@@ -1,5 +1,5 @@
 import React from 'react';
-import { auth, googleProvider } from '../firebase/firebase';
+import { auth, googleProvider } from '../firebase/firebase.config';
 import { signInWithPopup } from 'firebase/auth';
 import { sendTokenToBackend } from '../firebase/auth.service';
 

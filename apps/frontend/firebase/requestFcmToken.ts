@@ -1,6 +1,6 @@
 // firebase/requestFcmToken.ts
 import { getToken } from "firebase/messaging";
-import { messaging } from "./firebase";
+import { messaging } from "./firebase.config";
 
 export const requestFcmToken = async (): Promise<string | null> => {
   try {
