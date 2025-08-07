@@ -1,28 +1,34 @@
-// Define constant ROLES object
+// 🔐 User role constants
 export const ROLES = {
   BUYER: 'buyer',
-  SELLER: 'seller',
-  BUYER_SELLER: 'buyer_seller',
+  VENDOR: 'vendor',
+  BUYER_VENDOR: 'buyer_vendor',
   ADMIN: 'admin',
   SUPER_ADMIN: 'super_admin',
 } as const;
 
-// Create union type from ROLES values
+// 🎯 Type: Role values
 export type UserRole = (typeof ROLES)[keyof typeof ROLES];
 
+// 👤 Type: Authenticated user payload
 export interface AuthPayload {
   userId: string;
   email: string;
   role: UserRole;
-  iat?: number;
-  exp?: number;
+  iat?: number; // Issued at (for JWT)
+  exp?: number; // Expiry (for JWT)
 }
 
-// ✅ Role-check helpers using ROLES constant
+// ✅ Role check helpers
 export const isBuyer = (user?: AuthPayload) => user?.role === ROLES.BUYER;
-export const isSeller = (user?: AuthPayload) => user?.role === ROLES.SELLER;
-export const isBuyerSeller = (user?: AuthPayload) =>
-  user?.role === ROLES.BUYER_SELLER;
+export const isVendor = (user?: AuthPayload) => user?.role === ROLES.VENDOR;
+export const isBuyerVendor = (user?: AuthPayload) => user?.role === ROLES.BUYER_VENDOR;
 export const isAdmin = (user?: AuthPayload) => user?.role === ROLES.ADMIN;
-export const isSuperAdmin = (user?: AuthPayload) =>
-  user?.role === ROLES.SUPER_ADMIN;
+export const isSuperAdmin = (user?: AuthPayload) => user?.role === ROLES.SUPER_ADMIN;
+
+// 🧩 Combined helpers
+export const isVendorOrBuyerVendor = (user?: AuthPayload) =>
+  user?.role === ROLES.VENDOR || user?.role === ROLES.BUYER_VENDOR;
+
+export const isAdminOrSuperAdmin = (user?: AuthPayload) =>
+  user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;

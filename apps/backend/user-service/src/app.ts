@@ -4,36 +4,36 @@ import helmet from 'helmet';
 
 import { setupSwagger } from '@shared/swagger';
 import { errorHandler } from '@shared/error';
-import { logger } from '@shared/logger';
+import { loggerMiddleware } from '@shared/logger';
 
-import authRoutes from './app/routes/auth.routes';
-import userRoutes from './app/routes/user.routes';
+import oauthRoutes from './app/routes/oauth.routes'; // 🔐 Google OAuth (Firebase)
+import userRoutes from './app/routes/user.routes';   // 👤 User routes
 
 const app = express();
 
-// 🛡️ Global Middlewares
-app.use(cors()); // Enable CORS
-app.use(helmet()); // Set security-related headers
-app.use(express.json()); // Parse JSON request bodies
+// 🌐 Global Middlewares
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use(loggerMiddleware); // Logs each request
 
-// 📚 Swagger API Documentation
+// 📚 Swagger API Docs (should be public and before any auth middleware)
 setupSwagger(app, {
   title: 'User Service',
   version: '1.0.0',
   path: '/api/docs/user',
 });
 
-// 📦 Feature Routes
-app.use('/api/auth', authRoutes); // 🔐 Auth: login, register, token, etc.
-app.use('/api/user', userRoutes); // 👤 User: profile, roles, etc.
-
 // 🩺 Health Check Endpoint
 app.get('/healthz', (_req, res) => {
-  logger.info('✅ Health check: User Service is up');
-  return res.status(200).send('✅ User Service healthy');
+  res.status(200).send('✅ User Service healthy');
 });
 
-// ❌ Centralized Error Handler
+// 🔓 Public Routes
+app.use('/api/oauth', oauthRoutes); // Firebase Google login route
+app.use('/api/user', userRoutes);   // User-related endpoints
+
+// ❌ Global Error Handler (should come last)
 app.use(errorHandler);
 
 export default app;

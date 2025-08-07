@@ -1,38 +1,42 @@
 import express from 'express';
+
 import { setupSwagger } from '@shared/swagger';
 import { errorHandler, notFoundHandler } from '@shared/error';
 import { loggerMiddleware } from '@shared/logger';
 import { authMiddleware } from '@shared/auth';
+
 import vendorRoutes from './app/routes/vendor.routes';
+import oauthRoutes from './app/routes/oauth.routes';
 
 const app = express();
 
-// 🌐 Global Middleware
+// 🌐 Global Middlewares
 app.use(express.json());
 app.use(loggerMiddleware);
 
-// 📚 Swagger API Docs (public, before auth middleware)
+// 📚 Swagger API Documentation
 setupSwagger(app, {
   title: 'Vendor Service',
   version: '1.0.0',
   path: '/api/docs/vendor',
 });
 
-// 🩺 Health Check Endpoint (public, no auth required)
+// 🩺 Health Check
 app.get('/healthz', (_req, res) => {
-  return res.status(200).send('✅ Vendor Service healthy');
+  res.status(200).send('✅ Vendor Service healthy');
 });
 
-// 🔐 Auth Middleware (protect all routes below)
-app.use(authMiddleware());
+// 🔓 Public Routes
+app.use('/api/oauth', oauthRoutes);
 
-// 🛣️ Service Routes
+// 🔐 Protected Routes
+app.use(authMiddleware()); // Firebase token required
 app.use('/api/vendor', vendorRoutes);
 
-// 🚫 404 Handler
+// 🚫 Not Found
 app.use(notFoundHandler);
 
-// ❌ Centralized Error Handler
+// ❌ Error Handler
 app.use(errorHandler);
 
 export default app;
