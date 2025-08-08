@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { useRouter } from 'next/router';
-import { auth, googleProvider } from '../firebase/firebase.config'; // adjust path if needed
+import { auth, googleProvider } from '../../firebase/firebase.config'; // adjust path if needed
 
 const BuyerLogin = () => {
   const router = useRouter();
