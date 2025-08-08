@@ -34,7 +34,8 @@
     "../../dist/apps/user-ui/.next/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    "../../../dist/apps/frontend/user-ui/.next/types/**/*.ts"
+    "../../../dist/apps/frontend/user-ui/.next/types/**/*.ts",
+     "../firebase/**/*.ts" 
   ],
   "exclude": [
     "node_modules",
