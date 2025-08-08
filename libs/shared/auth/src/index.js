@@ -1,24 +1,10 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-__exportStar(require("./lib/authMiddleware"), exports);
-__exportStar(require("./lib/optionalAuthMiddleware"), exports);
-__exportStar(require("./lib/requireRole"), exports);
-__exportStar(require("./lib/generateToken"), exports);
-__exportStar(require("./lib/jwt"), exports);
-__exportStar(require("./lib/oauth"), exports);
-__exportStar(require("./lib/types"), exports);
+export * from './lib/authMiddleware';
+export * from './lib/optionalAuthMiddleware';
+export * from './lib/requireRole';
+export * from './lib/generateToken';
+export * from './lib/jwt';
+export * from './lib/oauth';
+export * from './lib/types';
+export * from './lib/password';
+export * from './lib/verifyFirebaseToken';
 //# sourceMappingURL=index.js.map

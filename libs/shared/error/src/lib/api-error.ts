@@ -26,7 +26,7 @@ export class BadRequestError extends ApiError {
 }
 
 export class NotFoundError extends ApiError {
-  constructor(message = 'Resource Not Found') {
+  constructor(message = 'Not Found') {
     super(404, message);
   }
 }

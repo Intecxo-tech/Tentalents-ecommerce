@@ -1,1 +1,1 @@
-{"version":3,"file":"optionalAuthMiddleware.d.ts","sourceRoot":"","sources":["optionalAuthMiddleware.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AAI1D;;;GAGG;AACH,wBAAgB,sBAAsB,CACpC,MAAM,GAAE,MAAgC,IAEhC,KAAK,OAAO,EAAE,MAAM,QAAQ,EAAE,MAAM,YAAY,UAiBzD"}
+{"version":3,"file":"optionalAuthMiddleware.d.ts","sourceRoot":"","sources":["optionalAuthMiddleware.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AAI1D;;;GAGG;AACH,wBAAgB,sBAAsB,CACpC,MAAM,GAAE,MAAgC,SAE3B,OAAO,QAAQ,QAAQ,QAAQ,YAAY,UAiBzD"}

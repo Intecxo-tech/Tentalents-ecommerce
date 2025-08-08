@@ -1,11 +1,13 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": "src/lib",
-    "outDir": "../../../dist/out-tsc/libs/shared/auth",
+    "rootDir": "src",
+    "outDir": "../../../dist/out-tsc/libs/shared/error",
     "composite": true,
     "declaration": true,
     "declarationMap": true
-  }
+  },
+  
+  "include": ["src/**/*.ts"]
 }

@@ -1,16 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.oauthMiddleware = oauthMiddleware;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-function oauthMiddleware(req, res, next) {
+import jwt from 'jsonwebtoken';
+export function oauthMiddleware(req, res, next) {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token)
         return res.status(401).json({ message: 'Missing OAuth token' });
     try {
-        const decoded = jsonwebtoken_1.default.decode(token); // Customize mapping if needed
+        const decoded = jwt.decode(token); // Customize mapping if needed
         req.user = decoded;
         next();
     }

@@ -1,11 +1,11 @@
 export declare const ROLES: {
     readonly BUYER: "buyer";
-    readonly SELLER: "seller";
-    readonly BUYER_SELLER: "buyer_seller";
+    readonly VENDOR: "vendor";
+    readonly BUYER_VENDOR: "buyer_vendor";
     readonly ADMIN: "admin";
     readonly SUPER_ADMIN: "super_admin";
 };
-export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+export declare type UserRole = (typeof ROLES)[keyof typeof ROLES];
 export interface AuthPayload {
     userId: string;
     email: string;
@@ -14,8 +14,10 @@ export interface AuthPayload {
     exp?: number;
 }
 export declare const isBuyer: (user?: AuthPayload) => boolean;
-export declare const isSeller: (user?: AuthPayload) => boolean;
-export declare const isBuyerSeller: (user?: AuthPayload) => boolean;
+export declare const isVendor: (user?: AuthPayload) => boolean;
+export declare const isBuyerVendor: (user?: AuthPayload) => boolean;
 export declare const isAdmin: (user?: AuthPayload) => boolean;
 export declare const isSuperAdmin: (user?: AuthPayload) => boolean;
+export declare const isVendorOrBuyerVendor: (user?: AuthPayload) => boolean;
+export declare const isAdminOrSuperAdmin: (user?: AuthPayload) => boolean;
 //# sourceMappingURL=types.d.ts.map

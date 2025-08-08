@@ -1,6 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.requireRole = requireRole;
 /**
  * 🔐 Middleware to enforce role-based access control (RBAC).
  * Accepts one or more allowed roles.
@@ -10,7 +7,7 @@ exports.requireRole = requireRole;
  * @example
  * app.get('/admin', requireRole(UserRole.ADMIN, UserRole.SUPER_ADMIN), handler);
  */
-function requireRole(...allowedRoles) {
+export function requireRole(...allowedRoles) {
     return (req, res, next) => {
         const user = req.user;
         if (!user?.role) {

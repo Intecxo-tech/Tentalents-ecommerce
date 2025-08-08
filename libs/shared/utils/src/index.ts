@@ -12,7 +12,7 @@ export * from './lib/invoice-generator';
 
 
 // Firebase utilities
-export { firebaseAuth } from './lib/firebase'; // 🔐 Client-side auth (for token generation/verification on frontend)
+
 export { adminAuth, firebaseAdmin } from './lib/firebase-admin'; // 🔐 Admin SDK (for backend auth verification)
 
 // Express helper

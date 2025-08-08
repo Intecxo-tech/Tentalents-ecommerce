@@ -1,14 +1,11 @@
-"use strict";
 // import { Request, Response, NextFunction } from 'express';
 // import { verifyToken } from './jwt';
 // import { AuthPayload, UserRole } from './types'; // ✅ No @shared/types import
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.requireAuth = void 0;
-exports.authMiddleware = authMiddleware;
-const jwt_1 = require("./jwt");
-function authMiddleware(allowedRoles, secret = process.env['JWT_SECRET']) {
+import { verifyToken } from './jwt';
+export function authMiddleware(allowedRoles, secret = process.env['JWT_SECRET']) {
     return (req, res, next) => {
         const authHeader = req.headers.authorization;
+        console.log('Authorization header:', authHeader);
         if (!authHeader?.startsWith('Bearer ')) {
             res
                 .status(401)
@@ -22,7 +19,7 @@ function authMiddleware(allowedRoles, secret = process.env['JWT_SECRET']) {
             return;
         }
         try {
-            const decoded = (0, jwt_1.verifyToken)(token, secret);
+            const decoded = verifyToken(token, secret);
             req.user = decoded;
             if (allowedRoles) {
                 const allowed = Array.isArray(allowedRoles)
@@ -41,11 +38,14 @@ function authMiddleware(allowedRoles, secret = process.env['JWT_SECRET']) {
         }
         catch (err) {
             console.error('❌ [authMiddleware] Token verification failed:', err);
-            // ✅ CORRECTED
-            res.status(403).json({ message: 'Invalid or expired token' });
+            if (err.name === 'TokenExpiredError') {
+                res.status(401).json({ message: 'Access token expired' });
+                return;
+            }
+            res.status(403).json({ message: 'Invalid token' });
             return;
         }
     };
 }
-exports.requireAuth = authMiddleware;
+export const requireAuth = authMiddleware;
 //# sourceMappingURL=authMiddleware.js.map

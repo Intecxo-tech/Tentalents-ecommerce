@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { auth } from 'firebase-admin'; // ✅ Make sure path alias is correctly configured
+import { auth } from 'firebase-admin';
 
-// Extend Express Request type to include oauthUser
 declare module 'express' {
   interface Request {
     oauthUser?: {
@@ -19,16 +18,18 @@ export const oauthMiddleware = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const { idToken } = req.body;
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ')
+    ? authHeader.split('Bearer ')[1]
+    : null;
 
-  if (!idToken) {
-    res.status(401).json({ message: 'ID token is required' });
-    return;
+  if (!token) {
+    res.status(401).json({ message: 'No ID token provided in Authorization header' });
+    return; // ✅ prevents further execution
   }
 
   try {
-    const decodedToken = await auth().verifyIdToken(idToken);
-
+    const decodedToken = await auth().verifyIdToken(token);
 
     req.oauthUser = {
       uid: decodedToken.uid,
@@ -38,9 +39,10 @@ export const oauthMiddleware = async (
       emailVerified: decodedToken.email_verified,
     };
 
-    next();
+    next(); // ✅ continue to route
   } catch (error: any) {
     console.error('Firebase token verification failed:', error.message);
     res.status(401).json({ message: 'Invalid or expired ID token' });
+    return; // ✅ stop here
   }
 };
