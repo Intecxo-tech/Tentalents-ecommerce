@@ -102,6 +102,7 @@
     "ioredis": "^5.7.0",
     "jotai": "^2.12.5",
     "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "kafkajs": "^2.2.4",
     "lucide-react": "^0.536.0",
     "nodemailer": "^7.0.5",

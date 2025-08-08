@@ -21,11 +21,13 @@ export function signToken(
 ): string {
   return jwt.sign(payload, secret, { expiresIn });
 }
-
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'refresh_secret';
 export function generateJWT(payload: AuthPayload): string {
   return signToken(payload, JWT_SECRET, '1h');
 }
-
+export function generateRefreshToken(payload: { userId: string }) {
+  return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: '30d' }); // 👈 stays valid for 30 days
+}
 /**
  * Verify a JWT token and return decoded AuthPayload
  * Throws error if invalid or expired

@@ -127,8 +127,10 @@ exports.Prisma.UserScalarFieldEnum = {
   password: 'password',
   role: 'role',
   phone: 'phone',
+  altPhone: 'altPhone',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  profileImage: 'profileImage'
 };
 
 exports.Prisma.PendingUserOtpScalarFieldEnum = {

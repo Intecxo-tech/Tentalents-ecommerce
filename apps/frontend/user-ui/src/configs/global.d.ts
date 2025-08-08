@@ -24,8 +24,17 @@ declare global {
     category: string[];
     reviewCount:number;
     seller?: Seller;
+    ratings?: Rating[]; 
   };
-
+export type Rating = {
+  id: string;
+  score: number;
+  comment?: string;
+  user: {
+    name: string;
+    image?: string;
+  };
+};
   export type footerPages = {
     title: string;
     href: string;

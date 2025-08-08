@@ -111,10 +111,15 @@ export function authMiddleware(
       }
 
       next();
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ [authMiddleware] Token verification failed:', err);
-      // ✅ CORRECTED
-      res.status(403).json({ message: 'Invalid or expired token' });
+
+      if (err.name === 'TokenExpiredError') {
+        res.status(401).json({ message: 'Access token expired' });
+        return;
+      }
+
+      res.status(403).json({ message: 'Invalid token' });
       return;
     }
   };

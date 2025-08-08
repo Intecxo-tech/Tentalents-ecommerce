@@ -8,9 +8,9 @@ import Image from 'next/image';
 import Google from '../../../assets/google.png';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
-import { supabase } from '../../../configs/supabaseClient';
 import '../login/login.css';
 import toast from 'react-hot-toast';
+import jwtDecode from "jwt-decode";
 
 const maskEmail = (email: string) => {
   if (!email) return '';
@@ -33,10 +33,10 @@ type FormData = {
 };
 
 const SignUp = () => {
- const [passwordVisible, setPasswordVisible] = useState({
-  password: false,
-  confirmPassword: false,
-});
+  const [passwordVisible, setPasswordVisible] = useState({
+    password: false,
+    confirmPassword: false,
+  });
   const [rememberMe, setRememberMe] = useState(true);
   const [otp, setOtp] = useState(Array(6).fill(''));
   const [timer, setTimer] = useState(60);
@@ -76,6 +76,8 @@ const SignUp = () => {
     }
   }, [timer, canResend]);
 
+  // Removed Supabase session check here
+
   const handleSendOtp = async () => {
     const isValid = await trigger('email');
     if (!isValid) return;
@@ -93,18 +95,18 @@ const SignUp = () => {
       setTimer(60);
       setOtp(Array(6).fill(''));
     } catch (err: any) {
-  const errorMessage = err?.response?.data?.message || err?.response?.data?.error;
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error;
 
-  if (errorMessage === 'User already exists') {
-    toast.error('This email is already registered. Please login or use a different email.');
-    // Optionally navigate user to login page or reset the form here
-  } else {
-    toast.error(errorMessage || 'OTP verification failed. Please try again.');
-  }
-} finally {
-  setLoading(false);
-}
-  }
+      if (errorMessage === 'User already exists') {
+        toast.error('This email is already registered. Please login or use a different email.');
+      } else {
+        toast.error(errorMessage || 'OTP verification failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleVerifyOtp = async () => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
@@ -129,24 +131,30 @@ const SignUp = () => {
     }
   };
 
-  const onSubmit = async (data: FormData) => {
-    setLoading(true);
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/auth/register/otp/complete`,
-        {
-          email,
-          password: data.password,
-          name: data.name || '',
-        }
-      );
-      router.push('/');
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Registration error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+const onSubmit = async (data: FormData) => {
+  setLoading(true);
+  try {
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_SERVER_URI}/api/auth/register/otp/complete`,
+      {
+        email,
+        password: data.password,
+        name: data.name || '',
+      }
+    );
+
+    toast.success('User registered successfully!');
+    // Optionally, redirect to login page after successful registration
+    router.push('/login'); 
+
+    // If you want to stay on the same page and just reset, comment out the above line
+  } catch (err: any) {
+    toast.error(err?.response?.data?.message || 'Registration error. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -183,23 +191,20 @@ const SignUp = () => {
       setLoading(false);
     }
   };
-const togglePassword = (field: 'password' | 'confirmPassword') => {
-  setPasswordVisible((prev) => ({
-    ...prev,
-    [field]: !prev[field],
-  }));
-};
+
+  const togglePassword = (field: 'password' | 'confirmPassword') => {
+    setPasswordVisible((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
   const handleGoogleSignIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) console.error('Google sign-in error:', error.message);
+    // If you want to keep Google sign-in, you need to handle it differently or remove this as well
+    toast.error('Google sign-in is currently disabled.');
   };
- const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
 
     setPasswordRules({
@@ -208,6 +213,7 @@ const togglePassword = (field: 'password' | 'confirmPassword') => {
       specialChar: /[@#%$]/.test(val),
     });
   };
+
   return (
     <div className="login-page">
       <div className="logincontainer">
@@ -219,267 +225,273 @@ const togglePassword = (field: 'password' | 'confirmPassword') => {
           <div className="spacer" />
         </div>
 
-        {/* <div className="login-box">
-          <button className="google-button" onClick={handleGoogleSignIn} disabled={loading}>
-            <Image src={Google} alt="Google Logo" width={20} height={20} />
-            Continue With Google
-          </button>
-
-          <div className="divider" /> */}
-
         {step === 'email' && (
-  <>
-    <button className="google-button" onClick={handleGoogleSignIn} disabled={loading}>
-      <Image src={Google} alt="Google Logo" width={20} height={20} />
-      Continue With Google
-    </button>
+          <>
+            <button className="google-button" onClick={handleGoogleSignIn} disabled={loading}>
+              <Image src={Google} alt="Google Logo" width={20} height={20} />
+              Continue With Google
+            </button>
 
-    <div className="divider" />
+            <div className="divider" />
 
-    <form>
-      <div className="form-group">
-        <input
-          type="email"
-          placeholder="Email"
-          {...register('email', {
-            required: 'Email is required',
-            pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: 'Invalid email address',
-            },
-          })}
-          disabled={loading}
-        />
-        {errors.email && <p className="error">{errors.email.message}</p>}
-      </div>
-
-      <button
-        type="button"
-        className="background-buttonver"
-        onClick={handleSendOtp}
-        disabled={loading}
-      >
-        {loading ? 'Sending OTP...' : 'Send OTP'}
-      </button>
-    </form>
-  </>
-)}
-
-          {step === 'otp' && (
-            <div className="otp-verification-container" style={{ textAlign: 'center' }}>
-              <h2 style={{ fontWeight: '600', fontSize: '1.25rem' }}>We've Emailed You A Code</h2>
-              <p style={{ color: '#888', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-                To change your password enter the code we have emailed you on{' '}
-                <strong>{maskEmail(email)}</strong>
-              </p>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '0.75rem',
-                  marginBottom: '1.5rem',
-                }}
-              >
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                   ref={(el) => {
-  inputRefs.current[index] = el;
-  // no return here
-}}
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    style={{
-                      width: '3rem',
-                      height: '3rem',
-                      fontSize: '1.5rem',
-                      textAlign: 'center',
-                      borderRadius: '8px',
-                      border: '1px solid #ccc',
-                      outline: 'none',
-                      transition: 'border-color 0.3s',
-                    }}
-                    className="otp-input"
-                    disabled={loading}
-                  />
-                ))}
-              </div>
-
-              <button
-                onClick={handleVerifyOtp}
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  maxWidth: '320px',
-                  backgroundColor: '#f1592a',
-                  color: '#fff',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  padding: '0.75rem 0',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {loading ? 'Verifying...' : 'Verify'}
-              </button>
-
-              <p style={{ marginTop: '1rem', color: '#888', fontSize: '0.9rem' }}>
-                Didn't Receive An Email?{' '}
-                {canResend ? (
-                  <button
-                    onClick={resendOtp}
-                    style={{
-                      color: '#f1592a',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                      padding: 0,
-                    }}
-                    disabled={loading}
-                  >
-                    Resend
-                  </button>
-                ) : (
-                  `Resend in ${timer}s`
-                )}
-              </p>
-            </div>
-          )}
-
-  
-          {step === 'password' && (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="form-group" style={{ position: 'relative' }}>
-        <input
-          type={passwordVisible ? 'text' : 'password'}
-          placeholder="Password"
-          {...register('password', {
-            required: 'Password is required',
-            minLength: {
-              value: 8,
-              message: 'Password must be at least 8 characters',
-            },
-            pattern: {
-              value: /^(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$/,
-              message: 'Include capital & special character',
-            },
-          })}
-          onChange={(e) => {
-            handlePasswordChange(e);
-            // Also call react-hook-form onChange if needed
-          }}
-          disabled={loading}
-        />
-        <button
-          type="button"
-         onClick={() => togglePassword('password')}
-          style={{
-            position: 'absolute',
-            right: '14px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'transparent',
-          }}
-          tabIndex={-1}
-        >
-          {passwordVisible ? <Eye size={20} /> : <EyeOff size={20} />}
-        </button>
-        {errors.password && <p className="error">{errors.password.message}</p>}
-      </div>
-
-      {/* New password requirement checkboxes */}
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: passwordRules.length ? 'green' : 'red' }}>
-          <input type="checkbox" checked={passwordRules.length} readOnly />
-          Must be at least 8 characters long
-        </label>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: passwordRules.capital ? 'green' : 'red' }}>
-          <input type="checkbox" checked={passwordRules.capital} readOnly />
-          Must contain a capital letter
-        </label>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: passwordRules.specialChar ? 'green' : 'red' }}>
-          <input type="checkbox" checked={passwordRules.specialChar} readOnly />
-          Must contain a special character (@, #, %, $)
-        </label>
-      </div>
-
-              <div className="form-group" style={{ position: 'relative' }}>
+            <form>
+              <div className="form-group">
                 <input
-                  type={passwordVisible ? 'text' : 'password'}
-                  placeholder="Confirm Password"
-                  {...register('confirmPassword', {
-                    required: 'Confirm Password is required',
-                    validate: (value) =>
-                      value === getValues('password') || 'Passwords do not match',
+                  type="email"
+                  placeholder="Email"
+                  {...register('email', {
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Invalid email address',
+                    },
                   })}
                   disabled={loading}
                 />
-                <button
-                  type="button"
-                  onClick={() => togglePassword('confirmPassword')}
-                  style={{
-                    position: 'absolute',
-                    right: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'transparent',
-                  }}
-                  tabIndex={-1}
-                >
-                  {passwordVisible ? <Eye size={20} /> : <EyeOff size={20} />}
-                </button>
-                {errors.confirmPassword && <p className="error">{errors.confirmPassword.message}</p>}
+                {errors.email && <p className="error">{errors.email.message}</p>}
               </div>
 
-              <div className="options">
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '13px',
-                    color: '#777',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={() => setRememberMe(!rememberMe)}
-                    style={{ transform: 'scale(1.1)', marginRight: '4px' }}
-                    disabled={loading}
-                  />
-                  <span>
-                    By clicking you agree on{' '}
-                    <Link href="#" style={{ color: '#f1592a', textDecoration: 'underline' }}>
-                      terms and conditions
-                    </Link>{' '}
-                    of tenttalents
-                  </span>
-                </label>
-              </div>
-
-              <button type="submit" className="background-buttonver" disabled={loading}>
-                {loading ? 'Registering...' : 'Complete Registration'}
+              <button
+                type="button"
+                className="background-buttonver"
+                onClick={handleSendOtp}
+                disabled={loading}
+              >
+                {loading ? 'Sending OTP...' : 'Send OTP'}
               </button>
             </form>
-          )}
-        </div>
+          </>
+        )}
 
-        {/* <div className="bottom-links">
-          <p>
-            Are You An Existing User? <Link href="/login">Login Here</Link>
-          </p>
-        </div> */}
+        {step === 'otp' && (
+          <div className="otp-verification-container" style={{ textAlign: 'center' }}>
+            <h2 style={{ fontWeight: '600', fontSize: '1.25rem' }}>We've Emailed You A Code</h2>
+            <p style={{ color: '#888', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+              To change your password enter the code we have emailed you on{' '}
+              <strong>{maskEmail(email)}</strong>
+            </p>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.75rem',
+                marginBottom: '1.5rem',
+              }}
+            >
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  type="text"
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  style={{
+                    width: '3rem',
+                    height: '3rem',
+                    fontSize: '1.5rem',
+                    textAlign: 'center',
+                    borderRadius: '8px',
+                    border: '1px solid #ccc',
+                    outline: 'none',
+                    transition: 'border-color 0.3s',
+                  }}
+                  className="otp-input"
+                  disabled={loading}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={handleVerifyOtp}
+              disabled={loading}
+              style={{
+                width: '100%',
+                maxWidth: '320px',
+                backgroundColor: '#f1592a',
+                color: '#fff',
+                fontWeight: '600',
+                fontSize: '1rem',
+                padding: '0.75rem 0',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? 'Verifying...' : 'Verify'}
+            </button>
+
+            <p style={{ marginTop: '1rem', color: '#888', fontSize: '0.9rem' }}>
+              Didn't Receive An Email?{' '}
+              {canResend ? (
+                <button
+                  onClick={resendOtp}
+                  style={{
+                    color: '#f1592a',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                  disabled={loading}
+                >
+                  Resend
+                </button>
+              ) : (
+                `Resend in ${timer}s`
+              )}
+            </p>
+          </div>
+        )}
+
+        {step === 'password' && (
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="form-group" style={{ position: 'relative' }}>
+              <input
+                type={passwordVisible.password ? 'text' : 'password'}
+                placeholder="Password"
+                {...register('password', {
+                  required: 'Password is required',
+                  minLength: {
+                    value: 8,
+                    message: 'Password must be at least 8 characters',
+                  },
+                  pattern: {
+                    value: /^(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$/,
+                    message: 'Include capital & special character',
+                  },
+                })}
+                onChange={(e) => {
+                  handlePasswordChange(e);
+                }}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => togglePassword('password')}
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                }}
+                tabIndex={-1}
+              >
+                {passwordVisible.password ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
+              {errors.password && <p className="error">{errors.password.message}</p>}
+            </div>
+
+            {/* New password requirement checkboxes */}
+            <div style={{ marginBottom: '1rem' }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '14px',
+                  color: passwordRules.length ? 'green' : 'red',
+                }}
+              >
+                <input type="checkbox" checked={passwordRules.length} readOnly />
+                Must be at least 8 characters long
+              </label>
+
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '14px',
+                  color: passwordRules.capital ? 'green' : 'red',
+                }}
+              >
+                <input type="checkbox" checked={passwordRules.capital} readOnly />
+                Must contain a capital letter
+              </label>
+
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '14px',
+                  color: passwordRules.specialChar ? 'green' : 'red',
+                }}
+              >
+                <input type="checkbox" checked={passwordRules.specialChar} readOnly />
+                Must contain a special character (@, #, %, $)
+              </label>
+            </div>
+
+            <div className="form-group" style={{ position: 'relative' }}>
+              <input
+                type={passwordVisible.confirmPassword ? 'text' : 'password'}
+                placeholder="Confirm Password"
+                {...register('confirmPassword', {
+                  required: 'Confirm Password is required',
+                  validate: (value) =>
+                    value === getValues('password') || 'Passwords do not match',
+                })}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => togglePassword('confirmPassword')}
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                }}
+                tabIndex={-1}
+              >
+                {passwordVisible.confirmPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
+              {errors.confirmPassword && <p className="error">{errors.confirmPassword.message}</p>}
+            </div>
+
+            <div className="options">
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  color: '#777',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                  style={{ transform: 'scale(1.1)', marginRight: '4px' }}
+                  disabled={loading}
+                />
+                <span>
+                  By clicking you agree on{' '}
+                  <Link href="#" style={{ color: '#f1592a', textDecoration: 'underline' }}>
+                    terms and conditions
+                  </Link>{' '}
+                  of tenttalents
+                </span>
+              </label>
+            </div>
+
+            <button type="submit" className="background-buttonver" disabled={loading}>
+              {loading ? 'Registering...' : 'Complete Registration'}
+            </button>
+          </form>
+        )}
       </div>
-    // </div>
+    </div>
   );
 };
 

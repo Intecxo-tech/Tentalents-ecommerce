@@ -1,0 +1,727 @@
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/components/reviews/ReviewModal.css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************/
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal{
+    background: white;
+    border: 1px solid var(--primary);
+    max-width:500px;
+    position: relative;
+    width:100%;
+    border-radius: 10px;;
+    padding:15px;
+}
+.modalheader{
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    
+}
+.modalheader h2,.reviewtextarea h2{
+    font-size:20px;
+    color:var(--secondary);
+    font-weight:500;
+
+
+}
+.reviewtextarea h2{
+    text-align: left;
+    margin-bottom: 5px;
+}
+.productinfo{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:10px;
+    background:var(--lightbackground);
+    border-radius:10px;
+    margin:10px;
+    padding:10px;
+}
+.productinfo h3{
+    font-size: 13px;
+    color:var(--grey)
+}
+.headingstar h2{
+  color: var(--grey);
+    font-size:15px;
+    
+}
+.ratingform{
+    text-align: center;
+
+}
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 300px;
+  position: relative;
+}
+
+
+.close-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.product-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.product-info h3 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+
+.star-icon {
+  transition: color 0.2s;
+}
+
+.review-textarea {
+  width: 100%;
+  height: 100px;
+  resize: none;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline:none;
+}
+
+.upload-box {
+  border: 2px dashed var(--lightgrey);
+  border-radius: 6px;
+  padding:30px 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #555;
+}
+.upload-box p{
+  font-size: 14px;;
+  color:var(--grey)
+}
+
+.file-name {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.reviewsubmit{
+  width: 100%;
+  margin-top: 1rem;
+  align-items: center !important;
+  display: flex !important;
+  text-align: center  !important;
+  justify-content: center !important;
+  
+}
+
+/*!*****************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/shop/[slug]/singleproductpage.css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************************************/
+.productpage{
+    display:flex;
+    align-items:flex-start;
+    justify-content: space-between;
+    margin:20px 0px;
+    gap:40px;
+    margin-bottom: 90px;
+}
+.image-gallery {
+  width: 100%;
+  max-width: 100%; /* Prevent overflow */
+}
+
+.thumbnail-gallery {
+  display: flex;
+  margin:10px 0px;
+  gap: 10px;
+  max-width: 100%;
+  overflow-x: auto; /* Optional: enable scroll if needed */
+}
+.thumbnail-image{
+    border-radius:10px;
+    padding:5px;
+    background-color: var(--lightbackground);
+}
+.featured-image {
+    background-color: white; /* Make the image container pop */
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid var(--bordergrey); /* Optional: subtle border */
+}
+
+.featured-image img {
+    max-width: 100%;
+    height: auto;
+    -o-object-fit: contain;
+       object-fit: contain;
+    border-radius: 10px;
+}
+.productpage-right{
+    width:25%;
+    background-color: var(--lightbackground);
+    border-radius: 10px;
+    padding:10px 15px;
+}
+.productpage-middle{
+    width:40%;
+}
+.productpage-left{
+    width:35%;
+}
+.price2{
+    font-size: 24px;
+    font-weight: 500;
+    color:black;
+    padding-left:15px;
+}
+
+.offer-price{
+    padding-left:5px;
+    font-size: 24px;
+    font-weight: 500;
+    color:var(--grey)
+}
+.pricesection{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+       padding:25px 0px;
+    /* border-bottom:1px solid var(--bordergrey); */
+}
+.pricecontainer{
+ 
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+
+}
+.productrating p{
+    padding:10px 15px;
+    font-size: 13px;;
+     background-color: var(--secondary);
+    color:white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:5px;
+
+
+}
+.productrating span{
+    color:var(--normalblue)
+}
+.staricon{
+    width:15px;
+    height:15px;
+}
+   
+
+
+.first-section{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.peoplebought{
+     padding:10px 15px;
+    font-size: 13px;;
+     background-color: var(--secondary);
+    color:white;
+    border-radius: 10px;
+    font-weight: 400;
+
+}
+.producttitle{
+    font-size: 20px;
+    font-weight: 500;
+    padding:25px 0px;
+    border-bottom: 1px solid var(--bordergrey);
+}
+.productdesc-heading h2{
+     font-size: 20px;
+    font-weight: 500;
+    padding:25px 0px;
+}
+.calculate-discount{
+    font-size: 13px;
+    color:var(--secondary);
+    padding:7px;
+    border:1px solid var(--secondary);
+    border-radius: 10px;
+}
+.coupon-section form{
+    display: flex;
+    align-items: center;
+    border:1px solid var(--primary);
+    border-radius: 10px;
+
+}
+
+.coupon-section form input{
+    /* border: 1px solid var(--primary); */
+    border-radius: 10px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    padding:10px 15px;
+    background-color: transparent;
+}
+.coupon-section form input::-moz-placeholder {
+  color:var(--lightgrey);          /* Your desired color */
+         /* Ensures full opacity, especially in Firefox */
+}
+.coupon-section form input::placeholder {
+  color:var(--lightgrey);          /* Your desired color */
+         /* Ensures full opacity, especially in Firefox */
+}
+.couponbutton{
+    border-right: 0px;
+    border-top: 0px;
+    border-bottom: 0px;;
+    margin: 0px;
+}
+.productdesc-heading{
+    border-top:1px solid var(--bordergrey);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+/* decsription */
+.productdescription p{
+    font-size: 15px;
+    color:var(--grey);
+}
+.productdescription img{
+    width:100%;
+    height: 100%;
+}
+.storeinfo ,.storeinfo-review{
+    margin:20px 0px;
+    padding:10px ;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border:1px solid #d8d8d8;
+    border-radius: 10px;
+}
+.storeinfo-review{
+    margin:10px 0px;
+}
+.storeinfo-left{
+    display: flex;
+    gap:10px;
+    
+    align-items: center;
+}
+.storeinfo-left p{
+    font-size: 12px;
+    color:var(--grey);
+}
+.storeinfo-left h2{
+    font-size: 16px;
+    font-weight: 500;
+    color:var(--lightblack);
+}
+.storeinfo-right p{
+    font-size: 13px;
+    color:var(--grey);
+    padding:10px;
+    border-radius: 10px;;
+    background-color: var(--lightbackground);
+    font-weight: 500;
+}
+
+/* product right section */
+.pricesection1{
+    display: flex;
+    align-items: center;
+    
+    padding:15px 0px;
+    border-bottom: 1px solid var(--bordergrey);
+    justify-content: space-between;
+}
+
+/* measuremnets */
+table{
+    width:100%;
+    border-collapse: collapse;
+}
+table tr{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding:5px 0px;
+ 
+}
+table tr td{
+    font-size: 15px;
+}
+.label{
+    color:var(--grey);
+
+}
+.value{
+    text-align: right;
+    width:70%;
+}
+
+.sellername{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.sellername h2{
+    color: var(--secondary);
+}
+.storeinfo-review{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.review-top{
+     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:5px;
+}
+.reviewer-info{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.reviewrating{
+      display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:5px;
+
+}
+.review-date{
+    padding:10px;
+    border-radius: 10px;
+    background-color: var(--lightbackground);
+}
+.reviewer-info p{
+    color:var(--secondary)
+}
+.reviewhelp{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.review-description p{
+    font-size: 14px;
+    color:var(--grey);
+}
+.review-description{
+    margin:10px 0px;
+}
+.reviewbuttons{
+    margin:5px 0px;
+}
+.review-description h2{
+    font-size: 16px;;
+}
+.singlereview{
+  margin:10px 0px;
+    padding:10px;
+    border-radius: 10px;;
+    border: 1px solid var(--bordergrey);
+}
+.delivery-date h2{
+    font-size: 14px;
+    font-weight: 400;
+    color:black;
+
+}
+.delivery-date{
+    
+     padding:15px 15px;
+    border-bottom: 1px solid var(--bordergrey);
+}
+.locationaddress{
+    padding:15px 15px;
+    border-bottom: 1px solid var(--bordergrey);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.pencil{
+    color:var(--primary);
+}
+.map{
+color:var(--secondary);
+}
+.adtocart-wrapper{
+ padding:15px 15px;
+    border-bottom: 1px solid var(--bordergrey);
+}
+.counter{
+   
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border:1px solid var(--primary);
+    border-radius: 10px;
+  padding:0px 10px;
+    margin-bottom: 10px;
+}
+.addtocart{
+    width:100%;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+.counter input {
+  width: 50px;
+  margin:0px;
+  background-color: var(--lightbackground);
+  text-align: center;
+}
+.counter-icon{
+    cursor: pointer;
+}
+.paymentimages{
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-bottom:10px;
+}
+.paymentwrapper{
+     padding:15px 15px;
+    border-bottom: 1px solid var(--bordergrey);
+}
+.featuredproducts{
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap:20px;
+    margin: 20px 0px;
+}
+.productslisting{
+    background-color: transparent;
+    padding:0px  !important;
+
+}
+.heavydiscount,.popularproducts{
+    background-color: var(--lightbackground);
+    border-radius: 10px;
+    
+}
+.discountheading{
+    padding:10px 20px;
+    padding-bottom: 0px;
+}
+
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/home-page/productstabs/producttab.css ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************************/
+.category-heading{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* background-color: var(--lightbackground); */
+    padding:0px 22px;
+    padding-top: 10px;;
+  
+    border-radius: 10px;
+
+}
+.category-tab{
+       background-color: var(--lightbackground);
+       border-top-left-radius: 10px;
+         border-top-right-radius: 10px;
+}
+/* .category-title{
+    padding:10px 15px;
+} */
+.tab{
+    border:1px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding:10px;
+    gap:10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.tabs{
+    display: flex;
+    align-items: center;
+     gap:15px;
+    justify-content: space-between;
+}
+.tab.active{
+    background-color: var(--primary);
+    color:white;
+}
+/*!***********************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/home-page/products-grid/productgrid.css ***!
+  \***********************************************************************************************************************************************************************************************************************************************************************************************************/
+
+.main-heading{
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 0px !important;
+}
+.product-grid{
+   display:grid;
+  align-items: center;
+    gap:20px;
+    height: 100%;
+   
+}
+.columns-2 {
+  grid-template-columns: repeat(2, 1fr);
+ 
+}
+.columns-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.columns-4 {
+  grid-template-columns: repeat(4, 1fr);
+ 
+}
+.columns-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+.columns-6 {
+  grid-template-columns: repeat(6, 1fr);
+}
+.product-card{
+background: transparent;
+border-radius: 10px;
+
+display:flex;
+flex-direction: column;
+
+}
+.products-grid{
+ background: var(--lightbackground);
+    padding:20px 25px;
+    border-radius: 10px;
+}
+
+
+.discount{
+    position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: var(--secondary);
+  color: white;
+  border-radius: 50px;
+  padding: 5px 10px;
+  font-size: 12px;
+  z-index: 1;
+}
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Keep square layout */
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: white;
+}
+.product-image {
+ 
+  width: 100%;
+  height: 100%;
+
+  position: absolute; 
+}
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/home-page/productlist/productlist.css ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************************/
+.product-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px; /* space between image and content */
+  padding:  10px 12px;
+
+  border-radius: 8px;
+
+
+}
+.product-list{
+  gap:5px;
+}
+.products-lists{
+  align-items: stretch;
+  padding:15px;
+  border-radius: 10px;
+    background-color: var(--lightbackground);
+}
+.main-heading{
+  padding-bottom:10px;
+}
+
+/* Image wrapper */
+.image-wrapper2 {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+/* Image styles */
+.product-image {
+  /* object-fit: cover; */
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+
+
+
+/* Right content area */
+.content-area2 {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Product title (truncate if too long) */
+

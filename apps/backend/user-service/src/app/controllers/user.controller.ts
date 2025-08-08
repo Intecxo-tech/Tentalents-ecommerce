@@ -4,7 +4,7 @@ import { produceKafkaEvent } from '@shared/kafka';
 import { sendSuccess } from '@shared/middlewares/utils/src/lib/response';
 import { KAFKA_TOPICS } from '@shared/middlewares/kafka/src/index';
 import { PrismaClient,UserRole } from '../../../generated/user-service';
-import { supabase } from '@shared/middlewares/auth/supabaselogin/supabaseClient';
+
 
 // 📝 POST /api/users/register
 export const initiateOtp = async (req: Request, res: Response, next: NextFunction) => {
@@ -25,7 +25,14 @@ export const verifyOtp = async (req: Request, res: Response, next: NextFunction)
     next(err);
   }
 };
-
+export const resendOtp = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await userService.resendRegistrationOtp(req.body.email);
+    return sendSuccess(res, 'OTP resent successfully', result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Something went wrong' });
+  }
+};
 export const completeOtpRegistration = async (
   req: Request,
   res: Response,
@@ -64,6 +71,7 @@ export const loginUser = async (
 ) => {
   try {
     const token = await userService.loginUser(req.body);
+    console.log('[loginUser controller] Sending success response');
     return sendSuccess(res, 'Login successful', { token });
   } catch (err) {
     next(err);
@@ -101,27 +109,38 @@ export const updateRole = async (
     next(err);
   }
 };
-// in user.controller.ts
-export const googleLogin = async (
+export const updateProfileImage = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { access_token } = req.body;
-    const result = await userService.googleLoginWithSupabase(access_token);
-    return res.status(200).json(result);
+    const userId = req.user!.userId;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    const updatedImageUrl = await userService.uploadImageAndGetUrl(userId, file);
+
+    return sendSuccess(res, 'Profile image updated', { profileImage: updatedImageUrl });
   } catch (err) {
+    console.error('[updateProfileImage error]', err);
     next(err);
   }
 };
-export const resendOtp = async (req: Request, res: Response, next: NextFunction) => {
+
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email } = req.body;
-    const result = await userService.resendRegistrationOtp(email);
-    return sendSuccess(res, 'OTP resent', result);
-  } catch (err: any) {
-      res.status(400).json({ error: err.message || 'Something went wrong' });
+    const userId = req.user!.userId;
+    const { name, phone,altPhone } = req.body;
+
+    const updated = await userService.updateUserProfile(userId, { name, phone,altPhone });
+
+    return sendSuccess(res, 'Profile updated successfully', updated);
+  } catch (err) {
     next(err);
   }
+  
 };

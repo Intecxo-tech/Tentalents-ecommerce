@@ -39,7 +39,9 @@ model User {
   name          String? // Display name or full name
   password      String? // Securely hashed password
   role          UserRole @default(buyer) // Role assigned to the user
-  phone         String? // Optional phone number for OTP/2FA
+  phone         String?
+  profileImage  String?
+  altPhone      String? // Optional phone number for OTP/2FA
   createdAt     DateTime @default(now()) // Created timestamp
   updatedAt     DateTime @updatedAt // Automatically updated on change
   sellerProfile Vendor?  @relation("UserSeller") // Optional: One-to-one seller profile (if role = seller)

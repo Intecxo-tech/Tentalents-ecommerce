@@ -4,7 +4,7 @@ import {
   verifyOtp,
   completeOtpRegistration,
   loginUser,
-  googleLogin,
+  
   resendOtp
 } from '../controllers/user.controller';
 
@@ -16,5 +16,6 @@ router.post('/register/otp/verify', verifyOtp);
 router.post('/register/otp/complete', completeOtpRegistration);
 router.post('/register/otp/resend', resendOtp);
 router.post('/login', loginUser);
-router.post('/google-login', googleLogin);
+
+// router.post('/google-login', googleLogin);
 export default router;

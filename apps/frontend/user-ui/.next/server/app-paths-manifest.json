@@ -1,4 +1,3 @@
 {
-  "/page": "app/page.js",
-  "/(routes)/signup/page": "app/(routes)/signup/page.js"
+  "/shop/[slug]/page": "app/shop/[slug]/page.js"
 }

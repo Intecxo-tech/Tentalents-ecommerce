@@ -2,17 +2,18 @@ import { PrismaClient, UserRole } from '../../../generated/user-service';
 import { hashPassword, comparePassword, generateJWT } from '@shared/auth';
 import { produceKafkaEvent as publishEvent } from '@shared/kafka';
 import { KAFKA_TOPICS } from '@shared/kafka';
-import { supabase } from '@shared/middlewares/auth/supabaselogin/supabaseClient';
+
 import { sendEmail } from '@shared/middlewares/email/src/index';
 import { logger } from '@shared/logger';
 import { response } from 'express';
-
+import * as crypto from 'crypto';
 const prisma = new PrismaClient();
 
 interface RegisterUserParams {
   email: string;
   password: string;
   phone: string;
+  altphone: string;
   name: string;
   role?: UserRole;
 }
@@ -110,12 +111,14 @@ resendRegistrationOtp: async (email: string) => {
     password,
     name,
     phone,
+    altphone,
     role = UserRole.buyer,
   }: {
     email: string;
     password: string;
     name?: string;
     phone?: string;
+    altphone?:string;
     role?: UserRole;
   }) => {
     try {
@@ -126,7 +129,7 @@ resendRegistrationOtp: async (email: string) => {
       if (!otpRecord || otpRecord.expiresAt < new Date()) {
         throw new Error('OTP verification expired or not found');
       }
-
+const defaultProfileImage = `https://gravatar.com/avatar/${crypto.createHash('md5').update(email).digest('hex')}?d=identicon`;
       const hashed = await hashPassword(password);
       const user = await prisma.user.create({
         data: {
@@ -134,9 +137,13 @@ resendRegistrationOtp: async (email: string) => {
           password: hashed,
           name: name || '',
           phone: phone || '',
+          altPhone: altphone || '',
           role,
+           profileImage: defaultProfileImage,
         },
       });
+      
+
 
       await prisma.pendingUserOtp.delete({ where: { email } });
 
@@ -160,6 +167,7 @@ resendRegistrationOtp: async (email: string) => {
                 userId: user.id,
                 email: user.email,
                 phone: user.phone,
+                altphone:user.altPhone,
                 status: 'pending',
               }),
             },
@@ -213,7 +221,7 @@ resendRegistrationOtp: async (email: string) => {
 
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, email: true, role: true, name: true, phone: true },
+        select: { id: true, email: true, role: true, name: true, phone: true,profileImage: true,   },
       });
 
       if (!user) throw new Error(`User with ID ${userId} not found`);
@@ -224,7 +232,22 @@ resendRegistrationOtp: async (email: string) => {
       throw err;
     }
   },
+ updateProfileImage: async (userId: string, imageUrl: string) => {
+  try {
+    if (!userId || !imageUrl) throw new Error('userId and imageUrl are required');
 
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: imageUrl },
+    });
+
+    logger.info(`[UserService] 🔄 Updated profile image for user ${userId}`);
+    return updatedUser;
+  } catch (err: any) {
+    logger.error('[UserService] ❌ updateProfileImage error:', err.message || err);
+    throw err;
+  }
+},
   updateUserRole: async (userId: string, newRole: UserRole) => {
     try {
       if (!userId || !newRole) throw new Error('userId and newRole are required');
@@ -242,58 +265,7 @@ resendRegistrationOtp: async (email: string) => {
     }
   },
 
-  googleLoginWithSupabase: async (accessToken: string) => {
-    try {
-      if (!accessToken) throw new Error('Access token is required');
-
-      const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(accessToken);
-
-      if (error) {
-        logger.error('[UserService] Supabase getUser error:', error);
-        throw new Error('Invalid Supabase token');
-      }
-
-      if (!supabaseUser) throw new Error('User not found from Supabase token');
-
-      const email = supabaseUser.email;
-      const phone = supabaseUser.phone ?? null;
-      const userMetadata = supabaseUser.user_metadata || {};
-      const name = userMetadata.full_name || userMetadata.name || 'Google User';
-
-      if (!email) throw new Error('Email is required from Supabase');
-
-      logger.info('[UserService] Supabase user info:', { email, name, phone });
-
-      let existingUser = await prisma.user.findUnique({ where: { email } });
-
-      if (!existingUser) {
-        existingUser = await prisma.user.create({
-          data: {
-            email,
-            phone,
-            name,
-            password: '', // OAuth user has no password
-            role: UserRole.buyer,
-          },
-        });
-        logger.info('[UserService] New user created:', existingUser.id);
-      } else {
-        logger.info('[UserService] Existing user found:', existingUser.id);
-      }
-
-      const token = generateJWT({
-        userId: existingUser.id,
-        email: existingUser.email,
-        role: existingUser.role,
-      });
-
-      return { token, user: existingUser };
-    } catch (err) {
-      logger.error('[UserService] googleLoginWithSupabase error:', err);
-      throw err;
-    }
-  },
-
+ 
   // Placeholder for Firebase or other OAuth login
   oauthLogin: async (provider: string, accessToken: string) => {
     try {
@@ -309,4 +281,61 @@ resendRegistrationOtp: async (email: string) => {
       throw err;
     }
   },
+ uploadImageAndGetUrl: async (userId: string, file: Express.Multer.File) => {
+  try {
+    if (!userId || !file) throw new Error('User ID and file are required');
+
+    // Convert the file to base64 string (you can also use file.buffer directly)
+    const base64Image = file.buffer.toString('base64');
+    const mimeType = file.mimetype;
+    const dataUrl = `data:${mimeType};base64,${base64Image}`;
+
+    // Update the user's profileImage field in the database
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        profileImage: dataUrl, // Assuming `profileImage` is a TEXT column
+      },
+    });
+
+    logger.info(`[UserService] 🖼️ Stored profile image for user ${userId}`);
+    return updatedUser.profileImage; // Return image URL/data if needed
+  } catch (err: any) {
+    logger.error('[userService] uploadImageAndGetUrl error:', err.message || err);
+    throw err;
+  }
+},
+  updateUserProfile: async (
+    userId: string,
+    updates: { name?: string; phone?: string; altPhone?: string }
+  ) => {
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(updates.name && { name: updates.name }),
+          ...(updates.phone && { phone: updates.phone }),
+          ...(updates.altPhone && { altPhone: updates.altPhone }),
+        },
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          altPhone:true,
+          email: true,
+          role: true,
+          profileImage: true,
+        },
+      });
+
+      logger.info(`[UserService] 🔄 Updated profile info for user ${userId}`);
+      return updatedUser;
+    } catch (err: any) {
+      logger.error('[userService] updateUserProfile error:', err.message || err);
+      throw err;
+    }
+  }
 };
+
+
+

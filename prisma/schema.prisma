@@ -105,6 +105,7 @@ model User {
   password  String?
   role      UserRole @default(buyer)
   phone     String?
+  altPhone String? 
   createdAt DateTime @default(now())
   updatedAt DateTime
   receivedRatings  Rating[] @relation("RatingSeller")
@@ -113,7 +114,7 @@ model User {
   ratings   Rating[]
   searchLogs SearchLog[]
   orders    Order[]
-
+  profileImage String?
   @@index([email])
   @@index([role])
   @@map("users")
