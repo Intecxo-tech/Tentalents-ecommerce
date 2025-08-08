@@ -1,18 +1,27 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "preserve",                  // ✅ Enables JSX
+    "jsx": "preserve", // ✅ Enables JSX
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["DOM", "ESNext"],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "incremental": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],   // ✅ Includes .tsx files
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ], // ✅ Includes .tsx files
+  "exclude": [
+    "node_modules"
+  ]
 }

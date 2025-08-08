@@ -2,7 +2,13 @@
   "name": "tentalents-ecommerce",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
   "scripts": {
+    "dev": "nx run-many --target=serve --all",
+    "dev:frontend": "nx serve frontend",
     "build:user-ui": "nx build user-ui",
     "nx": "npx nx",
     "lint": "npx nx lint",
@@ -11,8 +17,6 @@
     "dev:user-ui": "nx serve user-ui",
     "build:seller-ui": "nx build seller-ui --prod",
     "format": "nx format:write",
-    "dev": "nx run-many --target=serve --all",
-    "auth-docs": "node apps/auth-service/src/swagger.js",
     "user-ui": "npx nx run-many --target=dev --all --projects=user-ui",
     "seller-ui": "npx nx run-many --target=dev --all --projects=seller-ui",
     "serve:user-service": "npx nx serve user-service",
@@ -80,13 +84,8 @@
     "prisma:migrate:recommendation-service": "prisma migrate dev --schema=apps/backend/post-mvp-services/recommendation-service/prisma/schema.prisma",
     "prisma:migrate:refund-service": "prisma migrate dev --schema=apps/backend/post-mvp-services/refund-service/prisma/schema.prisma",
     "prisma:migrate:rating-service": "prisma migrate dev --schema=apps/backend/rating-service/prisma/schema.prisma",
-    "prisma:migrate:search-service": "prisma migrate dev --schema=apps/backend/search-service/prisma/schema.prisma",
-    "prisma:migrate:all": "npm run prisma:migrate:vendor-service && npm run prisma:migrate:user-service && npm run prisma:migrate:product-service && npm run prisma:migrate:order-service && npm run prisma:migrate:admin-service && npm run prisma:migrate:analytics-service && npm run prisma:migrate:cart-service && npm run prisma:migrate:email-service && npm run prisma:migrate:invoice-service && npm run prisma:migrate:payment-service && npm run prisma:migrate:cms-service && npm run prisma:migrate:coupon-service && npm run prisma:migrate:recommendation-service && npm run prisma:migrate:refund-service && npm run prisma:migrate:rating-service && npm run prisma:migrate:search-service"
+    "prisma:migrate:search-service": "prisma migrate dev --schema=apps/backend/search-service/prisma/schema.prisma"
   },
-  "workspaces": [
-    "apps/*",
-    "libs/*"
-  ],
   "dependencies": {
     "@prisma/client": "^6.12.0",
     "@supabase/supabase-js": "^2.53.0",
