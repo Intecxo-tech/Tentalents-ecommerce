@@ -8,8 +8,8 @@ import {
   signInWithRedirect,
   getRedirectResult,
 } from 'firebase/auth';
-import { useRouter } from 'next/navigation'; // ✅ useRouter for Next.js
-import { app } from '../../firebase/firebase.config'; // adjust the path if needed
+import { useRouter } from 'next/navigation';
+import { app } from '../../firebase/firebase.config'; // Adjust path if needed
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
@@ -17,6 +17,7 @@ const provider = new GoogleAuthProvider();
 export default function VendorLogin() {
   const router = useRouter();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     getRedirectResult(auth)
@@ -24,7 +25,6 @@ export default function VendorLogin() {
         if (result?.user) {
           const idToken = await result.user.getIdToken();
 
-          // Send token to backend if needed
           const res = await fetch('/api/auth/firebase-login', {
             method: 'POST',
             headers: {
@@ -34,16 +34,15 @@ export default function VendorLogin() {
           });
 
           if (!res.ok) throw new Error('Token validation failed');
-          router.push('/vendor/dashboard'); // ✅ navigate to dashboard
+          router.push('/vendor/dashboard');
         }
       })
-      .catch((err) => {
-        console.error(err);
-        setError('Login failed. Please try again.');
-      });
+      .catch(() => setError('Login failed. Please try again.'));
   }, [router]);
 
   const handleGooglePopupLogin = async () => {
+    setLoading(true);
+    setError('');
     try {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
@@ -58,9 +57,10 @@ export default function VendorLogin() {
 
       if (!res.ok) throw new Error('Authentication failed');
       router.push('/vendor/dashboard');
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,9 +75,10 @@ export default function VendorLogin() {
 
         <button
           onClick={handleGooglePopupLogin}
-          className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition"
+          disabled={loading}
+          className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition disabled:opacity-50"
         >
-          Sign in with Google (Popup)
+          {loading ? 'Signing in...' : 'Sign in with Google (Popup)'}
         </button>
 
         <button
