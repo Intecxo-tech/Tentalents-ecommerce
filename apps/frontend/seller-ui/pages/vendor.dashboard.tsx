@@ -1,61 +1,52 @@
 // pages/vendor-dashboard.tsx
-import { useEffect, useState } from 'react';
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut,
-  User,
-} from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { signOut, User } from 'firebase/auth';
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { getAuth } from 'firebase/auth';
 import { app } from '../../firebase/firebase.config';
+import { withAuth } from '../components/withAuth';
 
 const auth = getAuth(app);
 
-export const VendorDashboard = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+interface VendorDashboardProps {
+  user: User;
+}
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (!firebaseUser) {
-        navigate('/vendor/login');
-      } else {
-        setUser(firebaseUser);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
+const VendorDashboard = ({ user }: VendorDashboardProps) => {
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut(auth);
-    navigate('/vendor/login');
+    setLogoutLoading(true);
+    try {
+      await signOut(auth);
+      router.replace('/vendor/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      alert('Failed to logout. Please try again.');
+    } finally {
+      setLogoutLoading(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!user) return null;
-
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-2">Vendor Dashboard</h1>
-      <p className="mb-2">Welcome, {user.displayName}</p>
-      <p className="mb-4 text-gray-600">Email: {user.email}</p>
+    <div className="p-6 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Vendor Dashboard</h1>
+      <p className="mb-2">Welcome, {user.displayName || 'Vendor'}</p>
+      <p className="mb-6 text-gray-600">Email: {user.email || 'No email available'}</p>
 
       <button
         onClick={handleLogout}
-        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+        disabled={logoutLoading}
+        className={`px-4 py-2 rounded text-white ${
+          logoutLoading ? 'bg-red-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+        } transition`}
+        aria-label="Logout"
       >
-        Logout
+        {logoutLoading ? 'Logging out...' : 'Logout'}
       </button>
     </div>
   );
 };
+
+export default withAuth(VendorDashboard);
