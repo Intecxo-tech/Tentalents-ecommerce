@@ -25,17 +25,18 @@ enum VendorStatus {
 
 /// Represents a vendor/seller profile in the marketplace
 model Vendor {
-  id        String       @id @default(uuid())
-  name      String
-  email     String       @unique
-  phone     String?
-  storeName String
-  storeSlug String       @unique
-  logoUrl   String?
-  documents String[] // KYC/GST document paths in MinIO
-  status    VendorStatus @default(PENDING)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id          String       @id @default(uuid())
+  name        String
+  email       String       @unique
+  phone       String?
+  storeName   String
+  storeSlug   String       @unique
+  logoUrl     String?
+  documents   String[] // KYC/GST document paths in MinIO
+  status      VendorStatus @default(PENDING)
+  firebaseUid String?      @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   // === RELATIONS ===
   userId   String

@@ -34,6 +34,7 @@ model Vendor {
   logoUrl   String?
   documents String[]     // KYC/GST document paths in MinIO
   status    VendorStatus @default(PENDING)
+  firebaseUid String?    @unique
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 

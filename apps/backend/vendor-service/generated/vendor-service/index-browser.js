@@ -130,6 +130,7 @@ exports.Prisma.VendorScalarFieldEnum = {
   logoUrl: 'logoUrl',
   documents: 'documents',
   status: 'status',
+  firebaseUid: 'firebaseUid',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   userId: 'userId'

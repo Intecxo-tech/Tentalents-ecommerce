@@ -168,3 +168,5 @@ networks:
 
 # 🚀 Only Swagger UI
 # docker compose -f infra/docker/docker-compose.infrastructure.yml up -d swagger-ui
+
+

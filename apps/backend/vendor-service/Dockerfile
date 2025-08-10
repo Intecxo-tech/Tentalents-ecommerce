@@ -1,36 +1,35 @@
-# 1. Build stage: build your app with full deps and tooling
-FROM node:20-bookworm-slim AS builder
+# syntax=docker/dockerfile:1
 
-WORKDIR /app
+ARG NODE_VERSION=18.20.8
 
-# Copy package.json and package-lock.json for caching
-COPY package*.json ./
+FROM node:${NODE_VERSION}-alpine as base
+WORKDIR /usr/src/app
 
-# Install all dependencies (including dev)
-RUN npm ci
+FROM base as deps
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=package-lock.json,target=package-lock.json \
+    --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev
 
-# Copy the rest of your code
+FROM deps as build
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=package-lock.json,target=package-lock.json \
+    --mount=type=cache,target=/root/.npm \
+    npm ci
+
 COPY . .
 
-# Build your app (adjust this command if needed)
-RUN npm run build vendor-service
+RUN npx nx build backend/vendor-service
 
-# 2. Production stage: copy built code and install only prod deps
-FROM node:20-bookworm-slim AS production
+FROM base as final
+ENV NODE_ENV=production
+WORKDIR /usr/src/app
+USER node
 
-WORKDIR /app
+COPY package.json .
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/dist/apps/backend/vendor-service ./dist
 
-# Copy package.json and package-lock.json for production deps install
-COPY package*.json ./
+EXPOSE 3011
 
-# Install only production dependencies
-RUN npm ci --omit=dev
-
-# Copy built app from builder
-COPY --from=builder /app/dist ./dist
-
-# Expose your app port
-EXPOSE 3000
-
-# Run the built app
 CMD ["node", "dist/main.js"]

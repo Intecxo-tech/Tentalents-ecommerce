@@ -1,35 +1,35 @@
-# Stage 1: Build the app
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1
 
-WORKDIR /app
+ARG NODE_VERSION=18.20.8
 
-# Copy monorepo code
+FROM node:${NODE_VERSION}-alpine as base
+WORKDIR /usr/src/app
+
+FROM base as deps
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=package-lock.json,target=package-lock.json \
+    --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev
+
+FROM deps as build
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=package-lock.json,target=package-lock.json \
+    --mount=type=cache,target=/root/.npm \
+    npm ci
+
 COPY . .
 
-# Install dependencies and build the email service
-RUN npm install -g nx \
- && npm install \
- && nx build email-service
+RUN npx nx build backend/email-service
 
-# Stage 2: Runtime
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy necessary files from builder
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/package-lock.json ./
-COPY --from=builder /app/dist/apps/email-service ./dist
-COPY --from=builder /app/prisma ./prisma
-
-# Install only production dependencies
-RUN npm install --omit=dev
-
-# Set environment
+FROM base as final
 ENV NODE_ENV=production
+WORKDIR /usr/src/app
+USER node
 
-# Expose the service's port
+COPY package.json .
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/dist/apps/backend/email-service ./dist
+
 EXPOSE 3004
 
-# Start the app
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main.js"]

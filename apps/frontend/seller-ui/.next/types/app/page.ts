@@ -1,4 +1,4 @@
-// File: C:\Users\Karishma khatri\Desktop\Tentalents-ecommerce\apps\frontend\seller-ui\src\app\page.tsx
+// File: /mnt/c/Users/Dell/Desktop/Ecommerce-Project/Tentalents-ecommerce/apps/frontend/seller-ui/src/app/page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

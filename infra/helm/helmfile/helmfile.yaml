@@ -4,142 +4,98 @@ helmDefaults:
   createNamespace: true
 
 repositories:
-  - name: bitnami
-    url: https://charts.bitnami.com/bitnami
-  - name: kong
-    url: https://charts.konghq.com
-  - name: falcosecurity
-    url: https://falcosecurity.github.io/charts
+  # Add repos if your charts depend on them
+  # Usually not needed if your microservices charts are custom/local
+  # - name: bitnami
+  #   url: https://charts.bitnami.com/bitnami
 
 releases:
-  # === INFRA: DATABASES ===
-  - name: postgres
-    namespace: database
-    chart: bitnami/postgresql
-    values:
-      - ../helm/database/postgres-values.yaml
-
-  - name: redis
-    namespace: cache
-    chart: bitnami/redis
-    values:
-      - ../helm/database/redis-values.yaml
-
-  - name: kafka
-    namespace: messaging
-    chart: bitnami/kafka
-    values:
-      - ../helm/database/kafka-values.yaml
-
-  - name: minio
-    namespace: storage
-    chart: ../helm/database/minio
-    values:
-      - ../helm/database/minio/values.yaml
-
-  # === INGRESS CONTROLLERS ===
-  - name: nginx-ingress
-    namespace: ingress
-    chart: bitnami/nginx-ingress-controller
-    values:
-      - ../helm/ingress/nginx/values.yaml
-
-  - name: kong
-    namespace: kong
-    chart: kong/kong
-    values:
-      - ../helm/ingress/kong/values.yaml
-
-  # === MONITORING STACK ===
-  - name: prometheus
-    namespace: observability
-    chart: ../helm/monitoring/prometheus
-    values:
-      - ../helm/monitoring/prometheus/values.yaml
-
-  - name: grafana
-    namespace: observability
-    chart: ../helm/monitoring/grafana
-    values:
-      - ../helm/monitoring/grafana/values.yaml
-
-  - name: loki
-    namespace: observability
-    chart: ../helm/monitoring/loki
-    values:
-      - ../helm/monitoring/loki/values.yaml
-
-  - name: jaeger
-    namespace: observability
-    chart: ../helm/monitoring/jaeger
-    values:
-      - ../helm/monitoring/jaeger/values.yaml
-
-  # === SECURITY STACK ===
-  - name: falco
-    namespace: security
-    chart: falcosecurity/falco
-    values:
-      - ../helm/security/falco/values.yaml
-
-  - name: trivy
-    namespace: security
-    chart: ../helm/security/trivy
-    values:
-      - ../helm/security/trivy/values.yaml
-
-  # === NETWORK ===
-  - name: calico
-    namespace: network
-    chart: ../helm/network/calico
-    values:
-      - ../helm/network/calico/values.yaml
-
-  # === MICROSERVICES ===
   - name: user-service
-    namespace: user
-    chart: ../helm/microservices/user-service
+    namespace: user-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/user-service
     values:
-      - ../helm/microservices/user-service/values.yaml
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/user-service/values.yaml
 
   - name: product-service
-    namespace: product
-    chart: ../helm/microservices/product-service
+    namespace: product-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/product-service
     values:
-      - ../helm/microservices/product-service/values.yaml
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/product-service/values.yaml
 
   - name: order-service
-    namespace: order
-    chart: ../helm/microservices/order-service
+    namespace: order-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/order-service
     values:
-      - ../helm/microservices/order-service/values.yaml
-
-  - name: payment-service
-    namespace: payment
-    chart: ../helm/microservices/payment-service
-    values:
-      - ../helm/microservices/payment-service/values.yaml
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/order-service/values.yaml
 
   - name: rating-service
-    namespace: rating
-    chart: ../helm/microservices/rating-service
+    namespace: rating-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/rating-service
     values:
-      - ../helm/microservices/rating-service/values.yaml
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/rating-service/values.yaml
 
   - name: email-service
-    namespace: email
-    chart: ../helm/microservices/email-service
+    namespace: email-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/email-service
     values:
-      - ../helm/microservices/email-service/values.yaml
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/email-service/values.yaml
 
-  - name: cart-service
-    namespace: cart
-    chart: ../helm/microservices/cart-service
+  - name: payment-service
+    namespace: payment-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/payment-service
     values:
-      - ../helm/microservices/cart-service/values.yaml
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/payment-service/values.yaml
 
   - name: search-service
-    namespace: search
-    chart: ../helm/microservices/search-service
+    namespace: search-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/search-service
     values:
-      - ../helm/microservices/search-service/values.yaml
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/search-service/values.yaml
+
+  - name: cart-service
+    namespace: cart-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/cart-service
+    values:
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/cart-service/values.yaml
+
+  - name: admin-service
+    namespace: admin-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/admin-service
+    values:
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/admin-service/values.yaml
+
+  - name: invoice-service
+    namespace: invoice-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/invoice-service
+    values:
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/invoice-service/values.yaml
+
+  - name: analytics-service
+    namespace: analytics-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/analytics-service
+    values:
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/analytics-service/values.yaml
+
+  - name: vendor-service
+    namespace: vendor-service
+    chart: ./infra/helm/tentalents-ecommerce-platform/microservices/vendor-service
+    values:
+      - ./infra/helm/tentalents-ecommerce-platform/microservices/vendor-service/values.yaml
+
+
+
+
+# # Add/update Helm repos (if any)
+# helmfile -f helmfile-microservices.yaml repos
+
+# # Lint all charts
+# helmfile -f helmfile-microservices.yaml lint
+
+# # Sync (install/upgrade) all microservices releases
+# helmfile -f helmfile-microservices.yaml apply
+
+# # Template render all charts (dry-run)
+# helmfile -f helmfile-microservices.yaml template
+
+# # Destroy all releases (uninstall)
+# helmfile -f helmfile-microservices.yaml destroy

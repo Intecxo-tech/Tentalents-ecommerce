@@ -1563,6 +1563,7 @@ export namespace Prisma {
     storeSlug: string | null
     logoUrl: string | null
     status: $Enums.VendorStatus | null
+    firebaseUid: string | null
     createdAt: Date | null
     updatedAt: Date | null
     userId: string | null
@@ -1577,6 +1578,7 @@ export namespace Prisma {
     storeSlug: string | null
     logoUrl: string | null
     status: $Enums.VendorStatus | null
+    firebaseUid: string | null
     createdAt: Date | null
     updatedAt: Date | null
     userId: string | null
@@ -1592,6 +1594,7 @@ export namespace Prisma {
     logoUrl: number
     documents: number
     status: number
+    firebaseUid: number
     createdAt: number
     updatedAt: number
     userId: number
@@ -1608,6 +1611,7 @@ export namespace Prisma {
     storeSlug?: true
     logoUrl?: true
     status?: true
+    firebaseUid?: true
     createdAt?: true
     updatedAt?: true
     userId?: true
@@ -1622,6 +1626,7 @@ export namespace Prisma {
     storeSlug?: true
     logoUrl?: true
     status?: true
+    firebaseUid?: true
     createdAt?: true
     updatedAt?: true
     userId?: true
@@ -1637,6 +1642,7 @@ export namespace Prisma {
     logoUrl?: true
     documents?: true
     status?: true
+    firebaseUid?: true
     createdAt?: true
     updatedAt?: true
     userId?: true
@@ -1725,6 +1731,7 @@ export namespace Prisma {
     logoUrl: string | null
     documents: string[]
     status: $Enums.VendorStatus
+    firebaseUid: string | null
     createdAt: Date
     updatedAt: Date
     userId: string
@@ -1757,6 +1764,7 @@ export namespace Prisma {
     logoUrl?: boolean
     documents?: boolean
     status?: boolean
+    firebaseUid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     userId?: boolean
@@ -1779,6 +1787,7 @@ export namespace Prisma {
     logoUrl?: boolean
     documents?: boolean
     status?: boolean
+    firebaseUid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     userId?: boolean
@@ -1795,6 +1804,7 @@ export namespace Prisma {
     logoUrl?: boolean
     documents?: boolean
     status?: boolean
+    firebaseUid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     userId?: boolean
@@ -1811,12 +1821,13 @@ export namespace Prisma {
     logoUrl?: boolean
     documents?: boolean
     status?: boolean
+    firebaseUid?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     userId?: boolean
   }
 
-  export type VendorOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "phone" | "storeName" | "storeSlug" | "logoUrl" | "documents" | "status" | "createdAt" | "updatedAt" | "userId", ExtArgs["result"]["vendor"]>
+  export type VendorOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "phone" | "storeName" | "storeSlug" | "logoUrl" | "documents" | "status" | "firebaseUid" | "createdAt" | "updatedAt" | "userId", ExtArgs["result"]["vendor"]>
   export type VendorInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     products?: boolean | Vendor$productsArgs<ExtArgs>
@@ -1853,6 +1864,7 @@ export namespace Prisma {
       logoUrl: string | null
       documents: string[]
       status: $Enums.VendorStatus
+      firebaseUid: string | null
       createdAt: Date
       updatedAt: Date
       userId: string
@@ -2294,6 +2306,7 @@ export namespace Prisma {
     readonly logoUrl: FieldRef<"Vendor", 'String'>
     readonly documents: FieldRef<"Vendor", 'String[]'>
     readonly status: FieldRef<"Vendor", 'VendorStatus'>
+    readonly firebaseUid: FieldRef<"Vendor", 'String'>
     readonly createdAt: FieldRef<"Vendor", 'DateTime'>
     readonly updatedAt: FieldRef<"Vendor", 'DateTime'>
     readonly userId: FieldRef<"Vendor", 'String'>
@@ -9273,6 +9286,7 @@ export namespace Prisma {
     logoUrl: 'logoUrl',
     documents: 'documents',
     status: 'status',
+    firebaseUid: 'firebaseUid',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     userId: 'userId'
@@ -9456,6 +9470,7 @@ export namespace Prisma {
     logoUrl?: StringNullableFilter<"Vendor"> | string | null
     documents?: StringNullableListFilter<"Vendor">
     status?: EnumVendorStatusFilter<"Vendor"> | $Enums.VendorStatus
+    firebaseUid?: StringNullableFilter<"Vendor"> | string | null
     createdAt?: DateTimeFilter<"Vendor"> | Date | string
     updatedAt?: DateTimeFilter<"Vendor"> | Date | string
     userId?: StringFilter<"Vendor"> | string
@@ -9477,6 +9492,7 @@ export namespace Prisma {
     logoUrl?: SortOrderInput | SortOrder
     documents?: SortOrder
     status?: SortOrder
+    firebaseUid?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     userId?: SortOrder
@@ -9492,6 +9508,7 @@ export namespace Prisma {
     id?: string
     email?: string
     storeSlug?: string
+    firebaseUid?: string
     AND?: VendorWhereInput | VendorWhereInput[]
     OR?: VendorWhereInput[]
     NOT?: VendorWhereInput | VendorWhereInput[]
@@ -9510,7 +9527,7 @@ export namespace Prisma {
     payouts?: PayoutListRelationFilter
     invoices?: InvoiceListRelationFilter
     ratings?: RatingListRelationFilter
-  }, "id" | "email" | "storeSlug">
+  }, "id" | "email" | "storeSlug" | "firebaseUid">
 
   export type VendorOrderByWithAggregationInput = {
     id?: SortOrder
@@ -9522,6 +9539,7 @@ export namespace Prisma {
     logoUrl?: SortOrderInput | SortOrder
     documents?: SortOrder
     status?: SortOrder
+    firebaseUid?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     userId?: SortOrder
@@ -9543,6 +9561,7 @@ export namespace Prisma {
     logoUrl?: StringNullableWithAggregatesFilter<"Vendor"> | string | null
     documents?: StringNullableListFilter<"Vendor">
     status?: EnumVendorStatusWithAggregatesFilter<"Vendor"> | $Enums.VendorStatus
+    firebaseUid?: StringNullableWithAggregatesFilter<"Vendor"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Vendor"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Vendor"> | Date | string
     userId?: StringWithAggregatesFilter<"Vendor"> | string
@@ -9866,6 +9885,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutVendorsInput
@@ -9886,6 +9906,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     userId: string
@@ -9906,6 +9927,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutVendorsNestedInput
@@ -9926,6 +9948,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -9946,6 +9969,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     userId: string
@@ -9961,6 +9985,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9975,6 +10000,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -10399,6 +10425,7 @@ export namespace Prisma {
     logoUrl?: SortOrder
     documents?: SortOrder
     status?: SortOrder
+    firebaseUid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     userId?: SortOrder
@@ -10413,6 +10440,7 @@ export namespace Prisma {
     storeSlug?: SortOrder
     logoUrl?: SortOrder
     status?: SortOrder
+    firebaseUid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     userId?: SortOrder
@@ -10427,6 +10455,7 @@ export namespace Prisma {
     storeSlug?: SortOrder
     logoUrl?: SortOrder
     status?: SortOrder
+    firebaseUid?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     userId?: SortOrder
@@ -11562,6 +11591,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     products?: ProductCreateNestedManyWithoutVendorInput
@@ -11581,6 +11611,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     products?: ProductUncheckedCreateNestedManyWithoutVendorInput
@@ -11629,6 +11660,7 @@ export namespace Prisma {
     logoUrl?: StringNullableFilter<"Vendor"> | string | null
     documents?: StringNullableListFilter<"Vendor">
     status?: EnumVendorStatusFilter<"Vendor"> | $Enums.VendorStatus
+    firebaseUid?: StringNullableFilter<"Vendor"> | string | null
     createdAt?: DateTimeFilter<"Vendor"> | Date | string
     updatedAt?: DateTimeFilter<"Vendor"> | Date | string
     userId?: StringFilter<"Vendor"> | string
@@ -11644,6 +11676,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutVendorsInput
@@ -11663,6 +11696,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     userId: string
@@ -11698,6 +11732,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutVendorsNestedInput
@@ -11717,6 +11752,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -11736,6 +11772,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutVendorsInput
@@ -11755,6 +11792,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     userId: string
@@ -11790,6 +11828,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutVendorsNestedInput
@@ -11809,6 +11848,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -11828,6 +11868,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutVendorsInput
@@ -11847,6 +11888,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     userId: string
@@ -11882,6 +11924,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutVendorsNestedInput
@@ -11901,6 +11944,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -11920,6 +11964,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutVendorsInput
@@ -11939,6 +11984,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     userId: string
@@ -11974,6 +12020,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutVendorsNestedInput
@@ -11993,6 +12040,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -12012,6 +12060,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutVendorsInput
@@ -12031,6 +12080,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     userId: string
@@ -12066,6 +12116,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutVendorsNestedInput
@@ -12085,6 +12136,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -12212,6 +12264,7 @@ export namespace Prisma {
     logoUrl?: string | null
     documents?: VendorCreatedocumentsInput | string[]
     status?: $Enums.VendorStatus
+    firebaseUid?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -12226,6 +12279,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     products?: ProductUpdateManyWithoutVendorNestedInput
@@ -12245,6 +12299,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     products?: ProductUncheckedUpdateManyWithoutVendorNestedInput
@@ -12264,6 +12319,7 @@ export namespace Prisma {
     logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     documents?: VendorUpdatedocumentsInput | string[]
     status?: EnumVendorStatusFieldUpdateOperationsInput | $Enums.VendorStatus
+    firebaseUid?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

@@ -87,7 +87,7 @@
     "prisma:migrate:search-service": "prisma migrate dev --schema=apps/backend/search-service/prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/client": "^6.12.0",
+    "@prisma/client": "^6.13.0",
     "@supabase/supabase-js": "^2.53.0",
     "@tanstack/react-query": "^5.84.1",
     "axios": "^1.11.0",
@@ -140,10 +140,10 @@
     "@typescript-eslint/parser": "^8.38.0",
     "eslint": "^9.32.0",
     "jest": "^30.0.5",
-    "nx": "^21.3.9",
+    "nx": "^21.3.11",
     "prisma": "^6.12.0",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.8.3"
   }
 }

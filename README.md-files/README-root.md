@@ -271,3 +271,19 @@ npm install jsonwebtoken
 npm install --save-dev @types/jsonwebtoken
 
 npm run generate:jwt -->
+
+
+for gitlab-cli
+
+sudo apt install gh
+
+
+
+To update a few secrets only, you can manually run:
+
+gh secret set SECRET_NAME --repo your-org/your-repo -b "secret_value"
+To automate in CI pipelines, add gh setup and run this script in your 
+
+
+Docker compose command 
+docker compose -f infra/docker/docker-compose.infrastructure.yml -f infra/docker/docker-compose.microservices.yml up -d --build
