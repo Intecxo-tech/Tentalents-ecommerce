@@ -9,7 +9,7 @@ import {
   getRedirectResult,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { app } from '../../firebase/firebase.config'; // Adjust path if needed
+import { app } from '../../firebase-files/firebase.config'; // Adjust path if needed
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();

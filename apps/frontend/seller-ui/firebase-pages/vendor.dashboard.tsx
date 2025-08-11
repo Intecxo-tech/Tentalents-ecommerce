@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { getAuth } from 'firebase/auth';
 import { app } from '../../firebase/firebase.config';
-import { withAuth } from '../components/withAuth';
+
 
 const auth = getAuth(app);
 
