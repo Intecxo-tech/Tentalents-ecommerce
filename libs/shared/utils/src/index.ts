@@ -8,6 +8,7 @@ export * from './lib/hash';
 export * from './lib/validator';
 export * from './lib/response';
 export * from './lib/invoice-generator';
+export * from './lib/utils/firebase-admin';
 // libs/shared/utils/src/index.ts
 import { Response } from 'express';
 

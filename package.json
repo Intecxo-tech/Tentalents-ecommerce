@@ -95,6 +95,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
+    "firebase": "^12.1.0",
     "ioredis": "^5.7.0",
     "jotai": "^2.12.5",
     "jsonwebtoken": "^9.0.2",
