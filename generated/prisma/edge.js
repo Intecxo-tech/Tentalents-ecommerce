@@ -567,7 +567,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\Karishma khatri\\Desktop\\Tentalents-ecommerce\\generated\\prisma",
+      "value": "/mnt/c/Users/Dell/Desktop/Ecommerce-Project/Tentalents-ecommerce/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -576,12 +576,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "debian-openssl-3.0.x",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\Karishma khatri\\Desktop\\Tentalents-ecommerce\\prisma\\schema.prisma",
+    "sourceFilePath": "/mnt/c/Users/Dell/Desktop/Ecommerce-Project/Tentalents-ecommerce/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -595,6 +595,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": true,
   "inlineDatasources": {
     "db": {
       "url": {

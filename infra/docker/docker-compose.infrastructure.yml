@@ -1,0 +1,172 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - ../../.env
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+
+  redis-sentinel-0:
+    image: redis:7
+    container_name: redis-sentinel-0
+    restart: unless-stopped
+    command: redis-server /etc/redis/sentinel.conf --sentinel
+    volumes:
+      - ../../libs/shared/redis/src/lib/sentinel-0.conf:/etc/redis/sentinel.conf:ro
+    depends_on:
+      - redis
+    ports:
+      - "26379:26379"
+    networks:
+      - backend
+
+  kafka:
+    image: bitnami/kafka:3.7.0
+    container_name: kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+    networks:
+      - backend
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - backend
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server --console-address ":9001" /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - backend
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      SWAGGER_JSON_URL: ${SWAGGER_JSON_URL}
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+  redis-data:
+  minio-data:
+
+networks:
+  backend:
+    driver: bridge
+
+
+# ─── Infrastructure Commands ────────────────────────────────────────────────
+# 📌 All commands assume you run them from the repo root
+
+# 🚀 Start all infrastructure services
+# docker compose -f infra/docker/docker-compose.infrastructure.yml up -d
+
+# 🔄 Restart all services
+# docker compose -f infra/docker/docker-compose.infrastructure.yml restart
+
+# 🛑 Stop & remove all services
+# docker compose -f infra/docker/docker-compose.infrastructure.yml down
+
+# 🧼 Stop & remove services + volumes
+# docker compose -f infra/docker/docker-compose.infrastructure.yml down -v
+
+# 🧱 Rebuild images & start
+# docker compose -f infra/docker/docker-compose.infrastructure.yml up -d --build
+
+# 🔍 View live logs
+# docker compose -f infra/docker/docker-compose.infrastructure.yml logs -f
+
+# 🐳 Status of running containers
+# docker compose -f infra/docker/docker-compose.infrastructure.yml ps
+
+# 📥 Pull latest images
+# docker compose -f infra/docker/docker-compose.infrastructure.yml pull
+
+# ─── Run Specific Services ──────────────────────────────────────────────────
+# 🚀 Only Redis
+# docker compose -f infra/docker/docker-compose.infrastructure.yml up -d redis
+
+# 🚀 Only Redis + Sentinel
+# docker compose -f infra/docker/docker-compose.infrastructure.yml up -d redis redis-sentinel-0
+
+# 🚀 Only Postgres
+# docker compose -f infra/docker/docker-compose.infrastructure.yml up -d postgres
+
+# 🚀 Only Kafka + Kafka UI
+# docker compose -f infra/docker/docker-compose.infrastructure.yml up -d kafka kafka-ui
+
+# 🚀 Only MinIO
+# docker compose -f infra/docker/docker-compose.infrastructure.yml up -d minio
+
+# 🚀 Only Swagger UI
+# docker compose -f infra/docker/docker-compose.infrastructure.yml up -d swagger-ui
+
+

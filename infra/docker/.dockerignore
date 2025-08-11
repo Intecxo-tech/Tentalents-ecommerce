@@ -1,0 +1,51 @@
+# To keep Docker images clean and minimal.
+
+# Ignore dependencies – they will be installed inside the container
+node_modules
+
+# Ignore build output – we'll manually copy only needed dist/
+dist
+tmp
+
+# Ignore Git and local development settings
+.git
+.gitignore
+.vscode/
+.idea/
+
+# Ignore environment files – never include secrets in images
+.env
+.env.local
+
+# Ignore logs and coverage files
+*.log
+coverage/
+test/
+__tests__/
+
+# Ignore source TypeScript – only compiled output is needed
+*.ts
+*.tsx
+*.test.*
+
+# Ignore docs and markdown
+*.md
+
+# Ignore monorepo-specific config files not needed at runtime
+nx.json
+workspace.json
+project.json
+tsconfig.json
+tsconfig.base.json
+jest.config.js
+babel.config.js
+.eslintrc.js
+.prettierrc
+.prettierignore
+
+# Ignore Docker Compose – it's for local orchestration
+docker-compose.yml
+
+# Ignore all source files – only copy dist/
+apps/**/src
+libs/**/src

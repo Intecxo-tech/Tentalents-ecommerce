@@ -1,73 +1,142 @@
-name: Backend CI
+stages:
+  - lint-test
+  - build
+  - scan
+  - deploy
+  - rollback
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+variables:
+  GHCR_REGISTRY: ghcr.io
+  GHCR_OWNER: your-github-username   # CHANGE THIS
+  GHCR_REPO: your-repo-name           # CHANGE THIS
+  KUBE_NAMESPACE: backend
+  HELM_RELEASE_NAME: backend-app
+  HELM_CHART_PATH: ./charts/backend
+  KUBECONFIG: $CI_PROJECT_DIR/.kube/config
+  TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.cache/trivy"
+  NX_CACHE_FOLDER: "$CI_PROJECT_DIR/.nx-cache"
 
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+default:
+  image: docker:20.10.16
+  services:
+    - docker:dind
 
-    env:
-      # Load secrets into environment variables
-      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-      KAFKA_BROKER: ${{ secrets.KAFKA_BROKER }}
-      REDIS_URL: ${{ secrets.REDIS_URL }}
-      MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
-      MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
-      MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
+  before_script:
+    - apk add --no-cache bash curl git openssh-client helm kubectl jq
 
-    services:
-      postgres:
-        image: postgres:15
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+lint_test:
+  stage: lint-test
+  image: node:18
+  script:
+    - npm ci
+    - npx nx lint
+    - npx nx test --code-coverage --ci
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-npm"
+    paths:
+      - node_modules/
+      - .nx-cache/
 
-      redis:
-        image: redis:7
-        ports: ["6379:6379"]
+build_images:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:dind
+  script:
+    # Login to GHCR
+    - echo "$GHCR_PAT" | docker login $GHCR_REGISTRY -u $GHCR_OWNER --password-stdin
 
-      kafka:
-        image: bitnami/kafka:latest
-        ports: ["9092:9092"]
-        env:
-          KAFKA_CFG_NODE_ID: 1
-          KAFKA_CFG_PROCESS_ROLES: broker,controller
-          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-          KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-          KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-          KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-          KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+    # Build and push images per microservice
+    - |
+      for service in user-service product-service order-service rating-service email-service payment-service search-service cart-service admin-service invoice-service analytics-service vendor-service; do
+        IMAGE_TAG=$GHCR_REGISTRY/$GHCR_OWNER/$GHCR_REPO/$service:$CI_COMMIT_SHA
+        echo "Building and pushing $service image: $IMAGE_TAG"
+        docker build -t $IMAGE_TAG ./apps/$service
+        docker push $IMAGE_TAG
+      done
+  only:
+    - main
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-docker"
+    paths:
+      - /var/lib/docker
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+security_scan:
+  stage: scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  script:
+    - mkdir -p $TRIVY_CACHE_DIR
+    - |
+      for service in user-service product-service order-service rating-service email-service payment-service search-service cart-service admin-service invoice-service analytics-service vendor-service; do
+        IMAGE=$GHCR_REGISTRY/$GHCR_OWNER/$GHCR_REPO/$service:$CI_COMMIT_SHA
+        echo "Scanning image $IMAGE"
+        trivy image --cache-dir $TRIVY_CACHE_DIR --exit-code 1 --severity HIGH,CRITICAL $IMAGE
+      done
+  dependencies:
+    - build_images
+  only:
+    - main
+  allow_failure: false
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+deploy:
+  stage: deploy
+  image:
+    name: lachlanevenson/k8s-helm:latest
+    entrypoint: [""]
+  script:
+    - mkdir -p ~/.kube
+    - echo "$KUBE_CONFIG_DATA" | base64 -d > $KUBECONFIG
 
-      - name: Install dependencies
-        run: npm install
+    # Ensure namespace exists
+    - kubectl get ns $KUBE_NAMESPACE || kubectl create ns $KUBE_NAMESPACE
 
-      - name: Build all apps
-        run: npx nx run-many --target=build --all
+    # Deploy helm chart with correct image tags per service
+    - |
+      # Create helm --set image.tag values for all microservices
+      SET_IMAGE_TAGS=""
+      for service in user-service product-service order-service rating-service email-service payment-service search-service cart-service admin-service invoice-service analytics-service vendor-service; do
+        SET_IMAGE_TAGS="$SET_IMAGE_TAGS --set images.$service.tag=$CI_COMMIT_SHA"
+      done
 
-      - name: Run unit tests
-        run: npx nx run-many --target=test --all
+      helm upgrade --install $HELM_RELEASE_NAME $HELM_CHART_PATH \
+        --namespace $KUBE_NAMESPACE \
+        $SET_IMAGE_TAGS \
+        --atomic \
+        --wait
+
+  only:
+    - main
+  environment:
+    name: staging
+    url: http://your-staging-url
+
+rollback:
+  stage: rollback
+  image:
+    name: lachlanevenson/k8s-helm:latest
+    entrypoint: [""]
+  script:
+    - mkdir -p ~/.kube
+    - echo "$KUBE_CONFIG_DATA" | base64 -d > $KUBECONFIG
+    - echo "Rolling back Helm release $HELM_RELEASE_NAME"
+    - helm rollback $HELM_RELEASE_NAME -n $KUBE_NAMESPACE 1
+  when: manual
+  only:
+    - main
+
+
+# GitLab CI/CD Pipeline Overview
+# This GitLab CI/CD pipeline automates the full lifecycle of your backend microservices project:
+
+# Linting and Testing: Uses Nx and Jest to ensure code quality and correctness before building.
+
+# Docker Image Build & Push: Builds Docker images for each microservice and pushes them securely to GitHub Container Registry (GHCR).
+
+# Security Scanning: Runs Trivy vulnerability scans on the built images to ensure container security.
+
+# Helm-based Kubernetes Deployment: Deploys all microservices to Kubernetes (local Kind or remote cluster) using Helm charts, with dynamic image tagging.
+
+# Rollback Capability: Supports manual rollback via Helm to revert to a previous stable release if deployment issues arise.
+

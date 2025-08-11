@@ -1,0 +1,168 @@
+version: '3.9'
+
+services:
+  user-service:
+    build:
+      context: ../../apps/backend/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "${USER_SERVICE_PORT:-3000}:3000"
+    networks:
+      - microservices
+
+  product-service:
+    build:
+      context: ../../apps/backend/product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "${PRODUCT_SERVICE_PORT:-3001}:3001"
+    networks:
+      - microservices
+
+  order-service:
+    build:
+      context: ../../apps/backend/order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "${ORDER_SERVICE_PORT:-3002}:3002"
+    networks:
+      - microservices
+
+  rating-service:
+    build:
+      context: ../../apps/backend/rating-service
+      dockerfile: Dockerfile
+    container_name: rating-service
+    ports:
+      - "${RATING_SERVICE_PORT:-3003}:3003"
+    networks:
+      - microservices
+
+  email-service:
+    build:
+      context: ../../apps/backend/email-service
+      dockerfile: Dockerfile
+    container_name: email-service
+    ports:
+      - "${EMAIL_SERVICE_PORT:-3004}:3004"
+    networks:
+      - microservices
+
+  payment-service:
+    build:
+      context: ../../apps/backend/payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "${PAYMENT_SERVICE_PORT:-3005}:3005"
+    networks:
+      - microservices
+
+  search-service:
+    build:
+      context: ../../apps/backend/search-service
+      dockerfile: Dockerfile
+    container_name: search-service
+    ports:
+      - "${SEARCH_SERVICE_PORT:-3006}:3006"
+    networks:
+      - microservices
+
+  cart-service:
+    build:
+      context: ../../apps/backend/cart-service
+      dockerfile: Dockerfile
+    container_name: cart-service
+    ports:
+      - "${CART_SERVICE_PORT:-3007}:3007"
+    networks:
+      - microservices
+
+  admin-service:
+    build:
+      context: ../../apps/backend/admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    ports:
+      - "${ADMIN_SERVICE_PORT:-3008}:3008"
+    networks:
+      - microservices
+
+  invoice-service:
+    build:
+      context: ../../apps/backend/invoice-service
+      dockerfile: Dockerfile
+    container_name: invoice-service
+    ports:
+      - "${INVOICE_SERVICE_PORT:-3009}:3009"
+    networks:
+      - microservices
+
+  analytics-service:
+    build:
+      context: ../../apps/backend/analytics-service
+      dockerfile: Dockerfile
+    container_name: analytics-service
+    ports:
+      - "${ANALYTICS_SERVICE_PORT:-3010}:3010"
+    networks:
+      - microservices
+
+  vendor-service:
+    build:
+      context: ../../apps/backend/vendor-service
+      dockerfile: Dockerfile
+    container_name: vendor-service
+    ports:
+      - "${VENDOR_SERVICE_PORT:-3011}:3011"
+    networks:
+      - microservices
+
+networks:
+  microservices:
+    driver: bridge
+
+# # Start all microservices (build + run)
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d
+
+# # Stop and remove all containers
+# docker compose -f infra/docker/docker-compose.microservices.yml down
+
+# # Start only user-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d user-service
+
+# # Start only product-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d product-service
+
+# # Start only order-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d order-service
+
+# # Start only rating-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d rating-service
+
+# # Start only email-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d email-service
+
+# # Start only payment-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d payment-service
+
+# # Start only search-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d search-service
+
+# # Start only cart-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d cart-service
+
+# # Start only admin-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d admin-service
+
+# # Start only invoice-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d invoice-service
+
+# # Start only analytics-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d analytics-service
+
+# # Start only vendor-service
+# docker compose -f infra/docker/docker-compose.microservices.yml up --build -d vendor-service

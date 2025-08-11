@@ -1,0 +1,6 @@
+apiVersion: v2
+name: vendor-service
+description: Helm chart for vendor-service
+type: application
+version: 0.1.0
+appVersion: '1.0.0'
