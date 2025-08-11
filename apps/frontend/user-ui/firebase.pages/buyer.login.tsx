@@ -9,12 +9,12 @@ import {
   getRedirectResult,
 } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { app } from '../../firebase-files/firebase.config'; // Adjust path if needed
+import { app } from '../../firebase/firebase.config';
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-export default function VendorLogin() {
+export default function UserLogin() {
   const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function VendorLogin() {
           });
 
           if (!res.ok) throw new Error('Token validation failed');
-          router.push('/vendor/dashboard');
+          router.push('/user/dashboard');
         }
       })
       .catch(() => setError('Login failed. Please try again.'));
@@ -56,7 +56,7 @@ export default function VendorLogin() {
       });
 
       if (!res.ok) throw new Error('Authentication failed');
-      router.push('/vendor/dashboard');
+      router.push('/user/dashboard');
     } catch {
       setError('Login failed. Please try again.');
     } finally {
@@ -71,7 +71,7 @@ export default function VendorLogin() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="p-6 bg-white rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-4">Vendor Login</h2>
+        <h2 className="text-2xl font-bold text-center mb-4">User Login</h2>
 
         <button
           onClick={handleGooglePopupLogin}
