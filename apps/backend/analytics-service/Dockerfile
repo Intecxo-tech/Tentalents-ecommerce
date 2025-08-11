@@ -1,35 +1,28 @@
 # syntax=docker/dockerfile:1
+# IMPORTANT: Build from repo root:
+# docker build -t analytics-service -f apps/backend/analytics-service/Dockerfile .
 
 ARG NODE_VERSION=18.20.8
-
-FROM node:${NODE_VERSION}-alpine as base
+FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /usr/src/app
 
-FROM base as deps
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev
+FROM base AS deps
+COPY package.json package-lock.json ./
+RUN npm ci
 
-FROM deps as build
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=cache,target=/root/.npm \
-    npm ci
-
+FROM deps AS build
 COPY . .
+RUN npx nx build analytics-service
 
-RUN npx nx build backend/analytics-service
-
-FROM base as final
+FROM base AS final
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
-USER node
 
-COPY package.json .
+# Copy root-level files
+COPY package.json ./
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist/apps/backend/analytics-service ./dist
 
+USER node
 EXPOSE 3010
-
 CMD ["node", "dist/main.js"]

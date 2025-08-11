@@ -1,4 +1,4 @@
-
+version: '3.9'
 
 services:
   user-service:
@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: user-service
     ports:
-      - "${USER_SERVICE_PORT:-3012}:3012"
+      - "${USER_SERVICE_PORT:-3000}:3000"
     networks:
       - microservices
 
