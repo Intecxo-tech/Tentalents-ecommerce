@@ -16,7 +16,7 @@ import { logger } from '@shared/logger';
 // 🔧 Load env variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3006;
 const prisma = new PrismaClient();
 
 // 🧠 Kafka Config

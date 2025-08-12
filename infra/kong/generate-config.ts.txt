@@ -1,0 +1,173 @@
+const fs = require("fs");
+const path = require("path");
+const YAML = require("yaml");
+
+const services = [
+  {
+    name: "user-service",
+    url: "http://user-service:3012",
+    routeName: "user-routes",
+    path: "/user",
+    plugins: [
+      {
+        name: "cors",
+        config: {
+          origins: ["http://localhost:3000"],
+          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          headers: ["Authorization", "Content-Type"],
+          credentials: true,
+        },
+      },
+    ],
+  },
+  {
+    name: "product-service",
+    url: "http://product-service:3001",
+    routeName: "product-routes",
+    path: "/product",
+    plugins: [
+      { name: "rate-limiting", config: { minute: 60 } },
+      { name: "cors", config: { origins: ["http://localhost:3000"] } },
+    ],
+  },
+  {
+    name: "order-service",
+    url: "http://order-service:3002",
+    routeName: "order-routes",
+    path: "/order",
+    plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
+  },
+  {
+    name: "rating-service",
+    url: "http://rating-service:3003",
+    routeName: "rating-routes",
+    path: "/rating",
+    plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
+  },
+  {
+    name: "email-service",
+    url: "http://email-service:3004",
+    routeName: "email-routes",
+    path: "/email",
+    plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
+  },
+  {
+    name: "payment-service",
+    url: "http://payment-service:3005",
+    routeName: "payment-routes",
+    path: "/payment",
+    plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
+  },
+  {
+    name: "search-service",
+    url: "http://search-service:3006",
+    routeName: "search-routes",
+    path: "/search",
+    plugins: [
+      { name: "rate-limiting", config: { minute: 100 } },
+      { name: "cors", config: { origins: ["http://localhost:3000"] } },
+    ],
+  },
+  {
+    name: "cart-service",
+    url: "http://cart-service:3007",
+    routeName: "cart-routes",
+    path: "/cart",
+    plugins: [
+      { name: "rate-limiting", config: { minute: 30 } },
+      { name: "cors", config: { origins: ["http://localhost:3000"] } },
+    ],
+  },
+  {
+    name: "admin-service",
+    url: "http://admin-service:3008",
+    routeName: "admin-routes",
+    path: "/admin",
+    plugins: [
+      { name: "jwt" },
+      { name: "cors", config: { origins: ["http://localhost:3000"] } },
+    ],
+  },
+  {
+    name: "invoice-service",
+    url: "http://invoice-service:3009",
+    routeName: "invoice-routes",
+    path: "/invoice",
+    plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
+  },
+  {
+    name: "analytics-service",
+    url: "http://analytics-service:3010",
+    routeName: "analytics-routes",
+    path: "/analytics",
+    plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
+  },
+  {
+    name: "vendor-service",
+    url: "http://vendor-service:3011",
+    routeName: "vendor-routes",
+    path: "/vendor",
+    plugins: [
+      { name: "jwt" },
+      { name: "cors", config: { origins: ["http://localhost:3000"] } },
+    ],
+  },
+];
+
+const consumers = [
+  {
+    username: "admin-app",
+    custom_id: "admin-001",
+    jwt_secrets: [
+      {
+        key: "admin-key",
+        secret: "rXJpoINehOBHmHX1iuEgmZJ1eRn37/GmCiuIZIvbA88=",
+      },
+    ],
+  },
+  {
+    username: "vendor-app",
+    custom_id: "vendor-001",
+    jwt_secrets: [
+      {
+        key: "vendor-key",
+        secret: "bl2vk2gb3yZh36z08XKARBLqRt9V/GPhRq3rC4KLoIA=",
+      },
+    ],
+  },
+];
+
+function generateKongConfig() {
+  return {
+    _format_version: "3.0",
+    _transform: true,
+    services: services.map((svc) => ({
+      name: svc.name,
+      url: svc.url,
+      routes: [
+        {
+          name: svc.routeName,
+          paths: [svc.path],
+          plugins: svc.plugins || [],
+        },
+      ],
+    })),
+    consumers,
+  };
+}
+
+function writeYaml() {
+  const kongConfig = generateKongConfig();
+  const yamlStr = YAML.stringify(kongConfig, { indent: 2 });
+  const filePath = path.resolve(__dirname, "kong.yml");
+  fs.writeFileSync(filePath, yamlStr, "utf-8");
+  console.log("Kong config generated at:", filePath);
+}
+
+writeYaml();
+
+
+
+
+// ts-node infra/kong/generate-config.ts
+

@@ -1,9 +1,0 @@
-FROM kong:3.6
-
-# Copy your Kong config into the expected path inside the container
-COPY kong.yaml /kong/kong.yaml
-COPY kong.conf /etc/kong/kong.conf
-
-EXPOSE 8000 8443 8001 8444
-
-CMD ["kong", "start", "-c", "/etc/kong/kong.conf"]

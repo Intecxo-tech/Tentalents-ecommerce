@@ -16,7 +16,7 @@ import { KAFKA_TOPICS } from '@shared/constants';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const PORT = process.env.PORT || 3007;
+const PORT = process.env.PORT || 3003;
 const prisma = new PrismaClient();
 
 const kafkaConfig: KafkaConsumerConfig = {

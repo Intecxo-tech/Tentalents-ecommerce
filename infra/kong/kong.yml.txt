@@ -1,167 +1,161 @@
 _format_version: "3.0"
 _transform: true
+
 services:
   - name: user-service
     url: http://user-service:3012
     routes:
       - name: user-routes
-        paths:
-          - /user
+        paths: ["/user"]
         plugins:
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
-              methods:
-                - GET
-                - POST
-                - PUT
-                - DELETE
-                - OPTIONS
-              headers:
-                - Authorization
-                - Content-Type
+              origins: ["http://localhost:3000"]
+              methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+              headers: ["Authorization", "Content-Type"]
               credentials: true
+
   - name: product-service
     url: http://product-service:3001
     routes:
       - name: product-routes
-        paths:
-          - /product
+        paths: ["/product"]
         plugins:
           - name: rate-limiting
-            config:
-              minute: 60
+            config: { minute: 60 }
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: order-service
     url: http://order-service:3002
     routes:
       - name: order-routes
-        paths:
-          - /order
+        paths: ["/order"]
         plugins:
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: rating-service
     url: http://rating-service:3003
     routes:
       - name: rating-routes
-        paths:
-          - /rating
+        paths: ["/rating"]
         plugins:
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: email-service
     url: http://email-service:3004
     routes:
       - name: email-routes
-        paths:
-          - /email
+        paths: ["/email"]
         plugins:
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: payment-service
     url: http://payment-service:3005
     routes:
       - name: payment-routes
-        paths:
-          - /payment
+        paths: ["/payment"]
         plugins:
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: search-service
     url: http://search-service:3006
     routes:
       - name: search-routes
-        paths:
-          - /search
+        paths: ["/search"]
         plugins:
           - name: rate-limiting
-            config:
-              minute: 100
+            config: { minute: 100 }
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: cart-service
     url: http://cart-service:3007
     routes:
       - name: cart-routes
-        paths:
-          - /cart
+        paths: ["/cart"]
         plugins:
           - name: rate-limiting
-            config:
-              minute: 30
+            config: { minute: 30 }
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: admin-service
     url: http://admin-service:3008
     routes:
       - name: admin-routes
-        paths:
-          - /admin
+        paths: ["/admin"]
         plugins:
           - name: jwt
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: invoice-service
     url: http://invoice-service:3009
     routes:
       - name: invoice-routes
-        paths:
-          - /invoice
+        paths: ["/invoice"]
         plugins:
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: analytics-service
     url: http://analytics-service:3010
     routes:
       - name: analytics-routes
-        paths:
-          - /analytics
+        paths: ["/analytics"]
         plugins:
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
   - name: vendor-service
     url: http://vendor-service:3011
     routes:
       - name: vendor-routes
-        paths:
-          - /vendor
+        paths: ["/vendor"]
         plugins:
           - name: jwt
           - name: cors
             config:
-              origins:
-                - http://localhost:3000
+              origins: ["http://localhost:3000"]
+
 consumers:
   - username: admin-app
     custom_id: admin-001
     jwt_secrets:
       - key: admin-key
         secret: rXJpoINehOBHmHX1iuEgmZJ1eRn37/GmCiuIZIvbA88=
+
   - username: vendor-app
     custom_id: vendor-001
     jwt_secrets:
       - key: vendor-key
         secret: bl2vk2gb3yZh36z08XKARBLqRt9V/GPhRq3rC4KLoIA=
+
+
+
+# Generated strong secrets once, for example:
+# # generate a 32-byte base64 secret in Linux/macOS(for vendor & admin)
+# head -c 32 /dev/urandom | base64
+
+
+
+# Summary
+# Step	Command
+# Generate Kong config YAML	npm run generate:kong-config
+# Start all services + Kong	docker-compose -f infra/kong/docker-compose.yml up -d
+# Restart Kong after changes	docker-compose -f infra/kong/docker-compose.yml restart kong

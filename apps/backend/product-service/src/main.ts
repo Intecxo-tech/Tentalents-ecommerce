@@ -15,7 +15,7 @@ import { createTopicsIfNotExists } from '@shared/middlewares/kafka/src/lib/kafka
 // 🛠️ Load .env config
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3001;
 const prisma = new PrismaClient();
 
 // 🎯 Kafka Consumer Configuration

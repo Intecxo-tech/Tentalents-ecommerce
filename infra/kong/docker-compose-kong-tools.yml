@@ -1,0 +1,110 @@
+# version: '3.8'
+
+services:
+  kong-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kong
+    networks:
+      - kong-net
+
+  kong:
+    image: kong/kong-gateway:3.5.0.0
+    depends_on:
+      - kong-db
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_PASSWORD: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    ports:
+      - 8000:8000 # Proxy
+      - 8001:8001 # Admin API
+    networks:
+      - kong-net
+
+  konga: # optional UI
+    image: pantsel/konga
+    ports:
+      - 1337:1337
+    environment:
+      DB_ADAPTER: postgres
+      DB_HOST: kong-db
+      DB_PORT: 5432
+      DB_USER: kong
+      DB_PASSWORD: kong
+      DB_DATABASE: kong
+    networks:
+      - kong-net
+
+networks:
+  kong-net:
+    driver: bridge
+
+
+
+
+
+# linux
+# sudo apt install docker.io
+
+# steps to download and install Docker Desktop on Windows:
+
+# Download Docker Desktop Installer:
+
+# Open your browser and go to the official Docker Desktop download page:
+# https://docs.docker.com/desktop/install/windows-install/
+
+# Or directly download the installer:
+# https://desktop.docker.com/win/stable/Docker%20Desktop%20Installer.exe
+
+# Run the Installer:
+
+# Locate the downloaded file (DockerDesktopInstaller.exe) in your Downloads folder.
+# Double-click to run the installer.
+# Follow the Installation Wizard:
+# Click OK or Next on any prompts.
+# Accept the license agreement.
+# Choose to install required components like WSL 2 (recommended) if prompted.
+# Click Install.
+# Restart Your Computer:
+# After installation, restart your PC if requested.
+# Start Docker Desktop:
+# Launch Docker Desktop from the Start menu.
+# Wait for it to initialize (you’ll see the Docker icon in the system tray).
+# Docker is ready when the whale icon turns solid.
+
+# Verify Installation:
+
+# Open PowerShell or Command Prompt.
+
+# Run:
+# docker --version
+
+
+# # kong Commands 
+
+# # From your project root, start Kong and related services:
+# docker-compose -f infra/kong/docker-compose-kong-tools.yml up -d
+
+# # To see Kong logs:
+# docker-compose -f infra/kong/docker-compose-kong-tools.yml logs -f kong
+
+# # To restart Kong after config changes:
+# docker-compose -f infra/kong/docker-compose-kong-tools.yml restart kong
+
+# # To stop all Kong related containers:
+# docker-compose -f infra/kong/docker-compose-kong-tools.yml down
+
+
+
+
+
+
+

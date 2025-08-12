@@ -1,0 +1,58 @@
+/** 
+ * Kong service configuration for your microservices
+ */
+
+const services = [
+  {
+    name: "user-service",
+    url: "http://user-service:3012",
+    routeName: "user-routes",
+    path: "/user",
+    plugins: [
+      {
+        name: "cors",
+        config: {
+          origins: ["http://localhost:3000"],
+          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+          headers: ["Authorization", "Content-Type"],
+          credentials: true,
+        },
+      },
+    ],
+  },
+  {
+    name: "product-service",
+    url: "http://product-service:3001",
+    routeName: "product-routes",
+    path: "/product",
+    plugins: [
+      { name: "rate-limiting", config: { minute: 60 } },
+      { name: "cors", config: { origins: ["http://localhost:3000"] } },
+    ],
+  },
+  {
+    name: "order-service",
+    url: "http://order-service:3002",
+    routeName: "order-routes",
+    path: "/order",
+    plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
+  },
+  // ... add other services here similarly ...
+  {
+    name: "vendor-service",
+    url: "http://vendor-service:3011",
+    routeName: "vendor-routes",
+    path: "/vendor",
+    plugins: [
+      { name: "jwt" },
+      { name: "cors", config: { origins: ["http://localhost:3000"] } },
+    ],
+  },
+];
+
+module.exports = { services };
+
+
+// Run to generate updated kong.yml automatically:
+
+// npm run generate:kong-config
