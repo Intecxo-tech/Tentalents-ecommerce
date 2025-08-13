@@ -1,35 +1,28 @@
-# Stage 1: Build the app
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1
+# IMPORTANT: Build from repo root:
+# docker build -t email-service -f apps/backend/email-service/Dockerfile .
 
-WORKDIR /app
+ARG NODE_VERSION=18.20.8
+FROM node:${NODE_VERSION}-alpine AS base
+WORKDIR /usr/src/app
 
-# Copy monorepo code
+FROM base AS deps
+COPY package.json package-lock.json ./
+RUN npm ci
+
+FROM deps AS build
 COPY . .
+RUN npx nx build email-service
 
-# Install dependencies and build the email service
-RUN npm install -g nx \
- && npm install \
- && nx build email-service
-
-# Stage 2: Runtime
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy necessary files from builder
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/package-lock.json ./
-COPY --from=builder /app/dist/apps/email-service ./dist
-COPY --from=builder /app/prisma ./prisma
-
-# Install only production dependencies
-RUN npm install --omit=dev
-
-# Set environment
+FROM base AS final
 ENV NODE_ENV=production
+WORKDIR /usr/src/app
 
-# Expose the service's port
+# Copy root-level files
+COPY package.json ./
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/dist/apps/backend/email-service ./dist
+
+USER node
 EXPOSE 3004
-
-# Start the app
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main.js"]

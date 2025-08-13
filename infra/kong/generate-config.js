@@ -5,7 +5,7 @@ const YAML = require("yaml");
 const services = [
   {
     name: "user-service",
-    url: "http://user-service:3012",
+    url: "http://host.docker.internal:3012",
     routeName: "user-routes",
     path: "/user",
     plugins: [
@@ -22,7 +22,7 @@ const services = [
   },
   {
     name: "product-service",
-    url: "http://product-service:3001",
+    url: "http://host.docker.internal:3001",
     routeName: "product-routes",
     path: "/product",
     plugins: [
@@ -32,35 +32,35 @@ const services = [
   },
   {
     name: "order-service",
-    url: "http://order-service:3002",
+    url: "http://host.docker.internal:3002",
     routeName: "order-routes",
     path: "/order",
     plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
   },
   {
     name: "rating-service",
-    url: "http://rating-service:3003",
+    url: "http://host.docker.internal:3003",
     routeName: "rating-routes",
     path: "/rating",
     plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
   },
   {
     name: "email-service",
-    url: "http://email-service:3004",
+    url: "http://host.docker.internal:3004",
     routeName: "email-routes",
     path: "/email",
     plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
   },
   {
     name: "payment-service",
-    url: "http://payment-service:3005",
+    url: "http://host.docker.internal:3005",
     routeName: "payment-routes",
     path: "/payment",
     plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
   },
   {
     name: "search-service",
-    url: "http://search-service:3006",
+    url: "http://host.docker.internal:3006",
     routeName: "search-routes",
     path: "/search",
     plugins: [
@@ -70,7 +70,7 @@ const services = [
   },
   {
     name: "cart-service",
-    url: "http://cart-service:3007",
+    url: "http://host.docker.internal:3007",
     routeName: "cart-routes",
     path: "/cart",
     plugins: [
@@ -80,7 +80,7 @@ const services = [
   },
   {
     name: "admin-service",
-    url: "http://admin-service:3008",
+    url: "http://host.docker.internal:3008",
     routeName: "admin-routes",
     path: "/admin",
     plugins: [
@@ -90,21 +90,21 @@ const services = [
   },
   {
     name: "invoice-service",
-    url: "http://invoice-service:3009",
+    url: "http://host.docker.internal:3009",
     routeName: "invoice-routes",
     path: "/invoice",
     plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
   },
   {
     name: "analytics-service",
-    url: "http://analytics-service:3010",
+    url: "http://host.docker.internal:3010",
     routeName: "analytics-routes",
     path: "/analytics",
     plugins: [{ name: "cors", config: { origins: ["http://localhost:3000"] } }],
   },
   {
     name: "vendor-service",
-    url: "http://vendor-service:3011",
+    url: "http://host.docker.internal:3011",
     routeName: "vendor-routes",
     path: "/vendor",
     plugins: [
@@ -148,6 +148,7 @@ function generateKongConfig() {
         {
           name: svc.routeName,
           paths: [svc.path],
+          strip_path: true, // <-- added
           plugins: svc.plugins || [],
         },
       ],
@@ -166,8 +167,5 @@ function writeYaml() {
 
 writeYaml();
 
-
-
 // Run to generate updated kong.yml automatically:
-
 // npm run generate:kong-config

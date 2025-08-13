@@ -2,11 +2,12 @@ _format_version: "3.0"
 _transform: true
 services:
   - name: user-service
-    url: http://user-service:3012
+    url: http://host.docker.internal:3012
     routes:
       - name: user-routes
         paths:
           - /user
+        strip_path: true
         plugins:
           - name: cors
             config:
@@ -23,11 +24,12 @@ services:
                 - Content-Type
               credentials: true
   - name: product-service
-    url: http://product-service:3001
+    url: http://host.docker.internal:3001
     routes:
       - name: product-routes
         paths:
           - /product
+        strip_path: true
         plugins:
           - name: rate-limiting
             config:
@@ -37,55 +39,60 @@ services:
               origins:
                 - http://localhost:3000
   - name: order-service
-    url: http://order-service:3002
+    url: http://host.docker.internal:3002
     routes:
       - name: order-routes
         paths:
           - /order
+        strip_path: true
         plugins:
           - name: cors
             config:
               origins:
                 - http://localhost:3000
   - name: rating-service
-    url: http://rating-service:3003
+    url: http://host.docker.internal:3003
     routes:
       - name: rating-routes
         paths:
           - /rating
+        strip_path: true
         plugins:
           - name: cors
             config:
               origins:
                 - http://localhost:3000
   - name: email-service
-    url: http://email-service:3004
+    url: http://host.docker.internal:3004
     routes:
       - name: email-routes
         paths:
           - /email
+        strip_path: true
         plugins:
           - name: cors
             config:
               origins:
                 - http://localhost:3000
   - name: payment-service
-    url: http://payment-service:3005
+    url: http://host.docker.internal:3005
     routes:
       - name: payment-routes
         paths:
           - /payment
+        strip_path: true
         plugins:
           - name: cors
             config:
               origins:
                 - http://localhost:3000
   - name: search-service
-    url: http://search-service:3006
+    url: http://host.docker.internal:3006
     routes:
       - name: search-routes
         paths:
           - /search
+        strip_path: true
         plugins:
           - name: rate-limiting
             config:
@@ -95,11 +102,12 @@ services:
               origins:
                 - http://localhost:3000
   - name: cart-service
-    url: http://cart-service:3007
+    url: http://host.docker.internal:3007
     routes:
       - name: cart-routes
         paths:
           - /cart
+        strip_path: true
         plugins:
           - name: rate-limiting
             config:
@@ -109,11 +117,12 @@ services:
               origins:
                 - http://localhost:3000
   - name: admin-service
-    url: http://admin-service:3008
+    url: http://host.docker.internal:3008
     routes:
       - name: admin-routes
         paths:
           - /admin
+        strip_path: true
         plugins:
           - name: jwt
           - name: cors
@@ -121,33 +130,36 @@ services:
               origins:
                 - http://localhost:3000
   - name: invoice-service
-    url: http://invoice-service:3009
+    url: http://host.docker.internal:3009
     routes:
       - name: invoice-routes
         paths:
           - /invoice
+        strip_path: true
         plugins:
           - name: cors
             config:
               origins:
                 - http://localhost:3000
   - name: analytics-service
-    url: http://analytics-service:3010
+    url: http://host.docker.internal:3010
     routes:
       - name: analytics-routes
         paths:
           - /analytics
+        strip_path: true
         plugins:
           - name: cors
             config:
               origins:
                 - http://localhost:3000
   - name: vendor-service
-    url: http://vendor-service:3011
+    url: http://host.docker.internal:3011
     routes:
       - name: vendor-routes
         paths:
           - /vendor
+        strip_path: true
         plugins:
           - name: jwt
           - name: cors
@@ -165,4 +177,3 @@ consumers:
     jwt_secrets:
       - key: vendor-key
         secret: bl2vk2gb3yZh36z08XKARBLqRt9V/GPhRq3rC4KLoIA=
-

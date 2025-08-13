@@ -30,6 +30,18 @@ Our project has many small services (like user-service, product-service, order-s
 
    Run this command to create a configuration file (`kong.yml`) that tells Kong about all the services and routes:
 
+docker rm -f kong
+
+
+docker run -d --name kong \
+  -e "KONG_DATABASE=off" \
+  -e "KONG_DECLARATIVE_CONFIG=/kong/kong.yaml" \
+  -v /infra/kong/kong.yaml:/kong/kong.yaml \
+  -p 8000:8000 -p 8443:8443 \
+  kong:3.4
+
+
+
    ```bash
    npm run generate:kong-config
 Start Kong and all services

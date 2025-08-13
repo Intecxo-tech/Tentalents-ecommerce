@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # IMPORTANT: Build from repo root:
-# docker build -t user-service -f apps/backend/user-service/Dockerfile .
+# docker build -t admin-service -f apps/backend/admin-service/Dockerfile .
 
 ARG NODE_VERSION=18.20.8
 FROM node:${NODE_VERSION}-alpine AS base
@@ -12,7 +12,7 @@ RUN npm ci
 
 FROM deps AS build
 COPY . .
-RUN npx nx build user-service
+RUN npx nx build admin-service
 
 FROM base AS final
 ENV NODE_ENV=production
@@ -21,8 +21,8 @@ WORKDIR /usr/src/app
 # Copy root-level files
 COPY package.json ./
 COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/dist/apps/backend/user-service ./dist
+COPY --from=build /usr/src/app/dist/apps/backend/admin-service ./dist
 
 USER node
-EXPOSE 3012
+EXPOSE 3008
 CMD ["node", "dist/main.js"]

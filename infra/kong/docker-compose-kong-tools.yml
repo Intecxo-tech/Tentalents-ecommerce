@@ -1,4 +1,4 @@
-# version: '3.8'
+version: '3.8'
 
 services:
   kong-db:
@@ -9,6 +9,8 @@ services:
       POSTGRES_PASSWORD: kong
     networks:
       - kong-net
+    volumes:
+      - kong-db-data:/var/lib/postgresql/data
 
   kong:
     image: kong/kong-gateway:3.5.0.0
@@ -25,11 +27,15 @@ services:
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_DATABASE: "off"
     ports:
       - "8000:8000" # HTTP Proxy
-      - "8001:8001" # Admin API
       - "8443:8443" # HTTPS Proxy
+      - "8001:8001" # Admin API
       - "8444:8444" # Admin API over HTTPS
+    volumes:
+      - ./infra/kong/kong.yml:/kong/kong.yml:ro
     networks:
       - kong-net
 
@@ -51,11 +57,9 @@ networks:
   kong-net:
     driver: bridge
 
+volumes:
+  kong-db-data:
 
-# docker-compose -f infra/kong/docker-compose-kong-tools.yml up -d
-# docker compose -f infra/kong/docker-compose-kong-tools.yml down
-# docker compose -f infra/kong/docker-compose-kong-tools.yml up -d
-# docker compose -f infra/kong/docker-compose-kong-tools.yml up -d kong
 
 
 
