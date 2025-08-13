@@ -17,22 +17,26 @@ services:
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
       KONG_PG_PASSWORD: kong
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
     ports:
-      - 8000:8000 # Proxy
-      - 8001:8001 # Admin API
+      - "8000:8000" # HTTP Proxy
+      - "8001:8001" # Admin API
+      - "8443:8443" # HTTPS Proxy
+      - "8444:8444" # Admin API over HTTPS
     networks:
       - kong-net
 
   konga: # optional UI
     image: pantsel/konga
     ports:
-      - 1337:1337
+      - "1337:1337"
     environment:
       DB_ADAPTER: postgres
       DB_HOST: kong-db
@@ -47,6 +51,11 @@ networks:
   kong-net:
     driver: bridge
 
+
+# docker-compose -f infra/kong/docker-compose-kong-tools.yml up -d
+# docker compose -f infra/kong/docker-compose-kong-tools.yml down
+# docker compose -f infra/kong/docker-compose-kong-tools.yml up -d
+# docker compose -f infra/kong/docker-compose-kong-tools.yml up -d kong
 
 
 

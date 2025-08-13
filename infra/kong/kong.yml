@@ -165,3 +165,4 @@ consumers:
     jwt_secrets:
       - key: vendor-key
         secret: bl2vk2gb3yZh36z08XKARBLqRt9V/GPhRq3rC4KLoIA=
+

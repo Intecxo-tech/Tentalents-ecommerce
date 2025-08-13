@@ -43,6 +43,8 @@ If you change service settings or add new routes, regenerate the config and rest
 
 npm run generate:kong-config
 docker-compose -f infra/kong/docker-compose.yml restart kong
+
+
 Where to find important files
 infra/kong/kong-config.js — List of services and their settings.
 
@@ -63,7 +65,8 @@ curl commands  with Kong API Gateway for our microservices:
 # 1. Call a service route without authentication (e.g., product service)
 curl -i http://localhost:8000/product
 
-# 2. Call a service route with JWT authentication (e.g., admin service)
+# 2. C
+all a service route with JWT authentication (e.g., admin service)
 curl -i http://localhost:8000/admin \
   -H "Authorization: Bearer <YOUR_JWT_TOKEN>"
 
