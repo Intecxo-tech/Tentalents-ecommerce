@@ -14,7 +14,7 @@ export default function OrderSuccess() {
   useEffect(() => {
     if (!session_id) return;
 
-    fetch(`http://localhost:3005/api/payments/stripe-session/${session_id}`)
+    fetch(`https://payment-service-3yph.onrender.com/api/payments/stripe-session/${session_id}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch payment info');
         return res.json();
