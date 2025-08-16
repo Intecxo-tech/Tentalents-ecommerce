@@ -83,7 +83,7 @@ const [dateFilter, setDateFilter] = useState('all');
       }
 
       try {
-        const res = await fetch(`http://localhost:3002/api/orders/`, {
+        const res = await fetch(`https://order-service-vck8.onrender.com/api/orders/`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
