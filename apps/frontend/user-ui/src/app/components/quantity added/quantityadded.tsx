@@ -36,7 +36,7 @@ type CartItem = {
 
 const QuantityAdded = ({ listCount = 2 }: ProductsProps) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const CART_API_BASE_URL = process.env.NEXT_PUBLIC_CART_API_LINK ?? 'http://localhost:3020';
+  const CART_API_BASE_URL = process.env.NEXT_PUBLIC_CART_API_LINK ?? 'https://cart-service-z6ft.onrender.com/';
 
   useEffect(() => {
     fetchCartItems();
