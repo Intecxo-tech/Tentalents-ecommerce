@@ -146,4 +146,3 @@ const QuantityAdded = ({ listCount = 2 }: ProductsProps) => {
 };
 
 export default QuantityAdded;
-
