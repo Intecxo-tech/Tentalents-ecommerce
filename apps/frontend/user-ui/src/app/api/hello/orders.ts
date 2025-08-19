@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Send the POST request to the external order service
-      const apiResponse = await fetch(`https://order-service-ouw8.onrender.com/api/orders`, {
+      const apiResponse = await fetch(`https://order-service-faxh.onrender.com/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,4 +38,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 }
+
 
