@@ -250,4 +250,3 @@ const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddr
 };
 
 export default AddAddress;
-
