@@ -51,5 +51,3 @@ export const sendPaymentStatus = async (orderId: string, paymentStatus: string) 
     throw new Error('Failed to send payment status');
   }
 };
-
-
