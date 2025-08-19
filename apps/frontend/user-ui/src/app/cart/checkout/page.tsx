@@ -142,7 +142,7 @@ const handlePlaceOrder = async (selectedPaymentMode: string, selectedAddress: st
   };
 
   try {
-    const res = await fetch(`https://order-service-faxh.onrender.com/api/orders`, {
+    const res = await fetch(`${NEXT_PUBLIC_ORDER_API_LINK}/api/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -257,8 +257,3 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
 };
 
 export default Page;
-
-
-
-
-
