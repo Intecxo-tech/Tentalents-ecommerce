@@ -30,8 +30,8 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
 
     setLoading(true);
     try {
-      const response = await getAllAddresses(); 
-      setAddresses(response?.data || []);
+      const addresses = await getAllAddresses(); 
+setAddresses(addresses || []);
     } catch (error) {
       console.error('Error fetching addresses:', error);
       toast.error('Failed to load addresses');
@@ -161,3 +161,4 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
 };
 
 export default Address;
+

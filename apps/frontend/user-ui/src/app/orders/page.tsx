@@ -83,7 +83,7 @@ const [dateFilter, setDateFilter] = useState('all');
       }
 
       try {
-        const res = await fetch(`https://order-service-vck8.onrender.com/api/orders/`, {
+        const res = await fetch(`https://order-service-faxh.onrender.com/api/orders/`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -113,7 +113,7 @@ const [dateFilter, setDateFilter] = useState('all');
   useEffect(() => {
     async function fetchPopularProducts() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_PRODUCT_FETCH_LINK}/products`);
+        const res = await fetch(`https://product-service-23pc.onrender.com/products`);
         if (!res.ok) throw new Error('Failed to fetch products');
 
         const json = await res.json();
@@ -298,3 +298,5 @@ const filteredOrders = filterOrdersByDate(orders, dateFilter);
 };
 
 export default Page;
+
+

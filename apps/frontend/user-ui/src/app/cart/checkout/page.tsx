@@ -43,8 +43,8 @@ const Page = () => {
     const [paymentStatus, setPaymentStatus] = useState<string | null>(null); 
       const [orderId, setOrderId] = useState<string | null>(null);
 
-  const NEXT_PUBLIC_ORDER_API_LINK = 'https://order-service-vck8.onrender.com/';
-  const NEXT_PUBLIC_CART_API_LINK = 'https://cart-service-z6ft.onrender.com/';
+  const NEXT_PUBLIC_ORDER_API_LINK = `https://order-service-faxh.onrender.com`;
+  const NEXT_PUBLIC_CART_API_LINK = `https://cart-service-5lo3.onrender.com`;
 
   useEffect(() => {
     fetchCart();
@@ -59,7 +59,7 @@ const Page = () => {
         return;
       }
 
-      const res = await fetch(`${NEXT_PUBLIC_CART_API_LINK}/api/cart`, {
+      const res = await fetch(`https://cart-service-5lo3.onrender.com/api/cart`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -142,7 +142,7 @@ const handlePlaceOrder = async (selectedPaymentMode: string, selectedAddress: st
   };
 
   try {
-    const res = await fetch(`${NEXT_PUBLIC_ORDER_API_LINK}/api/orders`, {
+    const res = await fetch(`https://order-service-faxh.onrender.com/api/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -257,3 +257,7 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
 };
 
 export default Page;
+
+
+
+

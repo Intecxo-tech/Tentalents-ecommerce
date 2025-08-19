@@ -71,7 +71,7 @@ useEffect(() => {
       }
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_RATING_API_LINK}/api/rating/rate`,
+        `https://rating-service-kd8p.onrender.com/api/rating/rate`,
         formData,
         {
          headers: {
@@ -200,3 +200,4 @@ useEffect(() => {
 };
 
 export default ReviewModal;
+

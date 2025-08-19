@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_CART_API_LINK; // e.g. 'https://api.example.com'
-const PRODUCT_API = process.env.NEXT_PUBLIC_PRODUCT_FETCH_LINK;
+const API_BASE = `https://cart-service-5lo3.onrender.com`; // e.g. 'https://api.example.com'
+const PRODUCT_API = `https://product-service-23pc.onrender.com`;
 
 interface ProductDetails {
   productId: string;
@@ -58,7 +58,7 @@ export const addToCart = async (
   if (!token) throw new Error('User not authenticated.');
 
   const response = await axios.post(
-    `${API_BASE}/api/cart/add`,
+    `https://cart-service-5lo3.onrender.com/api/cart/add`,
     { userId, item },
     {
       headers: {
@@ -72,16 +72,18 @@ export const addToCart = async (
 };
 
 export const getCart = async (userId: string) => {
-  const response = await axios.get(`${API_BASE}/cart/${userId}`);
+  const response = await axios.get(`https://cart-service-5lo3.onrender.com/cart/${userId}`);
   return response.data;
 };
 
 export const removeFromCart = async (userId: string, itemId: string) => {
-  const response = await axios.delete(`${API_BASE}/cart/${userId}/item/${itemId}`);
+  const response = await axios.delete(`https://cart-service-5lo3.onrender.com/cart/${userId}/item/${itemId}`);
   return response.data;
 };
 
 export const checkoutCart = async (userId: string) => {
-  const response = await axios.post(`${API_BASE}/cart/${userId}/checkout`);
+  const response = await axios.post(`https://cart-service-5lo3.onrender.com/cart/${userId}/checkout`);
   return response.data;
 };
+
+

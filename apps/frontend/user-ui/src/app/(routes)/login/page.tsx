@@ -51,7 +51,7 @@ const Login = () => {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/auth/login`, {
+      const response = await fetch(`https://user-service-e1em.onrender.com/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ const handleGoogleCallback = async (response: any) => {
 
     // Log the Google token for debugging
     console.log('Google ID Token:', response.credential);
-const res = await axios.post(`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`, {
+const res = await axios.post(`https://user-service-e1em.onrender.com/api/auth/google-login}`, {
   provider: 'google',
   idToken: response.credential,
 });
@@ -141,7 +141,7 @@ const handleFirebaseGoogleSignIn = async () => {
     const result = await signInWithPopup(auth, provider);
     const firebaseIdToken = await result.user.getIdToken();
 
-   const res = await axios.post(`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`, {
+   const res = await axios.post(`https://user-service-e1em.onrender.com/api/auth/google-login`, {
   provider: 'google',
   idToken: firebaseIdToken,
 });

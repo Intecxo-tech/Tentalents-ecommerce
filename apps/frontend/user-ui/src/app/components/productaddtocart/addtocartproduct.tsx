@@ -29,7 +29,7 @@ const ProductCart = ({ listCount = 2 }: ProductsProps) => {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_PRODUCT_FETCH_LINK}/products`);
+        const res = await fetch(`https://product-service-23pc.onrender.com/products`);
         if (!res.ok) throw new Error('Failed to fetch products');
 
         const json = await res.json();
@@ -113,3 +113,4 @@ const ProductCart = ({ listCount = 2 }: ProductsProps) => {
 };
 
 export default ProductCart;
+

@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowBigRight, ChevronLeft } from 'lucide-react';
-import './forgotPassword.css'; // import your new styles
+import './forgotpassword.css'; // import your new styles
 
 type FormData = {
   email: string;

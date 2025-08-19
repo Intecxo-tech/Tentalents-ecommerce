@@ -1,22 +1,28 @@
 import { getProductBySlug } from '../../../services/productService';
 import ProductDetailClient from './ProductDetailPage';
 import Ramesh from "../../../assets/ramesh.png";
-interface PageProps {
-  params: {
-    slug: string;
-  };
+
+// interface PageProps {
+//   params: {
+//     slug: string;
+//   };
+// }
+type PageProps = {
+   params: Promise<{ slug: string }>;
+  // params: { slug: string }; 
+};
+// type tParams = { slug: string };
+export default async function ProductDetailPage({ params }: PageProps) {
+  // const { slug } = props.params;
+  const slug = (await params).slug;
+
+ let productRaw = null;
+
+try {
+  productRaw = await getProductBySlug(slug);
+} catch (error) {
+  console.error('Failed to fetch product details:', error);
 }
-
-export default async function ProductDetailPage(props: PageProps) {
-  const { slug } = await props.params;
-
-  let productRaw = null;
-
-  try {
-    productRaw = await getProductBySlug(slug);
-  } catch (error) {
-    console.error('Failed to fetch product details:', error);
-  }
 
   if (!productRaw) {
     return <p className="text-center text-red-500 mt-10">Product not found.</p>;
@@ -85,3 +91,10 @@ vendor: listing?.vendor?.user
 
   return <ProductDetailClient product={product} />;
 }
+
+
+
+
+
+
+

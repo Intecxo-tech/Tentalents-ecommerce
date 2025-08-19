@@ -35,7 +35,7 @@ const AccountPage = () => {
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/user/profile`, {
+      const res = await fetch(`https://user-service-e1em.onrender.com/api/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -88,7 +88,7 @@ const handleUpdateProfile = async () => {
       return;
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/user/profile`, {
+    const res = await fetch(`https://user-service-e1em.onrender.com/api/user/profile`, {
   method: 'PATCH',
   headers: {
     'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const formData = new FormData();
   formData.append('avatar', file);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/user/profile/image`, {
+    const res = await fetch(`https://user-service-e1em.onrender.com/api/user/profile/image`, {
      method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -286,3 +286,5 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 };
 
 export default AccountPage;
+
+

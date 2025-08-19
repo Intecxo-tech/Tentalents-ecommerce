@@ -94,7 +94,7 @@ const SignUp = () => {
     try {
       const { email: enteredEmail } = getValues();
       await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/auth/register/otp/initiate`,
+        `https://user-service-e1em.onrender.com/api/auth/register/otp/initiate`,
         { email: enteredEmail }
       );
       setEmail(enteredEmail);
@@ -125,7 +125,7 @@ const SignUp = () => {
     setLoading(true);
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_SERVER_URI}/api/auth/register/otp/verify`,
+        `https://user-service-e1em.onrender.com/api/auth/register/otp/verify`,
         {
           email,
           otp: otpCode,
@@ -143,7 +143,7 @@ const onSubmit = async (data: FormData) => {
   setLoading(true);
   try {
     await axios.post(
-      `${process.env.NEXT_PUBLIC_SERVER_URI}/api/auth/register/otp/complete`,
+      `https://user-service-e1em.onrender.com/api/auth/register/otp/complete`,
       {
         email,
         password: data.password,
@@ -187,7 +187,7 @@ const onSubmit = async (data: FormData) => {
 
     setLoading(true);
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/auth/register/otp/initiate`, {
+      await axios.post(`https://user-service-e1em.onrender.com/api/auth/register/otp/initiate`, {
         email,
       });
       setCanResend(false);
@@ -243,7 +243,7 @@ const handleGoogleCallback = async (response: any) => {
     console.log('Google ID Token:', response.credential);
 
     const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`,
+      `https://user-service-e1em.onrender.com/api/auth/google-login}`,
       {
         provider: 'google',
         idToken: response.credential,
@@ -576,3 +576,5 @@ const handleFirebaseGoogleSignIn = async () => {
 };
 
 export default SignUp;
+
+

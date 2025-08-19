@@ -71,7 +71,7 @@ const fetchRatings = async () => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_RATING_API_LINK}/api/rating/product/${product.id}`,
+      `https://rating-service-kd8p.onrender.com/api/rating/product/${product.id}`,
       { headers }
     );
 
@@ -388,3 +388,4 @@ const sellerInfo = product.vendor;
     </div>
   );
 }
+

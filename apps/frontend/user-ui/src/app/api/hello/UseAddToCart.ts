@@ -13,7 +13,7 @@ export function useAddToCart() {
       if (!token) return; // no error if no token
 
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVER_URI}/api/user/profile`, {
+        const res = await axios.get(`https://user-service-e1em.onrender.com/api/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserId(res.data.data.id);
@@ -55,3 +55,5 @@ export function useAddToCart() {
     userId,
   };
 }
+
+
