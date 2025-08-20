@@ -180,7 +180,39 @@ function filterOrdersByDate(orders: OrderData[], filter: string) {
 }
 
 const filteredOrders = filterOrdersByDate(orders, dateFilter);
+useEffect(() => {
+    async function fetchPopularProducts() {
+      try {
+        const res = await fetch(`https://product-service-23pc.onrender.com/api/products`);
+        if (!res.ok) throw new Error('Failed to fetch products');
 
+        const json = await res.json();
+        const data = json.data ?? [];
+
+        const mapped: Product[] = data.map((p: any) => {
+          const listing = p.listings?.[0];
+          return {
+            id: p.id,
+            title: p.title,
+            href: `/shop/${p.slug}`,
+            price: listing ? Number(listing.originalPrice) : 0,
+            offerPrice: listing ? Number(listing.price) : undefined,
+            image: p.imageUrls?.[0] || '',
+            rating: p.ratings?.[0]?.score || 0,
+            reviewCount: p.ratings?.length || 0,
+          };
+        });
+
+        setProducts(mapped.slice(0, 4));
+      } catch (err: any) {
+        setProductError(err.message || 'Something went wrong');
+      } finally {
+        setLoadingProducts(false);
+      }
+    }
+
+    fetchPopularProducts();
+  }, []);
   return (
   <div className="orderapagefull2">
   <div className="orderapagefull">
@@ -277,3 +309,4 @@ const filteredOrders = filterOrdersByDate(orders, dateFilter);
 };
 
 export default Page;
+
