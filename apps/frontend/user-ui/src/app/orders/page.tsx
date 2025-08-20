@@ -202,6 +202,8 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
 };
 
 
+
+
   return (
     <div>
       <div className="deliverylocation">
@@ -268,3 +270,7 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
 };
 
 export default Page;
+
+
+
+
