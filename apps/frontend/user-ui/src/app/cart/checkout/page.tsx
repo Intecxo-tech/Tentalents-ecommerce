@@ -141,33 +141,44 @@ const handlePlaceOrder = async (selectedPaymentMode: string, selectedAddress: st
     paymentMode: selectedPaymentMode,
   };
 
-  try {
-    const res = await fetch(`https://order-service-faxh.onrender.com/api/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(orderData),
-    });
+ try {
+  const res = await fetch(`https://order-service-faxh.onrender.com/api/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(orderData),
+  });
 
-    if (!res.ok) throw new Error('Failed to place order');
+  const text = await res.text();
 
-    const data = await res.json();
+  console.log('[ORDER] Status:', res.status);
+  console.log('[ORDER] Raw response:', text);
 
-    // Payment redirect logic here
-    if (selectedPaymentMode === 'credit_card' && data?.data?.checkoutUrl) {
-      window.open(data.data.checkoutUrl, '_blank');
-    } else if (selectedPaymentMode === 'cash_on_delivery') {
-      toast.success('Order placed successfully!');
-    } else {
-      toast.error('Unexpected payment response!');
-    }
-  } catch (error) {
-    toast.error('Failed to place order!');
+  if (!res.ok) {
+    throw new Error(`[ORDER] Failed with status ${res.status}: ${text}`);
   }
-};
 
+  const data = JSON.parse(text);
+  console.log('[ORDER] Parsed response:', data);
+
+if (selectedPaymentMode === 'credit_card' && data?.data?.checkoutUrl) {
+  console.log('[ORDER] Redirecting to Stripe URL:', data.data.checkoutUrl);
+  window.location.href = data.data.checkoutUrl;
+}
+ else if (selectedPaymentMode === 'cash_on_delivery') {
+    toast.success('Order placed successfully!');
+  } else {
+    toast.error('Unexpected payment response!');
+    console.log('[ORDER] No checkoutUrl found in response.');
+  }
+} catch (error) {
+  console.error('[ORDER] Error placing order:', error);
+  toast.error('Failed to place order!');
+}
+
+}
 const handlePaymentStatus = async (paymentId: string, signature: string) => {
   try {
     // First, verify payment status by calling the backend endpoint
