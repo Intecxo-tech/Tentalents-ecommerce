@@ -167,9 +167,12 @@ if (selectedPaymentMode === 'credit_card' && data?.data?.checkoutUrl) {
   console.log('[ORDER] Redirecting to Stripe URL:', data.data.checkoutUrl);
   window.location.href = data.data.checkoutUrl;
 }
- else if (selectedPaymentMode === 'cash_on_delivery') {
-    toast.success('Order placed successfully!');
-  } else {
+else if (selectedPaymentMode === 'cash_on_delivery') {
+  toast.success('Order placed successfully!');
+  setTimeout(() => {
+    window.location.href = '/orders'; // or use router.push('/orders') if using Next.js routing
+  }, 1500); // Give the toast time to show before redirecting
+} else {
     toast.error('Unexpected payment response!');
     console.log('[ORDER] No checkoutUrl found in response.');
   }
@@ -268,3 +271,4 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
 };
 
 export default Page;
+
