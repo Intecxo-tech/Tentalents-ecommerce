@@ -72,42 +72,56 @@ const [dateFilter, setDateFilter] = useState('all');
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productError, setProductError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Fetch orders for the logged-in user
-    async function fetchOrders() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setOrderError('Please Log in to view your orders');
-        setLoadingOrders(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(`https://order-service-faxh.onrender.com/api/orders/`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!res.ok) throw new Error('Failed to fetch orders');
-
-        const json = await res.json();
-
-        if (json.status === 'success') {
-          setOrders(json.data); // set all orders
-        } else {
-          setOrderError('Error fetching order details');
-        }
-      } catch (err: any) {
-        setOrderError(err.message || 'Unknown error fetching orders');
-      } finally {
-        setLoadingOrders(false);
-      }
+ useEffect(() => {
+  async function fetchOrders() {
+    const token = localStorage.getItem('token');
+    console.log('Token from localStorage:', token);
+    if (!token) {
+      setOrderError('Please Log in to view your orders');
+      setLoadingOrders(false);
+      return;
     }
 
-    fetchOrders();
-  }, []);
+    try {
+      const res = await fetch(`https://order-service-faxh.onrender.com/api/orders/`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Fetch orders response status:', res.status);
+
+      if (!res.ok) throw new Error('Failed to fetch orders');
+
+      const json = await res.json();
+      console.log('Fetched orders data:', json);
+
+      if (json.status === 'success') {
+        setOrders(json.data);
+      } else {
+        setOrderError('Error fetching order details');
+      }
+    } catch (err: any) {
+      console.error('Error fetching orders:', err);
+      setOrderError(err.message || 'Unknown error fetching orders');
+    } finally {
+      setLoadingOrders(false);
+    }
+  }
+
+  fetchOrders();
+}, []);
+
+// Log orders before filtering
+console.log('Orders before filtering:', orders);
+console.log('Current date filter:', dateFilter);
+
+const filteredOrders = filterOrdersByDate(orders, dateFilter);
+
+console.log('Filtered orders:', filteredOrders);
+
 
   // Your existing products fetch effect here
   useEffect(() => {
@@ -298,5 +312,6 @@ const filteredOrders = filterOrdersByDate(orders, dateFilter);
 };
 
 export default Page;
+
 
 
