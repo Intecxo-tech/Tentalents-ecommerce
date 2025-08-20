@@ -1,278 +1,269 @@
 'use client';
+import React, { useState, useEffect } from 'react';
+import Address from '../../components/addaddress/Address';
+import Payment from '../../components/paymentmethod/payment';
+import QuantityAdded from '../../components/quantity added/quantityadded';
+import './checkout.css';
+import '../cart.css';
+import toast from 'react-hot-toast';
+import { loadStripe } from '@stripe/stripe-js';
+import {initiatePayment,verifyPayment, sendPaymentStatus } from '../../../services/Payment'
 
-import React, { useEffect, useState } from 'react';
-import OrderCard from '../components/orderssec/ordercard';
-import YourOrder from '../components/yourorder/yourorder';
-import OrderPlaced from '../components/orderplaced/orderplaced';
-import './orders.css';
-import Closet from '../home-page/closet-section/closet';
-import Products from '../home-page/products-grid/productsgrid';
-import { ChevronRight, Search } from 'lucide-react';
-import '../home-page/headerbanner.css';
-import type { Product } from '../components/orderplaced/orderplaced';
+// Replace with your actual public Stripe key
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || ''); // Public Key for Stripe Checkout
 
-interface ShippingAddress {
-  name: string;
-  phone: string;
-  country: string;
-  state: string;
-  city: string;
-  pinCode: string;
-  addressLine1: string;
-  addressLine2?: string;
-  addressType: string;
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface OrderItem {
+type CartItem = {
   id: string;
-  orderId: string;
-  productId: string;
   listingId: string;
-  vendorId: string;
+  productId: string;
   quantity: number;
-  unitPrice: string;
-  totalPrice: string;
-  status: string;
-  addedAt: string;
-  dispatchStatus: string;
-  dispatchTime: string | null;
-  product: {
+  vendor: { id: string; name: string };
+  product?: {
+    id: string;
     title: string;
+    description?: string;
     imageUrls: string[];
-     slug: string;
+    category?: string;
+    brand?: string;
   };
-}
-
-interface OrderData {
-  id: string;
-  buyerId: string;
-  totalAmount: string;
-  paymentMode: string;
-  paymentStatus: string;
-  shippingAddressId: string;
-  placedAt: string;
-  updatedAt: string;
-  stripePaymentIntentId: string | null;
-  dispatchStatus: string;
-  dispatchTime: string | null;
-  status: string;
-  items: OrderItem[];
-  shippingAddress: ShippingAddress;
-}
+  productListing?: {
+    id: string;
+    price: number;
+    stock?: number;
+    sku?: string;
+    status?: string;
+  };
+};
 
 const Page = () => {
-  const [orders, setOrders] = useState<OrderData[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(true);
-  const [orderError, setOrderError] = useState<string | null>(null);
-const [dateFilter, setDateFilter] = useState('all');
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [productError, setProductError] = useState<string | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [address, setAddress] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<string>('');
+    const [paymentStatus, setPaymentStatus] = useState<string | null>(null); 
+      const [orderId, setOrderId] = useState<string | null>(null);
 
-  // Your existing products fetch effect here
-useEffect(() => {
-  async function fetchOrders() {
-    const token = localStorage.getItem('token');
-    console.log('Token from localStorage:', token);
-    if (!token) {
-      setOrderError('Please Log in to view your orders');
-      setLoadingOrders(false);
-      return;
-    }
+  const NEXT_PUBLIC_ORDER_API_LINK = `https://order-service-faxh.onrender.com`;
+  const NEXT_PUBLIC_CART_API_LINK = `https://cart-service-5lo3.onrender.com`;
 
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  async function fetchCart() {
+    setLoading(true);
     try {
-      const res = await fetch(`https://order-service-faxh.onrender.com/api/orders/`, {
-        method: 'GET',
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setCartItems([]);
+        return;
+      }
+
+      const res = await fetch(`https://cart-service-5lo3.onrender.com/api/cart`, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      console.log('Fetch orders response status:', res.status);
+      if (!res.ok) throw new Error('Failed to fetch cart');
 
-      if (!res.ok) throw new Error('Failed to fetch orders');
+      const data = await res.json();
 
-      const json = await res.json();
-      console.log('Fetched orders data:', json);
+      const filteredItems = data.data
+        .map((item: CartItem) => {
+          const parsedPrice =
+            typeof item.productListing?.price === 'number'
+              ? item.productListing.price
+              : parseFloat(item.productListing?.price || '0');
 
-   if (json.success) {
-  setOrders(json.data);
-} else {
-  setOrderError('Error fetching order details');
-}
+          if (
+            item.product &&
+            item.productListing &&
+            !isNaN(parsedPrice) &&
+            Array.isArray(item.product.imageUrls) &&
+            item.product.imageUrls.length > 0 &&
+            typeof item.product.title === 'string'
+          ) {
+            return {
+              ...item,
+              productListing: {
+                ...item.productListing,
+                price: parsedPrice,
+              },
+            };
+          }
+          return null;
+        })
+        .filter(Boolean) as CartItem[];
 
-    } catch (err: any) {
-      console.error('Error fetching orders:', err);
-      setOrderError(err.message || 'Unknown error fetching orders');
+      setCartItems(filteredItems);
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+      setCartItems([]);
     } finally {
-      setLoadingOrders(false);
+      setLoading(false);
     }
   }
 
-  fetchOrders();
-}, []);
+  const subtotal = cartItems.reduce((acc, item) => {
+    const price = item.productListing?.price ?? 0;
+    return acc + price * item.quantity;
+  }, 0);
 
-// Log orders before filtering
-console.log('Orders before filtering:', orders);
-console.log('Current date filter:', dateFilter);
+  const shippingFee = 54;
+  const platformFee = 4;
+const total = subtotal > 0 ? subtotal + shippingFee + platformFee : 0;
 
+  const vendorId = cartItems.length > 0 ? cartItems[0].vendor.id : '';
 
+const handlePlaceOrder = async (selectedPaymentMode: string, selectedAddress: string | null) => {
+  if (!selectedAddress) {
+    toast.error('Please select or add a delivery address!');
+    return;
+  }
+  if (!selectedPaymentMode) {
+    toast.error('Please choose a payment method!');
+    return;
+  }
+  
+  const token = localStorage.getItem('token');
+  const orderData = {
+    items: cartItems.map((item) => ({
+      productId: item.productId,
+      vendorId: item.vendor.id,
+      listingId: item.listingId,
+      quantity: item.quantity,
+      price: Number((item.productListing?.price ?? 0).toFixed(2)),
+    })),
+    totalAmount: subtotal,
+    shippingAddressId: selectedAddress,
+    paymentMode: selectedPaymentMode,
+  };
 
+ try {
+  const res = await fetch(`https://order-service-faxh.onrender.com/api/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(orderData),
+  });
 
+  const text = await res.text();
 
-function filterOrdersByDate(orders: OrderData[], filter: string) {
-  if (filter === 'all') return orders;
+  console.log('[ORDER] Status:', res.status);
+  console.log('[ORDER] Raw response:', text);
 
-  const now = new Date();
-  let dateLimit: Date;
-  let nextDateLimit: Date | null = null;
-
-  switch (filter) {
-    case 'today': {
-      const todayStart = new Date(now);
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date(now);
-      todayEnd.setHours(23, 59, 59, 999);
-      return orders.filter(order => {
-        const placedAt = new Date(order.placedAt);
-        return placedAt >= todayStart && placedAt <= todayEnd;
-      });
-    }
-    case 'yesterday': {
-      const yesterdayStart = new Date(now);
-      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-      yesterdayStart.setHours(0, 0, 0, 0);
-      const yesterdayEnd = new Date(now);
-      yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
-      yesterdayEnd.setHours(23, 59, 59, 999);
-      return orders.filter(order => {
-        const placedAt = new Date(order.placedAt);
-        return placedAt >= yesterdayStart && placedAt <= yesterdayEnd;
-      });
-    }
-    case '15days':
-      dateLimit = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
-      break;
-    case '30days':
-      dateLimit = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      break;
-    case '3months':
-      dateLimit = new Date(now);
-      dateLimit.setMonth(dateLimit.getMonth() - 3);
-      break;
-    case '6months':
-      dateLimit = new Date(now);
-      dateLimit.setMonth(dateLimit.getMonth() - 6);
-      break;
-    case '1year':
-      dateLimit = new Date(now);
-      dateLimit.setFullYear(dateLimit.getFullYear() - 1);
-      break;
-    default:
-      return orders;
+  if (!res.ok) {
+    throw new Error(`[ORDER] Failed with status ${res.status}: ${text}`);
   }
 
-  return orders.filter(order => new Date(order.placedAt) >= dateLimit);
+  const data = JSON.parse(text);
+  console.log('[ORDER] Parsed response:', data);
+
+if (selectedPaymentMode === 'credit_card' && data?.data?.checkoutUrl) {
+  console.log('[ORDER] Redirecting to Stripe URL:', data.data.checkoutUrl);
+  window.location.href = data.data.checkoutUrl;
+}
+ else if (selectedPaymentMode === 'cash_on_delivery') {
+    toast.success('Order placed successfully!');
+  } else {
+    toast.error('Unexpected payment response!');
+    console.log('[ORDER] No checkoutUrl found in response.');
+  }
+} catch (error) {
+  console.error('[ORDER] Error placing order:', error);
+  toast.error('Failed to place order!');
 }
 
-const filteredOrders = filterOrdersByDate(orders, dateFilter);
+}
+const handlePaymentStatus = async (paymentId: string, signature: string) => {
+  try {
+    // First, verify payment status by calling the backend endpoint
+    const paymentVerification = await verifyPayment(paymentId, orderId!, signature);  // Pass orderId to verify payment
+
+    // Once you have the payment verification status
+    if (paymentVerification.status === 'success') {
+      // If payment is successful, send the success status to backend
+      await sendPaymentStatus(orderId!, 'success');
+      setPaymentStatus('success');
+      toast.success('Payment successful! Order confirmed.');
+    } else {
+      // If payment fails, send the failed status to backend
+      await sendPaymentStatus(orderId!, 'failed');
+      setPaymentStatus('failed');
+      toast.error('Payment failed! Please try again.');
+    }
+  } catch (error) {
+    toast.error('Error confirming payment status!');
+  }
+};
+
 
   return (
-  <div className="orderapagefull2">
-  <div className="orderapagefull">
-    <div className="orderpageleft-2">
-      <div className="yourorder-header">
-        <h2 className="sectiontitle">Your Orders</h2>
+    <div>
+      <div className="deliverylocation">
+        <div className="checkoutleft">
+          <Address
+            showLocate={false}
+            vendorId={vendorId}
+            setAddress={setAddress}
+          />
+          <Payment
+  onPaymentModeSelect={setPaymentMode}
+  total={total}
+  onConfirmPayment={(selectedPaymentMode) => {
+    // Validate address + paymentMode before placing order
+    if (!address) {
+      toast.error('Please select or add a delivery address!');
+      return;
+    }
+    if (!selectedPaymentMode) {
+      toast.error('Please choose a payment method!');
+      return;
+    }
+    setPaymentMode(selectedPaymentMode);
+    handlePlaceOrder(selectedPaymentMode, address);
+  }}
+/>
+</div>
 
-        <div className="dateorder">
-          <div className="search-inputbutton">
-            <input type="text" placeholder="Search Order By ID/Product name" />
-            <button className="background-button">
-              <Search className="search-icon" />
-            </button>
+        <div className="checkoutright">
+          <div className="subtotal-section">
+            <div className="subtotal">
+              <h2>Subtotal</h2>
+              <p>${subtotal.toFixed(2)}</p>
+            </div>
+             {cartItems.length > 0 && (
+      <>
+            <div className="subtotal">
+              <h2>Shipping</h2>
+              <p>${shippingFee.toFixed(2)}</p>
+            </div>
+            <div className="subtotal">
+              <h2>Platform Fee</h2>
+              <p>${platformFee.toFixed(2)}</p>
+            </div>
+          </>
+          )}
+            <div className="subtotal total">
+              <h2 className="alltotal">Total</h2>
+              <p>${cartItems.length > 0
+        ? total.toFixed(2)
+        : '0.00'}</p>
+            </div>
           </div>
-        <select
-  id="dateFilter"
-  className="bordered-button custom-dropdown"
-  value={dateFilter}
-  onChange={(e) => setDateFilter(e.target.value)}
->
 
-            <option value="all">All Orders</option>
-              <option value="today">Today</option>
-  <option value="yesterday">Yesterday</option>
-            <option value="15days">Past 15 Days</option>
-            <option value="30days">Past 30 Days</option>
-            <option value="3months">Past 3 Months</option>
-            <option value="6months">Past 6 Months</option>
-            <option value="1year">Past 1 Year</option>
-          </select>
+          <QuantityAdded />
+          {/* <button onClick={handlePlaceOrder} className="background-button">
+            Place Order
+          </button> */}
         </div>
       </div>
-
-     <div className="sectionorder">
- {loadingOrders ? (
-  <p>Loading your orders...</p>
-) : orderError ? (
-  <p className="error-message">{orderError}</p>
-) : orders.length > 0 ? (
-  filteredOrders.map(order => (
-    <div key={order.id} className="sectionsorder">
-      {/* You can put OrderCard for that order */}
-      <OrderCard order={order} />
-
-      {/* If YourOrder is supposed to show multiple orders, you might want to filter or pass only this order */}
-      {/* Or if YourOrder is a summary component, maybe keep it outside the map? */}
-      {/* But since you want the section repeated for every order, let's assume you want YourOrder here as well */}
-      <YourOrder orders={[order]} loading={false} error={null} />
     </div>
-  ))
-) : (
-  <p className="empty-message">Nothing in your orders.</p>
-)}
-
-</div>
-    </div>
-
-    <div className="productpageright">
-      <div className="popularproductcard">
-        <h2 className="sectiontitle">Popular Products</h2>
-        {loadingProducts && <p>Loading products...</p>}
-        {productError && <p>Error: {productError}</p>}
-        {!loadingProducts &&
-          !productError &&
-          products.slice(0, 4).map((product) => (
-            <OrderPlaced key={product.id} product={product} />
-          ))}
-        <button className="background-button shopbutton">Explore Shop</button>
-      </div>
-
-      <div className="fullwidth-banner">
-        <div className="section-1">
-          <div className="content">
-            <h3 className="banner-heading">Denim That Defines</h3>
-            <p className="content-para">
-              Explore premium fits, rugged comfort, and timeless style made for every move.
-            </p>
-            <button className="background-button mt-[10px]">
-              Explore Now <ChevronRight />
-            </button>
-          </div>
-        </div>
-      </div>
-      </div>
- 
-  </div>
-
-  <div>
-<Products />
-    <Closet />
-  </div>
-</div>
+    
   );
 };
 
