@@ -83,17 +83,28 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
       </div>
 
       <div className="orderdetails">
-        <div className="shipto">
-          <p className="orderlabel">Ship To</p>
-          <p className="ordervalue pr-2">
-            {shippingAddress.addressLine1}
-            {shippingAddress.addressLine2 ? `, ${shippingAddress.addressLine2}` : ''}
-            , {shippingAddress.city} - {shippingAddress.pinCode} - {shippingAddress.state} - {shippingAddress.country}
-          </p>
-          <p className="ordervalue pr-2">
+       <div className="shipto">
+  <p className="orderlabel">Ship To</p>
+  {shippingAddress ? (
+    <>
+      <p className="ordervalue pr-2">
+        {shippingAddress.addressLine1}
+        {shippingAddress.addressLine2 ? `, ${shippingAddress.addressLine2}` : ''}
+        , {shippingAddress.city} - {shippingAddress.pinCode} - {shippingAddress.state} - {shippingAddress.country}
+      </p>
+      <p className="ordervalue pr-2">
+        <strong>Name:</strong> {shippingAddress.name} | <strong>Phone:</strong> {shippingAddress.phone}
+      </p>
+    </>
+  ) : (
+    <p className="ordervalue pr-2">Shipping address not available</p>
+  )}
+</div>
+
+          {/* <p className="ordervalue pr-2">
             <strong>Name:</strong> {shippingAddress.name} | <strong>Phone:</strong> {shippingAddress.phone}
           </p>
-        </div>
+        </div> */}
 
         <div className="payment-method">
           <p className="orderlabel">Payment Method</p>
