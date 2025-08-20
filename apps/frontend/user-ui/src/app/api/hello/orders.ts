@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const { userId, data } = req.body; // Changed buyerId to userId
 
       // Fetch the order service API from the environment variable
-      const orderApiUrl = process.env.NEXT_PUBLIC_ORDER_API_LINK; // Fetch from environment variable
+      const orderApiUrl =`https://order-service-faxh.onrender.com`; // Fetch from environment variable
 
       if (!orderApiUrl) {
         return res.status(500).json({ error: 'API URL is not defined in the environment variables' });
@@ -38,5 +38,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 }
+
 
 
