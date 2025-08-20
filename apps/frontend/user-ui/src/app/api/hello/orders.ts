@@ -3,41 +3,50 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
-      const { userId, data } = req.body; // Changed buyerId to userId
-
-      // Fetch the order service API from the environment variable
-      const orderApiUrl =`https://order-service-faxh.onrender.com`; // Fetch from environment variable
-
-      if (!orderApiUrl) {
-        return res.status(500).json({ error: 'API URL is not defined in the environment variables' });
+      // Step 1: Get token from Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Missing or invalid token' });
       }
 
-      // Send the POST request to the external order service
+      const token = authHeader.split(' ')[1];
+
+      // Step 2: Decode token to get userId
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+      const userId = decoded.userId;
+
+      // Step 3: Extract the order data
+      const { data } = req.body;
+
+      const orderApiUrl = process.env.NEXT_PUBLIC_ORDER_API_LINK;
+      if (!orderApiUrl) {
+        return res.status(500).json({ error: 'API URL not defined in env' });
+      }
+
+      // Step 4: Send order to external order service
       const apiResponse = await fetch(`https://order-service-faxh.onrender.com/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId, data }), // Changed buyerId to userId
+        body: JSON.stringify({ userId, data }), // ✅ userId from token
       });
 
       if (!apiResponse.ok) {
         throw new Error('Failed to place the order with external service');
       }
 
-      // Get the response from the external service
       const order = await apiResponse.json();
-
-      // Return the order data in the response
       return res.status(201).json(order);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      return res.status(500).json({ error: 'Failed to place order' });
+      return res.status(500).json({ error: error.message || 'Failed to place order' });
     }
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 }
+
 
 
 
