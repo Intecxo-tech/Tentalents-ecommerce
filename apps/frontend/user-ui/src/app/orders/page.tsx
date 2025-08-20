@@ -72,7 +72,8 @@ const [dateFilter, setDateFilter] = useState('all');
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productError, setProductError] = useState<string | null>(null);
 
- useEffect(() => {
+  // Your existing products fetch effect here
+useEffect(() => {
   async function fetchOrders() {
     const token = localStorage.getItem('token');
     console.log('Token from localStorage:', token);
@@ -98,11 +99,12 @@ const [dateFilter, setDateFilter] = useState('all');
       const json = await res.json();
       console.log('Fetched orders data:', json);
 
-      if (json.status === 'success') {
-        setOrders(json.data);
-      } else {
-        setOrderError('Error fetching order details');
-      }
+   if (json.success) {
+  setOrders(json.data);
+} else {
+  setOrderError('Error fetching order details');
+}
+
     } catch (err: any) {
       console.error('Error fetching orders:', err);
       setOrderError(err.message || 'Unknown error fetching orders');
@@ -120,41 +122,6 @@ console.log('Current date filter:', dateFilter);
 
 
 
-
-  // Your existing products fetch effect here
-  useEffect(() => {
-    async function fetchPopularProducts() {
-      try {
-        const res = await fetch(`https://product-service-23pc.onrender.com/products`);
-        if (!res.ok) throw new Error('Failed to fetch products');
-
-        const json = await res.json();
-        const data = json.data ?? [];
-
-        const mapped: Product[] = data.map((p: any) => {
-          const listing = p.listings?.[0];
-          return {
-            id: p.id,
-            title: p.title,
-            href: `/shop/${p.slug}`,
-            price: listing ? Number(listing.originalPrice) : 0,
-            offerPrice: listing ? Number(listing.price) : undefined,
-            image: p.imageUrls?.[0] || '',
-            rating: p.ratings?.[0]?.score || 0,
-            reviewCount: p.ratings?.length || 0,
-          };
-        });
-
-        setProducts(mapped.slice(0, 4));
-      } catch (err: any) {
-        setProductError(err.message || 'Something went wrong');
-      } finally {
-        setLoadingProducts(false);
-      }
-    }
-
-    fetchPopularProducts();
-  }, []);
 
 
 function filterOrdersByDate(orders: OrderData[], filter: string) {
@@ -310,7 +277,3 @@ const filteredOrders = filterOrdersByDate(orders, dateFilter);
 };
 
 export default Page;
-
-
-
-
