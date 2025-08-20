@@ -1,8 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import Address from '../../components/addaddress/Address';
-import Payment from '../../components/paymentmethod/payment';
-import QuantityAdded from '../../components/quantity added/quantityadded';
+import Address from '../components/addaddress/Address';
+import Payment from '../components/paymentmethod/payment';
+import QuantityAdded from '../components/quantity added/quantityadded';
 import './checkout.css';
 import '../cart.css';
 import toast from 'react-hot-toast';
@@ -117,6 +117,7 @@ const total = subtotal > 0 ? subtotal + shippingFee + platformFee : 0;
 
   const vendorId = cartItems.length > 0 ? cartItems[0].vendor.id : '';
 
+
 const handlePlaceOrder = async (selectedPaymentMode: string, selectedAddress: string | null) => {
   if (!selectedAddress) {
     toast.error('Please select or add a delivery address!');
@@ -201,7 +202,6 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
   }
 };
 
-
   return (
     <div>
       <div className="deliverylocation">
@@ -268,3 +268,4 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
 };
 
 export default Page;
+
