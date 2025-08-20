@@ -24,17 +24,18 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
     const token = localStorage.getItem('token');
     if (!token) {
       console.warn('User not logged in. Skipping address fetch.');
-      setAddresses([]); // Clear any old state
+      setAddresses([]);
       return;
     }
 
     setLoading(true);
     try {
       const addresses = await getAllAddresses(); 
-setAddresses(addresses || []);
+      setAddresses(Array.isArray(addresses) ? addresses : []);
     } catch (error) {
       console.error('Error fetching addresses:', error);
       toast.error('Failed to load addresses');
+      setAddresses([]); // fallback to empty
     } finally {
       setLoading(false);
     }
@@ -42,6 +43,7 @@ setAddresses(addresses || []);
 
   fetchAddresses();
 }, []);
+
 
   const handleSelectAddress = (addressId: string) => {
     setSelectedAddressId(addressId);  // Set the selected address ID
@@ -161,4 +163,5 @@ setAddresses(addresses || []);
 };
 
 export default Address;
+
 
