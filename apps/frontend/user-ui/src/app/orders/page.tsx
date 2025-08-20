@@ -118,9 +118,7 @@ const [dateFilter, setDateFilter] = useState('all');
 console.log('Orders before filtering:', orders);
 console.log('Current date filter:', dateFilter);
 
-const filteredOrders = filterOrdersByDate(orders, dateFilter);
 
-console.log('Filtered orders:', filteredOrders);
 
 
   // Your existing products fetch effect here
@@ -312,6 +310,7 @@ const filteredOrders = filterOrdersByDate(orders, dateFilter);
 };
 
 export default Page;
+
 
 
 
