@@ -68,9 +68,12 @@ export const getAllAddresses = async (): Promise<Address[]> => {
     throw new Error('Failed to fetch addresses');
   }
 
-  const data = await res.json();
-  return data; // Assuming the response contains an array of addresses
+  const json = await res.json();
+
+  // ✅ SAFELY return the array
+  return Array.isArray(json?.data) ? json.data : [];
 };
+
 
 // Add a new address
 export const addAddress = async (newAddress: Address): Promise<Address> => {
@@ -121,6 +124,7 @@ export const deleteAddress = async (addressId: string): Promise<void> => {
   // No need to return anything if it's just a delete operation
   await res.json(); // We assume we don't need to handle the response here
 };
+
 
 
 
