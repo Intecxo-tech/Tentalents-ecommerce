@@ -67,3 +67,12 @@ margin-top: 5px;
 .banner-content .banner-heading{
     margin: 0px 0px;
 }
+@media(max-width:768px){
+.features,.banner-section{
+    display: flex;
+flex-direction: column;
+}
+.banner-content{
+    padding-left: 20px;
+}
+}
