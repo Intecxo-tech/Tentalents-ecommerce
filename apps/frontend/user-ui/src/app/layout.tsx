@@ -2,10 +2,12 @@ import Header from '../shared/widgets';
 import Footer from '../shared/widgets/Footer';
 import BreadCrumb from './breadcrumb';
 import './global.css';
-import { Poppins, Roboto } from 'next/font/google';
 import SignUpBanner from './home-page/signupbanner/SignUpBanner';
 import Providers from './Providers';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './auth/callback/AuthContext'; // don't use useAuth here
+import { Poppins, Roboto } from 'next/font/google';
+import AuthUIWrapper from '../app/components/AuthUIWrapper'; // 👈 new client component
 
 export const metadata = {
   title: 'Welcome to user-ui',
@@ -24,23 +26,21 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${roboto.variable} ${poppins.variable}`} suppressHydrationWarning>
-        <Providers>
-          <Header />
-          <BreadCrumb />
-          <div className="layout-wrapper">{children}</div>
-          <SignUpBanner />
-          <Footer />
-          {/* Add Toaster here */}
-          <Toaster position="top-right" reverseOrder={false} />
-        </Providers>
+        <AuthProvider>
+          <Providers>
+            <Header />
+            <BreadCrumb />
+            <div className="layout-wrapper">{children}</div>
+            <SignUpBanner />
+            <Footer />
+            <Toaster position="top-right" reverseOrder={false} />
+            <AuthUIWrapper /> {/* 👈 moved client logic here */}
+          </Providers>
+        </AuthProvider>
       </body>
     </html>
   );

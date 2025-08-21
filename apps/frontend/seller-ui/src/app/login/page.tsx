@@ -123,7 +123,7 @@ const handleGoogleCallback = async (response: any) => {
 
     // Log the Google token for debugging
     console.log('Google ID Token:', response.credential);
-const res = await axios.post(`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`, {
+const res = await axios.post(`https://vendor-service-8bzv.onrender.com/api/vendor/google`, {
   provider: 'google',
   idToken: response.credential,
 });
@@ -146,7 +146,7 @@ const handleFirebaseGoogleSignIn = async () => {
     const result = await signInWithPopup(auth, provider);
     const firebaseIdToken = await result.user.getIdToken();
 
-   const res = await axios.post(`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`, {
+   const res = await axios.post(`https://vendor-service-8bzv.onrender.com/api/vendor/google`, {
   provider: 'google',
   idToken: firebaseIdToken,
 });

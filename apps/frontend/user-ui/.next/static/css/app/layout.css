@@ -1,3 +1,265 @@
+/*!**************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/components/loginregister/loginregister.css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************************************************/
+/* Reuse popup overlay */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.loginregisterpopup {
+  background: white;
+  width: 400px;
+  height: 100vh;
+  padding: 30px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+  animation: slideInRight 0.3s ease forwards;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.authform {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  gap: 15px;
+}
+
+.authform input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.authform button {
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  background-color: black;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.bordered-button {
+  border: 1px solid #ccc;
+  background: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.toggle-link {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.toggle-link span {
+  font-weight: bold;
+  color: #0070f3;
+  cursor: pointer;
+}
+
+/*!********************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/(routes)/login/login.css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************/
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.logincontainer{
+    width:30%;
+
+}
+.login-box {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px 20px;
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.login-box h1 {
+  text-align: center;
+  font-size: 26px;
+  color: #2c0dff;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.google-button {
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid #f1592a;
+  border-radius: 10px;
+  color: #f1592a;
+  font-weight: 500;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  transition: background 0.2s;
+  font-size: 16px;
+}
+
+.google-button:hover {
+  background: #fff6f3;
+}
+
+.divider {
+  height: 1px;
+  background-color: #eee;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #e4e4e4;
+  border-radius: 10px;
+  font-size: 14px;
+  background-color: #fafafa;
+}
+
+.options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 20px;
+}
+
+.options input[type='checkbox'] {
+  transform: scale(1.1);
+}
+
+
+
+.bottom-links {
+    margin:10px 0px;
+  text-align: center;
+  font-size: 14px;
+  color: #777;
+}
+.bottom-links p{
+    
+  font-weight: 500;
+ 
+ 
+  font-size: 16px;;
+}
+.bottom-links a {
+  color: #f1592a;
+  font-weight: 500;
+  text-decoration: none;
+  margin-left: 5px;
+  font-size: 16px;
+  text-decoration: underline;
+}
+
+.error {
+  color: red;
+  font-size: 13px;
+  margin-top: 6px;
+}
+.google-button img{
+    background-color: transparent;
+}
+.login-heading {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px; /* Button, heading, placeholder for alignment */
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.login-heading .bordered-button {
+  justify-self: start;
+  border: 1px solid #f1592a;
+  border-radius: 8px;
+  padding: 6px;
+  background: white;
+  color: #f1592a;
+  cursor: pointer;
+}
+
+.login-heading h1 {
+  text-align: center;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c0dff;
+}
+
+.login-heading .spacer {
+  /* Used to balance layout if needed */
+  visibility: hidden;
+}
+
+/* .options{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px
+} */
+ .options span{
+
+ font-weight: 400;
+ }
+ .login-sidebarheading{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+ }
+ .sidebar-loginform{
+  display: flex;
+  margin: 10px 0px;;
+  /* height: 100vh; */
+  /* justify-content: center;
+  align-items: center; */
+  flex-direction: column;
+  gap:10px;
+ }
+ .primary{
+  cursor: pointer;
+  color:var(--primary)
+ }
 /*!******************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/global.css ***!
   \******************************************************************************************************************************************************************************************************************************************************************************/
@@ -20,6 +282,9 @@
 }
 .mt-\[30px\] {
   margin-top: 30px;
+}
+.mb-\[10px\] {
+  margin-bottom: 10px;
 }
 .mb-\[30px\] {
   margin-bottom: 30px;
@@ -320,6 +585,7 @@ button {
   font-size: 20px;
 }
 .banner-heading {
+  margin: 0px 0px;
   font-size: 32px;
   color: var(--black);
   padding: 5px 0px;
@@ -976,7 +1242,9 @@ summary svg {
 }
 .feature-content h3{
     font-size: 20px;
+    margin:0px;
     color:var(--black);
+    padding-bottom: 5px;
     font-weight: 500;
 
 }
@@ -987,22 +1255,30 @@ summary svg {
 
 /* banner stylings */
 .banner-section{
- padding-top:40px;
-  padding-left: 30px;
+    padding:20px 0px;
+ /* padding-top:40px; */
+  /* padding-left: 30px; */
  /* padding-right: 30px; */
     background-color: var(--lightbackground);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: space-evenly;
-    gap:30px;
+    gap:10px;
       margin:30px 0px;
 }
 .banner-content button{
     margin-top: 20px;;
 }
-.banner-content{
+/* .banner-content{
     width:60%;
+} */
+.banner-content button{
+margin:0px;
+margin-top: 5px;
+}
+.banner-content .banner-heading{
+    margin: 0px 0px;
 }
 /*!************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/shared/widgets/footer&header.css ***!

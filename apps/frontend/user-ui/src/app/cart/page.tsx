@@ -8,7 +8,7 @@ import Products from '../home-page/products-grid/productsgrid';
 import { ShoppingCart } from 'lucide-react';
 import './cart.css';
 import '../shop/[slug]/singleproductpage.css'; // For additional product styles
-
+import toast from 'react-hot-toast';
 type CartItem = {
   id: string;
   listingId: string;
@@ -317,11 +317,24 @@ const total = subtotal + shippingFee + platformFee;
               <p>${total.toFixed(2)}</p>
             </div>
 
-            <div className="checkout">
-              <Link href="/cart/checkout" className="background-button checkoutbutton">
-                Checkout <ChevronRight />
-              </Link>
-            </div>
+          <div className="checkout">
+  {hasItems ? (
+    <Link href="/cart/checkout" className="background-button checkoutbutton">
+      Checkout <ChevronRight />
+    </Link>
+  ) : (
+    <button
+      className="background-button checkoutbutton"
+      onClick={() => {
+        toast.error("Your cart is empty. Add items to proceed to checkout.");
+      }}
+    >
+      Checkout <ChevronRight />
+    </button>
+  )}
+</div>
+
+
           </div>
         </div>
       </div>

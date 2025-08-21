@@ -271,7 +271,7 @@ const handleFirebaseGoogleSignIn = async () => {
     });
 
     toast.success('Logged in successfully!');
-    router.push('/dashboard');
+    router.push('/myaccount');
   } catch (error) {
     console.error(error);
     toast.error('Google login failed.');

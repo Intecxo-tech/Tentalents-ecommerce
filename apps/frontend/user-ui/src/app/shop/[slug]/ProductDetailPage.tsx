@@ -18,10 +18,11 @@ import toast from 'react-hot-toast';
 import bank from "../../../assets/bank.png";
 import BankTransfer from "../../../assets/banktransfer.png";
 import productimage from "../../../assets/productimage.png";
-
+import { useAuth } from '../../auth/callback/AuthContext';
 import './singleproductpage.css';
 
 export default function ProductDetailClient({ product }: { product: any }) {
+  const { openSidebar } = useAuth();
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -44,8 +45,7 @@ const { handleAddToCart, loading, error, userId } = useAddToCart();
 
 const onAddToCartClick = async () => {
   if (!userId) {
-    toast.error(' Please log in to add items to your cart.');
-    router.push('/login');
+    openSidebar();
     return;
   }
 

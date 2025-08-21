@@ -255,6 +255,7 @@ button{
 
 }
 .banner-heading{
+  margin:0px 0px;
   font-size: 32px;
   color:var(--black);
   padding:5px 0px;

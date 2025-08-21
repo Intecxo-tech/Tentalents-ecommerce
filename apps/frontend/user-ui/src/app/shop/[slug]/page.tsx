@@ -76,7 +76,8 @@ try {
 vendor: listing?.vendor?.user
   ? {
        id: listing.vendor.id,
-      name: listing.vendor.businessName || listing.vendor.user?.name || 'Unnamed Vendor',
+  name: listing.vendor.businessName || listing.vendor.name || listing.vendor.user?.name || 'Unnamed Vendor',
+
        image: listing.vendor.profileImage || listing.vendor.user?.profileImage || Ramesh,
      productCount: listing.vendor.productListings?.length || 0,
     }

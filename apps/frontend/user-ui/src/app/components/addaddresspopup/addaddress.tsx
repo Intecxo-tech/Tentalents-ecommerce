@@ -147,8 +147,17 @@ const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddr
               onChange={(phone) => setPhone(phone)}
               inputClass="phone-input"
             />
+        
           </div>
-
+                    <div className="firstcolumn topsection mb-[10px]">
+    <input
+              type="email"
+              placeholder="Email"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            </div>
           <div className="newdelivery">
             <h2 className="sectiontitle">Add New Delivery Address</h2>
 

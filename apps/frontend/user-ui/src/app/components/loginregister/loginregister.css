@@ -1,0 +1,82 @@
+/* Reuse popup overlay */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.loginregisterpopup {
+  background: white;
+  width: 400px;
+  height: 100vh;
+  padding: 30px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+  animation: slideInRight 0.3s ease forwards;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.authform {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  gap: 15px;
+}
+
+.authform input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.authform button {
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  background-color: black;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.bordered-button {
+  border: 1px solid #ccc;
+  background: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.toggle-link {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.toggle-link span {
+  font-weight: bold;
+  color: #0070f3;
+  cursor: pointer;
+}

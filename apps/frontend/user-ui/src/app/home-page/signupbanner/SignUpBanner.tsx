@@ -43,7 +43,7 @@ const SignUpBanner = () => {
         <div className="banner-content">
             <h3 className="banner-heading">Get Signed-up On Tentalents and Get amazing offers</h3>
             <p className="content-para">Discover top deals on appliances, electronics & more all in one place.</p>
-            <button className="background-button">Explore Now  <ChevronRight /></button>
+            <button className="background-button buttnosection">Explore Now  <ChevronRight /></button>
             </div>
       </div>
     </div>

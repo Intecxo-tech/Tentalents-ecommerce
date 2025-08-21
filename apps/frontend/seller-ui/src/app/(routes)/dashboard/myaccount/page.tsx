@@ -77,7 +77,7 @@ console.log('🔑 JWT Token:', token);
 
         console.log(`📦 Fetching vendor details for ID: ${vendorId}`);
 
-        const response = await fetch(`http://localhost:3010/api/vendor/${vendorId}`, {
+        const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/${vendorId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',

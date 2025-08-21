@@ -11,7 +11,7 @@ import { KafkaConfig, logLevel } from 'kafkajs';
 
 export const kafkaConfig: KafkaConfig & { groupId: string, ssl: boolean, sasl: { mechanism: string, username: string, password: string } } = {
   clientId: process.env.KAFKA_CLIENT_ID || 'backend-client',
-  brokers: (process.env.KAFKA_BROKERS || 'd2g2jt1modb6qsnje0rg.any.ap-south-1.mpx.prd.cloud.redpanda.com:9092').split(','),
+  brokers: (process.env.KAFKA_BROKERS || 'd2g2jt1modb6qsnje0rg.any.ap-south-1.mpx.prd.cloud.redpanda.com:9093').split(','),
   logLevel: logLevel.INFO,
   groupId: process.env.KAFKA_GROUP_ID || 'backend-consumer-group',
 

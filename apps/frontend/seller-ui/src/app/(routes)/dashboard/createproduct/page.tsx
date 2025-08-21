@@ -137,7 +137,7 @@ const onSubmit = async (data: FormData) => {
 
     // Send POST request to create product
     const createRes = await axios.post(
-      'http://localhost:3003/api/products',
+      'https://product-service-23pc.onrender.com/api/products',
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -321,7 +321,7 @@ if (!createdProductId) {
 
  <div>
       
-          <input {...register('enclosureMaterial')} placeholder='Enclosure Material' />
+          <textarea {...register('enclosureMaterial')} placeholder='Enclosure Material' />
         </div>
         
         
@@ -332,7 +332,7 @@ if (!createdProductId) {
         {/* Product Care Instructions */}
         <div>
 
-          <input {...register('productCareInstructions')}  placeholder='Product Care Instructions' />
+          <textarea {...register('productCareInstructions')}  placeholder='Product Care Instructions' />
         </div>
 
         {/* Product Features */}
