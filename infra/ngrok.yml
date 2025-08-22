@@ -1,0 +1,31 @@
+agent:
+  authtoken: 2bwbae282gQgtzTLDZXxFV7Vy5b_6bGdsEgmA8p1NmxHtiQFn
+
+
+
+
+
+#   # 1️⃣ Install Ngrok (if not installed)
+# sudo snap install ngrok
+
+# # 2️⃣ Authenticate Ngrok with your authtoken
+# # Replace <YOUR_NGROK_AUTHTOKEN> with your token from ngrok.com
+# ngrok config add-authtoken <YOUR_NGROK_AUTHTOKEN>
+
+# # 3️⃣ Start Ngrok to expose your Kubernetes Ingress (usually port 80)
+# ngrok http 80
+
+# # After running this, Ngrok will show a public URL like:
+# # https://abcd1234.ngrok.io
+
+# # 4️⃣ Use this public URL in your Next.js frontend .env.local:
+# # Create or update .env.local in your frontend project
+# echo "NEXT_PUBLIC_API_BASE_URL=https://abcd1234.ngrok.io" > .env.local
+
+# # 5️⃣ Deploy or run your frontend
+# # For local frontend testing:
+# npm run dev   # inside user-ui or seller-ui
+# # Or deploy frontend on Vercel using the same .env.local
+
+# # ✅ All backend services (/user/*, /product/*, /order/*, etc.) 
+# # will be accessible through this single Ngrok URL.

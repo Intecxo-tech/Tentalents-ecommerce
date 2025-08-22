@@ -1,73 +1,129 @@
-name: Backend CI
+# GitLab CI/CD pipeline for Tentalents Monorepo
+# Builds, scans, pushes Docker images for all backend services
+# Deploys observability stack (Prometheus, Jaeger, Grafana)
+# Deploys microservices via Helmfile
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+stages:
+  - build
+  - scan
+  - push
+  - observability
+  - deploy
 
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+variables:
+  # Base paths
+  BACKEND_PATH: apps/backend
+  K8S_INFRA_PATH: infra/k8s
+  HELMFILE_PATH: helmfile.yaml
 
-    env:
-      # Load secrets into environment variables
-      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-      KAFKA_BROKER: ${{ secrets.KAFKA_BROKER }}
-      REDIS_URL: ${{ secrets.REDIS_URL }}
-      MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
-      MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
-      MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
+  # Docker & GitHub Container Registry info
+  GHCR_REGISTRY: ghcr.io
+  GHCR_NAMESPACE: adhavswapna
 
-    services:
-      postgres:
-        image: postgres:15
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+# ---------------------------
+# Dynamically generate services list
+# This detects all folders under apps/backend (each folder is a service)
+# ---------------------------
+before_script:
+  - echo "Generating services list dynamically..."
+  - |
+    SERVICES=$(ls $BACKEND_PATH | grep -v '^$' | tr '\n' ' ')
+    echo "Services found: $SERVICES"
 
-      redis:
-        image: redis:7
-        ports: ["6379:6379"]
+# ---------------------------
+# Build Docker images for each service
+# ---------------------------
+build_images:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - |
+      # Loop through each service folder and build its Docker image
+      for service in $SERVICES; do
+        echo "🔹 Building Docker image for service: $service"
+        docker build -t "$GHCR_REGISTRY/$GHCR_NAMESPACE/$service:latest" "$BACKEND_PATH/$service"
+      done
+  tags:
+    - docker
 
-      kafka:
-        image: bitnami/kafka:latest
-        ports: ["9092:9092"]
-        env:
-          KAFKA_CFG_NODE_ID: 1
-          KAFKA_CFG_PROCESS_ROLES: broker,controller
-          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-          KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-          KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-          KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-          KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+# ---------------------------
+# Security scan with Trivy for all services
+# ---------------------------
+scan_images:
+  stage: scan
+  image: aquasec/trivy:latest
+  script:
+    - |
+      # Loop through all services and run Trivy vulnerability scan
+      for service in $SERVICES; do
+        echo "🔍 Scanning Docker image for service: $service"
+        trivy image "$GHCR_REGISTRY/$GHCR_NAMESPACE/$service:latest"
+      done
+  dependencies:
+    - build_images
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# ---------------------------
+# Push Docker images to GitHub Container Registry
+# ---------------------------
+push_images:
+  stage: push
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    # Authenticate to GitHub Container Registry using PAT
+    - echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+  script:
+    - |
+      # Loop through services and push each image
+      for service in $SERVICES; do
+        echo "🚀 Pushing Docker image for service: $service"
+        docker push "$GHCR_REGISTRY/$GHCR_NAMESPACE/$service:latest"
+      done
+  dependencies:
+    - scan_images
+  only:
+    - main
+  tags:
+    - docker
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+# ---------------------------
+# Deploy Observability stack: Prometheus, Jaeger, Grafana
+# ---------------------------
+deploy_observability:
+  stage: observability
+  image: lachlanevenson/k8s-helm:latest
+  before_script:
+    # Add Helm repos for observability tools
+    - helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    - helm repo add jaegertracing https://jaegertracing.github.io/helm-charts
+    - helm repo add grafana https://grafana.github.io/helm-charts
+    - helm repo update
+  script:
+    # Deploy Prometheus, Jaeger, Grafana via Helm
+    - helm upgrade --install prometheus prometheus-community/kube-prometheus-stack
+    - helm upgrade --install jaeger jaegertracing/jaeger
+    - helm upgrade --install grafana grafana/grafana
+  environment:
+    name: observability
+  only:
+    - main
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build all apps
-        run: npx nx run-many --target=build --all
-
-      - name: Run unit tests
-        run: npx nx run-many --target=test --all
+# ---------------------------
+# Deploy all microservices via Helmfile
+# ---------------------------
+deploy_services:
+  stage: deploy
+  image: lachlanevenson/k8s-helm:latest
+  script:
+    # Apply all Helmfile charts (services & infrastructure)
+    - echo "Deploying all microservices via Helmfile..."
+    - helmfile -f "$HELMFILE_PATH" apply
+  dependencies:
+    - push_images
+  environment:
+    name: production
+  only:
+    - main

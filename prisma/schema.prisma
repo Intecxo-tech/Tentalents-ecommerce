@@ -317,6 +317,7 @@ model Order {
 
 model Invoice {
   id       String   @id @default(uuid())
+  profileImageUrl String?
   orderId  String   @unique
   vendorId String   @db.Uuid
   pdfUrl   String

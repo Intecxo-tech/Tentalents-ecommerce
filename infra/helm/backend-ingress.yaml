@@ -1,0 +1,142 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend-ingress
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - host: api.localhost
+      http:
+        paths:
+          - path: /user/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 3012
+          - path: /product/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 3001
+          - path: /order/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 3002
+          - path: /rating/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: rating-service
+                port:
+                  number: 3019
+          - path: /email/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: email-service
+                port:
+                  number: 3004
+          - path: /payment/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: payment-service
+                port:
+                  number: 3005
+          - path: /search/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: search-service
+                port:
+                  number: 3006
+          - path: /cart/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: cart-service
+                port:
+                  number: 3020
+          - path: /admin/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: admin-service
+                port:
+                  number: 3008
+          - path: /invoice/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: invoice-service
+                port:
+                  number: 3009
+          - path: /analytics/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: analytics-service
+                port:
+                  number: 3010
+          - path: /vendor/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: vendor-service
+                port:
+                  number: 3011
+
+
+
+
+
+
+
+# Steps to apply Ingress
+
+# Install NGINX ingress controller in Kind (if not already installed):
+
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.5/deploy/static/provider/kind/deploy.yaml
+
+
+# Apply the ingress file:
+
+# kubectl apply -f backend-ingress.yaml
+
+
+# Update your /etc/hosts (for local development):
+
+# 127.0.0.1 api.localhost
+
+
+# Test:
+
+# curl http://api.localhost/user/health
+# curl http://api.localhost/product/list
+
+
+# Frontend integration: Use https://api.localhost as NEXT_PUBLIC_API_BASE_URL in your Next.js .env.
+
+# # This way, all services are exposed under one domain, and you don’t need separate NodePort URLs.
+# Step 1: Expose your Ingress with Ngrok
+
+# Since your Ingress host is api.localhost (mapped to port 80):
+
+# ngrok http 80
+
+
+# Ngrok will generate a public URL, e.g.:
+
+# https://abcd1234.ngrok.io
+
+
+# This single URL now acts as your api.localhost.

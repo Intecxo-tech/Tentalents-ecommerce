@@ -1,159 +1,113 @@
-📁 apps/README.md
+🛒 E-Commerce Nx Monorepo — Project Overview
 
-# 🛒 Nx Monorepo E-Commerce Platform
+This repository contains a full-stack, event-driven e-commerce platform built with Nx Monorepo architecture. It is designed for microservices-based development, scalability, and maintainability.
 
-This directory contains all microservices, gateway, and supporting systems for the **MVP e-commerce platform** built using a modular, event-driven architecture.
+The platform consists of:
 
----
+Frontend apps for users and sellers
+Backend apps implementing core microservices
+Post-MVP services for advanced features
 
-## 📦 Services Overview
+🏗️ Monorepo Structure
+Frontend
+App Name	Description
+user-ui	Customer-facing web application
+seller-ui	Seller/vendor management dashboard
+Backend
+Core Microservices
+Service Name	Description
+analytics-service	Event tracking & analytics
+admin-service	Admin dashboard & system control
+vendor-service	Vendor onboarding & management
+invoice-service	Invoice generation & management
+user-service	User management & authentication
+product-service	Product catalog & inventory
+order-service	Order processing & management
+rating-service	Product rating & review system
+email-service	Email notifications & campaigns
+payment-service	Payment processing & gateway
+search-service	Search functionality & indexing
+cart-service	Shopping cart & session management
+Post-MVP Services
+Service Name	Description
+post-mvp-services	Placeholder for future enhancements
+cms-service	Content management system
+recommendation-service	Product recommendation engine
+coupon-service	Coupon & discount management
+refund-service	Refund handling & processing
+⚡ Getting Started
+1. Install Dependencies
+# Install root dependencies
+npm install
 
-| Service Name        | Port | Description                                             |
-| ------------------- | ---- | ------------------------------------------------------- |
-| `user-service`      | 3000 | Handles user registration, login, JWT auth, and roles   |
-| `product-service`   | 3001 | Manages product catalog, categories, and inventory      |
-| `order-service`     | 3002 | Processes customer orders and order lifecycle           |
-| `rating-service`    | 3007 | Users rate and review products                          |
-| `email-service`     | 3004 | Sends OTPs, order confirmations via SMTP                |
-| `payment-service`   | 3005 | Integrates with mock payment provider                   |
-| `search-service`    | 3003 | Handles keyword search (future: ElasticSearch)          |
-| `cart-service`      | 3006 | Manages cart items and syncing with products            |
-| `admin-service`     | 3014 | Admin-only management UI/API (users, vendors, products) |
-| `invoice-service`   | 3015 | Generates downloadable invoices for orders              |
-| `analytics-service` | 3016 | Provides dashboard metrics and analytics APIs           |
-| `vendor-service`    | 3008 | Handles vendor onboarding, approval, analytics          |
+2. Running Frontend Apps
+# User UI
+npx nx serve user-ui
+# Seller UI
+npx nx serve seller-ui
 
----
 
-## 📦 Post-MVP Services
+Visit in browser:
 
-| Service Name             | Port | Description                                          |
-| ------------------------ | ---- | ---------------------------------------------------- |
-| `cms-service`            | 3011 | Manages dynamic content pages (banners, about, etc.) |
-| `coupon-service`         | 3010 | Handles coupons, promo codes, and discounts          |
-| `refund-service`         | 3012 | Processes refund requests and admin approvals        |
-| `recommendation-service` | 3013 | Returns personalized product recommendations         |
+User UI: http://localhost:4200/user-ui
 
----
+Seller UI: http://localhost:4200/seller-ui
 
-## 🌐 API Gateway
+3. Running Backend Services
+# Example: Start user-service
+npx nx serve user-service
+# Start all core services
+npx nx run-many --target=serve --all
 
-| Service Name       | Description                              |
-| ------------------ | ---------------------------------------- |
-| `kong-API-gateway` | Open-source gateway for routing and auth |
 
----
+Default service ports are configured per service in libs/shared/constants/service-ports.ts.
 
-## 🗂 Directory Structure (Simplified)
+🗄️ Database Configuration
 
-apps/
-├── [service-name]/
-│ ├── src/
-│ │ ├── app/
-│ │ │ ├── controllers/
-│ │ │ ├── routes/
-│ │ │ ├── services/
-│ │ │ ├── docs/
-│ │ │ └── ...
-│ │ ├── app.ts
-│ │ └── main.ts
-│ ├── prisma/
-│ │ ├── schema.prisma
-│ │ ├── seed.ts
-│ │ └── seed-\*.json
-│ ├── README.md
-│ └── project.json
+The backend services connect to PostgreSQL / Supabase databases. Add your database URL to .env:
 
----
+DATABASE_URL="postgresql://username:password@host:port/dbname?sslmode=require"
 
-## 🧪 Development
 
-### 🛠 Run a Service
+Other environment variables:
 
-```bash
-pnpm nx serve [service-name]
+SWAGGER_JSON_URL=http://localhost:<port>
 
-Example:
+📦 Microservices Communication
 
-pnpm nx serve user-service
+Kafka: Event-driven messaging between microservices
 
-🧬 Seed Data
+Redis: Caching & session storage
 
-pnpm exec prisma db seed --schema=apps/[service-name]/prisma/schema.prisma
+MinIO: File storage (invoices, KYC docs)
 
-📚 API Documentation
+Kafka topics and event types are centralized in libs/shared/kafka.
 
-Swagger is enabled per service at:
+📜 API Documentation
 
-http://localhost:[port]/api/docs/[service-name]
+All backend services expose Swagger documentation:
 
-Example:
+# Install Swagger packages if not installed
+npm install swagger-ui-express swagger-jsdoc
 
-http://localhost:3000/api/docs/user
+# Run the backend service
+npx nx serve <service-name>
 
-⚙️ Technologies
+# Visit in browser
+http://localhost:<service-port>/api-docs
 
-    Node.js (Express)
+🛠️ Developer Notes
 
-    Prisma (PostgreSQL ORM)
+Shared libraries are located under libs/shared for reusable logic (auth, Kafka, Redis, MinIO, utils, etc.)
 
-    Kafka (via KRaft, no Zookeeper)
+Nx CLI allows running, building, and testing apps efficiently
 
-    Redis Sentinel
+Use npx nx graph to visualize the dependency graph
 
-    MinIO (for vendor uploads)
+🔮 Future Plans
 
-    Docker + Kubernetes (Kind)
+Expand post-MVP services: CMS, recommendations, coupons, refunds
 
-    Helm Charts
+Add mobile frontend apps for iOS/Android
 
-    GitHub Actions CI/CD
-
-    Prometheus + Grafana + Loki + Jaeger
-
-    Trivy + Falco (Security)
-
-    Keycloak + OAuth2 Proxy (RBAC, Auth)
-
-🧭 Service Dependencies
-
-    All services share .env-based config and use centralized shared libs (@shared/...) for:
-
-        logger, config, kafka, redis, swagger, auth, errorHandler, utils
-
-✅ Preview & Deployment
-
-    Frontend: Next.js (deployed via Vercel)
-
-    Backend: Deployed via Helm on Kind cluster (can switch to real cloud via Terraform later)
-
-    Images stored on ImageKit
-
-    Domains managed via Cloudflare
-
-📋 Checklist
-
-Dockerized all services
-
-Helm charts per service
-
-CI pipeline for affected apps
-
-Preview environments on PRs
-
-Monitoring, tracing, and logging via OSS stack
-
-Trivy security scans
-
-Graceful shutdowns and health checks
-
-    Post-MVP services scaffolded
-
-🧠 Contributions
-
-Please commit services with proper structure:
-
-controller/ → route → service → Kafka/Redis → DB
-
-And add Swagger annotations + seeders.
-```
+Improve monitoring with Prometheus/Grafana and observability tools

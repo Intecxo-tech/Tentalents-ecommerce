@@ -8,8 +8,7 @@
     "lint": "npx nx lint",
     "test": "npx nx test",
     "dev:seller-ui": "nx serve seller-ui",
-
- "dev:user-ui": "nx serve user-ui",
+    "dev:user-ui": "nx serve user-ui",
     "format": "nx format:write",
     "dev": "nx run-many --target=serve --all",
     "auth-docs": "node apps/auth-service/src/swagger.js",
@@ -131,6 +130,8 @@
     "@nx/next": "^21.3.9",
     "@nx/react": "^21.3.9",
     "@nx/webpack": "^21.3.7",
+    "@swc-node/register": "^1.11.1",
+    "@swc/core": "^1.13.4",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",

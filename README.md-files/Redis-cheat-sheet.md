@@ -1,7 +1,6 @@
 ✅ Essential Redis Commands for Your Project
-bash
-Copy
-Edit
+
+
 # 🔍 Check Redis is running (no auth)
 redis-cli PING
 # → Response: PONG

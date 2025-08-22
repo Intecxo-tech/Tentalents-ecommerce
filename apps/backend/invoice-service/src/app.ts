@@ -4,6 +4,7 @@ import { errorHandler, notFoundHandler } from '@shared/error';
 import { corsMiddleware, helmetMiddleware } from '@shared/middlewares';
 import { logger } from '@shared/logger';
 import invoiceRoutes from './app/routes/invoice.routes';
+import cloudinaryRoutes from './app/routes/cloudinary.routes';
 
 const app = express();
 
@@ -14,6 +15,9 @@ app.use(helmetMiddleware);
 
 // 📦 Routes
 app.use('/api/invoices', invoiceRoutes);
+
+// 🌐 Cloudinary routes (demo: logs URL in console)
+app.use('/api/cloudinary', cloudinaryRoutes);
 
 // 📚 Swagger Docs
 setupSwagger(app, {

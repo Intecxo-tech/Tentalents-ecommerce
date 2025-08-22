@@ -1,33 +1,56 @@
-version: "3.8"
-
 services:
+  # ─── Infrastructure Services ────────────────────────────────
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
   redis:
     image: redis:7
     container_name: redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD}
     env_file:
-      - ./.env
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      - .env
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     networks:
       - backend
 
-  redis-sentinel-0:
-    image: redis:7
-    container_name: redis-sentinel-0
+  minio:
+    image: minio/minio
+    container_name: minio
     restart: unless-stopped
-    command: redis-sentinel /etc/redis/sentinel.conf
-    volumes:
-      - ./libs/shared/redis/src/lib/sentinel-0.conf:/etc/redis/sentinel.conf
+    env_file:
+      - .env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server --console-address ":9001" /data
     ports:
-      - "26379:26379"
-    depends_on:
-      - redis
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
     networks:
       - backend
 
@@ -41,43 +64,11 @@ services:
       KAFKA_CFG_NODE_ID: 1
       KAFKA_CFG_PROCESS_ROLES: controller,broker
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-    networks:
-      - backend
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
-    restart: unless-stopped
-    ports:
-      - "8081:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local-kafka
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-    depends_on:
-      - kafka
-    networks:
-      - backend
-
-  minio:
-    image: minio/minio
-    container_name: minio
-    restart: unless-stopped
-    env_file:
-      - ./.env
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
-    command: server --console-address ":9001" /data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio-data:/data
     networks:
       - backend
 
@@ -86,7 +77,7 @@ services:
     container_name: swagger
     restart: unless-stopped
     env_file:
-      - ./.env
+      - .env
     environment:
       SWAGGER_JSON_URL: ${SWAGGER_JSON_URL}
     ports:
@@ -94,10 +85,287 @@ services:
     networks:
       - backend
 
+  # ─── Microservices ────────────────────────────────
+  user-service:
+    build:
+      context: .
+      dockerfile: apps/backend/user-service/Dockerfile
+    container_name: user-service
+    env_file:
+      - .env
+    ports:
+      - "${USER_SERVICE_PORT}:3012"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  product-service:
+    build:
+      context: .
+      dockerfile: apps/backend/product-service/Dockerfile
+    container_name: product-service
+    env_file:
+      - .env
+    ports:
+      - "${PRODUCT_SERVICE_PORT}:3001"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  order-service:
+    build:
+      context: .
+      dockerfile: apps/backend/order-service/Dockerfile
+    container_name: order-service
+    env_file:
+      - .env
+    ports:
+      - "${ORDER_SERVICE_PORT}:3002"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  rating-service:
+    build:
+      context: .
+      dockerfile: apps/backend/rating-service/Dockerfile
+    container_name: rating-service
+    env_file:
+      - .env
+    ports:
+      - "${RATING_SERVICE_PORT}:3003"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  email-service:
+    build:
+      context: .
+      dockerfile: apps/backend/email-service/Dockerfile
+    container_name: email-service
+    env_file:
+      - .env
+    ports:
+      - "${EMAIL_SERVICE_PORT}:3004"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: apps/backend/payment-service/Dockerfile
+    container_name: payment-service
+    env_file:
+      - .env
+    ports:
+      - "${PAYMENT_SERVICE_PORT}:3005"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  search-service:
+    build:
+      context: .
+      dockerfile: apps/backend/search-service/Dockerfile
+    container_name: search-service
+    env_file:
+      - .env
+    ports:
+      - "${SEARCH_SERVICE_PORT}:3006"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  cart-service:
+    build:
+      context: .
+      dockerfile: apps/backend/cart-service/Dockerfile
+    container_name: cart-service
+    env_file:
+      - .env
+    ports:
+      - "${CART_SERVICE_PORT}:3020"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: apps/backend/admin-service/Dockerfile
+    container_name: admin-service
+    env_file:
+      - .env
+    ports:
+      - "${ADMIN_SERVICE_PORT}:3008"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  invoice-service:
+    build:
+      context: .
+      dockerfile: apps/backend/invoice-service/Dockerfile
+    container_name: invoice-service
+    env_file:
+      - .env
+    ports:
+      - "${INVOICE_SERVICE_PORT}:3009"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: apps/backend/analytics-service/Dockerfile
+    container_name: analytics-service
+    env_file:
+      - .env
+    ports:
+      - "${ANALYTICS_SERVICE_PORT}:3010"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
+  vendor-service:
+    build:
+      context: .
+      dockerfile: apps/backend/vendor-service/Dockerfile
+    container_name: vendor-service
+    env_file:
+      - .env
+    ports:
+      - "${VENDOR_SERVICE_PORT}:3011"
+    networks:
+      - microservices
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+      - minio
+
 volumes:
+  pgdata:
   redis-data:
   minio-data:
 
 networks:
   backend:
     driver: bridge
+  microservices:
+    driver: bridge
+
+# ─── Useful Commands ────────────────────────────────
+
+# Build all services
+# npx nx run-many --target=build --all && docker compose --env-file .env up -d --build
+
+# ─── All Services ────────────────────────────────
+
+# # Start all services (detached)
+# docker compose --env-file .env up -d
+
+# # Stop all services
+# docker compose down
+
+# # Stop all services and remove volumes
+# docker compose down -v
+
+# # Check status of running containers
+# docker compose ps
+
+# # Tail logs of all services
+# docker compose --env-file .env logs -f
+
+# # Rebuild and restart all services
+# docker compose --env-file .env up -d --build
+
+# # ─── Single Service ────────────────────────────────
+
+# # Start a specific service
+# docker compose --env-file .env up -d user-service
+# docker compose --env-file .env up -d product-service
+# docker compose --env-file .env up -d order-service
+# docker compose --env-file .env up -d rating-service
+# docker compose --env-file .env up -d email-service
+# docker compose --env-file .env up -d payment-service
+# docker compose --env-file .env up -d search-service
+# docker compose --env-file .env up -d cart-service
+# docker compose --env-file .env up -d admin-service
+# docker compose --env-file .env up -d invoice-service
+# docker compose --env-file .env up -d analytics-service
+# docker compose --env-file .env up -d vendor-service
+
+# # Rebuild and restart a specific service
+# docker compose --env-file .env up -d --build user-service
+# docker compose --env-file .env up -d --build product-service
+# docker compose --env-file .env up -d --build order-service
+# docker compose --env-file .env up -d --build rating-service
+# docker compose --env-file .env up -d --build email-service
+# docker compose --env-file .env up -d --build payment-service
+# docker compose --env-file .env up -d --build search-service
+# docker compose --env-file .env up -d --build cart-service
+# docker compose --env-file .env up -d --build admin-service
+# docker compose --env-file .env up -d --build invoice-service
+# docker compose --env-file .env up -d --build analytics-service
+# docker compose --env-file .env up -d --build vendor-service
+
+# # Tail logs of a specific service
+# docker compose --env-file .env logs -f user-service
+# docker compose --env-file .env logs -f product-service
+# docker compose --env-file .env logs -f order-service
+# docker compose --env-file .env logs -f rating-service
+# docker compose --env-file .env logs -f email-service
+# docker compose --env-file .env logs -f payment-service
+# docker compose --env-file .env logs -f search-service
+# docker compose --env-file .env logs -f cart-service
+# docker compose --env-file .env logs -f admin-service
+# docker compose --env-file .env logs -f invoice-service
+# docker compose --env-file .env logs -f analytics-service
+# docker compose --env-file .env logs -f vendor-service

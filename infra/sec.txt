@@ -1,0 +1,182 @@
+gh secret set DATABASE_URL --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set SWAGGER_JSON_URL --repo Intecxo-tech/Tentalents-ecommerce --body "http://localhost:3004/swagger.json"
+
+gh secret set SUPABASE_URL --repo Intecxo-tech/Tentalents-ecommerce --body "https://yorfdedelcovdxwrpdij.supabase.co"
+
+gh secret set SUPABASE_ANON_KEY --repo Intecxo-tech/Tentalents-ecommerce --body "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvcmZkZWRlbGNvdmR4d3JwZGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMjcxMjcsImV4cCI6MjA2OTkwMzEyN30.PN1EJyD45QPvgkh5VWevUTVDL3Z0QRAhHWNl8xjnssQ"
+
+gh secret set SERVICE_ROLE_KEY --repo Intecxo-tech/Tentalents-ecommerce --body "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvcmZkZWRlbGNvdmR4d3JwZGlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDMyNzEyNywiZXhwIjoyMDY5OTAzMTI3fQ.friNfZGHpBctA6viOomz5vbwC19Hvy6EFcfExaROWFw"
+
+gh secret set KAFKA_BROKERS --repo Intecxo-tech/Tentalents-ecommerce --body "localhost:9092"
+
+gh secret set KAFKAJS_NO_PARTITIONER_WARNING --repo Intecxo-tech/Tentalents-ecommerce --body "1"
+
+gh secret set REDIS_HOST --repo Intecxo-tech/Tentalents-ecommerce --body "localhost"
+
+gh secret set REDIS_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "6379"
+
+gh secret set REDIS_SENTINEL_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "myredis"
+
+gh secret set REDIS_PASSWORD --repo Intecxo-tech/Tentalents-ecommerce --body "redis_pass"
+
+gh secret set MINIO_ENDPOINT --repo Intecxo-tech/Tentalents-ecommerce --body "localhost"
+
+gh secret set MINIO_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "9000"
+
+gh secret set MINIO_ACCESS_KEY --repo Intecxo-tech/Tentalents-ecommerce --body "minio"
+
+gh secret set MINIO_SECRET_KEY --repo Intecxo-tech/Tentalents-ecommerce --body "minio123"
+
+gh secret set MINIO_BUCKET --repo Intecxo-tech/Tentalents-ecommerce --body "images"
+
+gh secret set JWT_SECRET --repo Intecxo-tech/Tentalents-ecommerce --body "psyrim3ReSNikbVHwq/R624osFaIpjxGjt8HxNqUFAg="
+
+gh secret set SMTP_HOST --repo Intecxo-tech/Tentalents-ecommerce --body "smtp.sendgrid.net"
+
+gh secret set SMTP_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "587"
+
+gh secret set SMTP_USER --repo Intecxo-tech/Tentalents-ecommerce --body "apikey"
+
+gh secret set SMTP_PASS --repo Intecxo-tech/Tentalents-ecommerce --body "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"
+
+gh secret set EMAIL_FROM --repo Intecxo-tech/Tentalents-ecommerce --body "helotune258@gmail.com"
+
+gh secret set USER_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3012"
+
+gh secret set USER_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "user-service"
+
+gh secret set USER_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set USER_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "user-service-client"
+
+gh secret set USER_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "user-service-group"
+
+gh secret set PRODUCT_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3001"
+
+gh secret set PRODUCT_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "product-service"
+
+gh secret set PRODUCT_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set PRODUCT_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "product-service-client"
+
+gh secret set PRODUCT_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "product-service-group"
+
+gh secret set ORDER_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3002"
+
+gh secret set ORDER_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "order-service"
+
+gh secret set ORDER_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set ORDER_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "order-service-client"
+
+gh secret set ORDER_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "order-service-group"
+
+gh secret set RATING_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3003"
+
+gh secret set RATING_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "rating-service"
+
+gh secret set RATING_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set RATING_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "rating-service-client"
+
+gh secret set RATING_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "rating-service-group"
+
+gh secret set EMAIL_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3004"
+
+gh secret set EMAIL_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "email-service"
+
+gh secret set EMAIL_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set EMAIL_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "email-service-client"
+
+gh secret set EMAIL_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "email-service-group"
+
+gh secret set PAYMENT_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3005"
+
+gh secret set PAYMENT_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "payment-service"
+
+gh secret set PAYMENT_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set PAYMENT_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "payment-service-client"
+
+gh secret set PAYMENT_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "payment-service-group"
+
+gh secret set SEARCH_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3006"
+
+gh secret set SEARCH_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "search-service"
+
+gh secret set SEARCH_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set SEARCH_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "search-service-client"
+
+gh secret set SEARCH_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "search-service-group"
+
+gh secret set CART_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3007"
+
+gh secret set CART_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "cart-service"
+
+gh secret set CART_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set CART_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "cart-service-client"
+
+gh secret set CART_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "cart-service-group"
+
+gh secret set ADMIN_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3008"
+
+gh secret set ADMIN_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "admin-service"
+
+gh secret set ADMIN_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set ADMIN_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "admin-service-client"
+
+gh secret set ADMIN_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "admin-service-group"
+
+gh secret set INVOICE_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3009"
+
+gh secret set INVOICE_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "invoice-service"
+
+gh secret set INVOICE_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set INVOICE_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "invoice-service-client"
+
+gh secret set INVOICE_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "invoice-service-group"
+
+gh secret set ANALYTICS_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3010"
+
+gh secret set ANALYTICS_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "analytics-service"
+
+gh secret set ANALYTICS_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set ANALYTICS_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "analytics-service-client"
+
+gh secret set ANALYTICS_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "analytics-service-group"
+
+gh secret set VENDOR_SERVICE_PORT --repo Intecxo-tech/Tentalents-ecommerce --body "3011"
+
+gh secret set VENDOR_SERVICE_NAME --repo Intecxo-tech/Tentalents-ecommerce --body "vendor-service"
+
+gh secret set VENDOR_SERVICE_DB --repo Intecxo-tech/Tentalents-ecommerce --body "postgresql://neondb_owner:npg_IzRrx7gaLtp2@ep-icy-smoke-a1cyzmap-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+gh secret set VENDOR_SERVICE_KAFKA_CLIENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "vendor-service-client"
+
+gh secret set VENDOR_SERVICE_KAFKA_GROUP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "vendor-service-group"
+
+gh secret set GOOGLE_APPLICATION_CREDENTIALS --repo Intecxo-tech/Tentalents-ecommerce --body "./libs/shared/auth/serviceaccount.json"
+
+gh secret set FIREBASE_API_KEY --repo Intecxo-tech/Tentalents-ecommerce --body "AIzaSyCooYBOJXExeAcdQXJE1_itGquHcVLTvQ0"
+
+gh secret set FIREBASE_AUTH_DOMAIN --repo Intecxo-tech/Tentalents-ecommerce --body "tentalents-ecommerce-58052.firebaseapp.com"
+
+gh secret set FIREBASE_PROJECT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "tentalents-ecommerce-58052"
+
+gh secret set FIREBASE_APP_ID --repo Intecxo-tech/Tentalents-ecommerce --body "1:517240037944:web:e0941b6a1553ac289efccd"
+
+gh secret set FIREBASE_STORAGE_BUCKET --repo Intecxo-tech/Tentalents-ecommerce --body "tentalents-ecommerce-58052.firebasestorage.appspot.com"
+
+gh secret set FIREBASE_MESSAGING_SENDER_ID --repo Intecxo-tech/Tentalents-ecommerce --body "517240037944"
+
+gh secret set FIREBASE_MEASUREMENT_ID --repo Intecxo-tech/Tentalents-ecommerce --body "G-X09JLBNXDX"
+
+
+gh secret set GOOGLE_SERVICE_ACCOUNT_BASE64 --repo Intecxo-tech/Tentalents-ecommerce --body "$(cat serviceAccount.json.base64.txt)"

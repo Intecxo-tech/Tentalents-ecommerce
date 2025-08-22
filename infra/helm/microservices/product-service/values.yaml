@@ -1,24 +1,49 @@
 replicaCount: 1
 
 image:
-  repository: your-dockerhub/product-service
+  repository: product-service
   pullPolicy: IfNotPresent
   tag: latest
 
 service:
-  type: ClusterIP
-  port: 3000
+  type: NodePort
+  port: 3001
+  nodePort: 3001
 
 ingress:
   enabled: true
   className: 'nginx'
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
   hosts:
     - host: api.localhost
       paths:
-        - path: /api/product/(.*)
+        - path: /api/product-service/(.*)
           pathType: ImplementationSpecific
 
-resources: {}
-env: {}
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+# Non-sensitive config
+env:
+  - name: REDIS_HOST
+    value: "localhost"
+  - name: REDIS_PORT
+    value: "6379"
+  - name: MINIO_ENDPOINT
+    value: "localhost"
+  - name: MINIO_PORT
+    value: "9000"
+  - name: KAFKA_BROKERS
+    value: "localhost:9092"
+
+# Sensitive data from Kubernetes Secret
+envFrom:
+  - secretRef:
+      name: product-service-secrets
