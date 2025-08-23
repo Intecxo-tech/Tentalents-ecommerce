@@ -149,15 +149,15 @@ const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddr
             />
         
           </div>
-                    <div className="firstcolumn topsection mb-[10px]">
+                    {/* <div className="firstcolumn topsection mb-[10px]">
     <input
               type="email"
               placeholder="Email"
-              value={name}
+              value={Email}
               onChange={(e) => setName(e.target.value)}
               required
             />
-            </div>
+            </div> */}
           <div className="newdelivery">
             <h2 className="sectiontitle">Add New Delivery Address</h2>
 
