@@ -17,7 +17,7 @@ const Header = () => {
 const [showSearchCategories, setShowSearchCategories] = useState(false);
   const [searchCategory, setSearchCategory] = useState('');
   const [searchBrand, setSearchBrand] = useState('');
-const categoriesRef = useRef<HTMLDivElement>(null);
+
   // ref for menu container to detect outside clicks
   const menuRef = useRef<HTMLDivElement>(null);
 const router = useRouter();
@@ -97,24 +97,6 @@ const router = useRouter();
     // Push to shop page with discount query param
     router.push(`/shop?discount=${discountValue}`);
   };
-  useEffect(() => {
-  function handleClickOutside(event: MouseEvent) {
-    if (categoriesRef.current && !categoriesRef.current.contains(event.target as Node)) {
-      setShowSearchCategories(false);
-    }
-  }
-
-  if (showSearchCategories) {
-    document.addEventListener('mousedown', handleClickOutside);
-  } else {
-    document.removeEventListener('mousedown', handleClickOutside);
-  }
-
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
-  };
-}, [showSearchCategories]);
-
   return (
     <header className="header">
       <div className="header-container">
@@ -129,85 +111,10 @@ const router = useRouter();
 
           <div className='header-right'>
             <div className="search-bar" style={{ position: 'relative' }}>
-    <div 
-  className="search-categories"
-  onClick={() => setShowSearchCategories(prev => !prev)}
-  style={{ cursor: 'pointer', position: 'relative', userSelect: 'none', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}
-  ref={categoriesRef} 
->
-  Categories
-  <ChevronDown size={16} className="chevron" />
-
-  {showSearchCategories && (
-    <div
-      className="categories-dropdown"
-      style={{
-        position: 'absolute',
-        top: 'calc(100% + 4px)', // just below the button with some gap
-        left: 0,
-        backgroundColor: 'white',
-        border: '1px solid #ddd',
-        borderRadius: '6px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        zIndex: 1001,
-        maxHeight: '240px',
-        overflowY: 'auto',
-        width: '220px',
-        padding: '8px 0',
-        fontSize: '14px',
-        fontWeight: '500',
-        color: '#222',
-      }}
-    >
-      {categories.map((cat, index) => (
-        <div
-          key={index}
-          className="dropdown-category-item"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '8px 16px',
-            cursor: 'pointer',
-            backgroundColor: searchCategory === cat.title ? '#f0f4ff' : 'transparent',
-            transition: 'background-color 0.2s ease',
-            gap: '10px',
-          }}
-          onClick={() => {
-            setSearchCategory(cat.title);
-            setShowSearchCategories(false);
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f0f4ff')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = searchCategory === cat.title ? '#f0f4ff' : 'transparent')}
-        >
-          <Image src={cat.image} alt={cat.title} width={24} height={24} style={{ borderRadius: '4px' }} />
-          <span>{cat.title}</span>
-        </div>
-      ))}
-
-      <div
-        className="dropdown-category-item clear-selection"
-        style={{
-          padding: '8px 16px',
-          cursor: 'pointer',
-          fontStyle: 'italic',
-          color: '#666',
-          borderTop: '1px solid #eee',
-          marginTop: '8px',
-        }}
-        onClick={() => {
-          setSearchCategory('');
-          setShowSearchCategories(false);
-        }}
-        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f9f9f9')}
-        onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-      >
-        Clear Selection
-      </div>
-    </div>
-  )}
-</div>
-
-
+              <div className="search-categories">
+                Categories
+                <ChevronDown size={16} className="chevron" />
+              </div>
               <input
                 className="search-input"
                 placeholder="Search Tentalents.in"
