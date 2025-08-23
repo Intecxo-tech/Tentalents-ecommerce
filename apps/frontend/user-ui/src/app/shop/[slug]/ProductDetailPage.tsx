@@ -22,8 +22,8 @@ import { useAuth } from '../../auth/callback/AuthContext';
 import './singleproductpage.css';
 
 export default function ProductDetailClient({ product }: { product: any }) {
-  const { openSidebar } = useAuth();
   const router = useRouter();
+    const { openSidebar } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [openSections, setOpenSections] = useState({
@@ -44,7 +44,9 @@ console.log(" Vendor Name:", product.vendor?.name);
 const { handleAddToCart, loading, error, userId } = useAddToCart();
 
 const onAddToCartClick = async () => {
+  console.log('User ID:', userId);
   if (!userId) {
+    toast.error(' Please log in to add items to your cart.');
     openSidebar();
     return;
   }
@@ -59,7 +61,7 @@ const onAddToCartClick = async () => {
       quantity
     );
     
-    toast.success('✅ Added to cart!');
+    toast.success('Added to cart');
   } catch (e) {
       console.error('Add to cart failed:', e);
     toast.error(' Failed to add to cart.');
@@ -374,7 +376,21 @@ const sellerInfo = product.vendor;
         </div>
         <div className="paymentwrapper">
           <div className="paymentimages"><Image src={UPI} alt="upi"/><Image src={visa} alt="visa"/><Image src={bank} alt="bank"/><Image src={BankTransfer} alt="bank-transfer"/></div>
-         <a href="/cart/checkout"><button  className="background-button addtocart">Buy Now</button></a> 
+       <button
+  className="background-button addtocart"
+  onClick={() => {
+    if (!userId) {
+      toast.error('Please log in to proceed to checkout.');
+      openSidebar(); // Trigger sidebar login
+      return;
+    }
+
+    router.push('/cart/checkout'); // Redirect to checkout if logged in
+  }}
+>
+  Buy Now
+</button>
+
         </div>
       </div>
     </div>
@@ -388,4 +404,3 @@ const sellerInfo = product.vendor;
     </div>
   );
 }
-

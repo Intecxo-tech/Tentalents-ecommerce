@@ -51,7 +51,7 @@ const PasswordStep = ({ email, otp, mode, loading, setLoading }: Props) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} className='register-form'>
       <input
         type="password"
         placeholder="Password"

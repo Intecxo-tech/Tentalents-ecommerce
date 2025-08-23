@@ -10,6 +10,9 @@
   display: flex;
   justify-content: flex-end;
 }
+/* .login-sidebarheading{
+
+} */
 
 .loginregisterpopup {
   background: white;
@@ -79,4 +82,24 @@
   font-weight: bold;
   color: #0070f3;
   cursor: pointer;
+}
+
+.sidebar-loginform .google-button{
+  margin-bottom: 0px;
+}
+.divider {
+  height: 1px;
+  background-color: #eee;
+  margin-bottom: 20px;
+}
+.sidebar-loginform .bottom-links{
+  margin: 0px;;
+}
+.register-form{
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  gap:10px;
+  flex-direction: column;
 }

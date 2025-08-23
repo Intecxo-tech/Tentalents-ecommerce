@@ -13,6 +13,9 @@
   display: flex;
   justify-content: flex-end;
 }
+/* .login-sidebarheading{
+
+} */
 
 .loginregisterpopup {
   background: white;
@@ -84,6 +87,25 @@
   cursor: pointer;
 }
 
+.sidebar-loginform .google-button{
+  margin-bottom: 0px;
+}
+.divider {
+  height: 1px;
+  background-color: #eee;
+  margin-bottom: 20px;
+}
+.sidebar-loginform .bottom-links{
+  margin: 0px;;
+}
+.register-form{
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  gap:10px;
+  flex-direction: column;
+}
 /*!********************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/(routes)/login/login.css ***!
   \********************************************************************************************************************************************************************************************************************************************************************************************/
@@ -248,11 +270,12 @@
   justify-content: space-between;
  }
  .sidebar-loginform{
+
   display: flex;
-  margin: 10px 0px;;
-  /* height: 100vh; */
-  /* justify-content: center;
-  align-items: center; */
+  margin: 10px 0px;
+  height: 100vh; 
+  justify-content: center;
+  align-items: center;
   flex-direction: column;
   gap:10px;
  }

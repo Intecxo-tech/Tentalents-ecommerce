@@ -67,7 +67,7 @@ const Cart = () => {
       if (!res.ok) throw new Error('Failed to fetch cart');
 
       const responseData = await res.json();
-
+console.log('Cart API Raw Data:', responseData.data);
       const filtered = responseData.data
         .map((item: CartItem) => {
        const parsedPrice =

@@ -4,7 +4,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import './loginregister.css';
 import toast from 'react-hot-toast';
 import AuthFlow from '../auth/Authflow'; // 👈 import your AuthFlow component
-import '../../(routes)/login/login.css'
+import '../../(routes)/login/login.css';
+import { auth, provider } from '../../../services/firebase';
+import { signInWithPopup } from 'firebase/auth';
+import Image from 'next/image';
+import Google from '../../../assets/google.png';
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -61,6 +65,40 @@ const LoginRegisterSidebar = ({ isOpen, onClose, onLoginSuccess }: Props) => {
       setLoading(false);
     }
   };
+const handleFirebaseGoogleSignIn = async () => {
+  try {
+    setLoading(true);
+    const result = await signInWithPopup(auth, provider);
+    const firebaseIdToken = await result.user.getIdToken();
+
+    const res = await fetch(`https://user-service-e1em.onrender.com/api/auth/google-login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        provider: 'google',
+        idToken: firebaseIdToken,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message || 'Google login failed');
+
+    toast.success('Logged in successfully!');
+    localStorage.setItem('token', data.token);
+    console.log('Login response data:', data);
+    onLoginSuccess?.({
+  token: data.token || data.data.token,  // handle both login and Google response
+});
+    onClose();
+  } catch (error: any) {
+    toast.error(error.message || 'Google login failed');
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (!isOpen) return null;
 
@@ -94,15 +132,18 @@ const LoginRegisterSidebar = ({ isOpen, onClose, onLoginSuccess }: Props) => {
             <button type="submit" className="background-buttonver" disabled={loading}>
               {loading ? 'Logging in...' : 'Login'}
             </button>
-          </form>
-        ) : (
-          // ✅ Register flow using your AuthFlow component
-          <div style={{ padding: '1rem 0' }}>
-            <AuthFlow mode="signup" />
-          </div>
-        )}
+ <div className="divider" />
+            <button
+  type="button"
+  onClick={handleFirebaseGoogleSignIn}
+  className="google-button"
+  disabled={loading}
+>
+  <Image src={Google} alt="Google Icon" width={20} height={20} style={{ marginRight: '8px' }} />
+  Continue with Google
+</button>
 
-        <div className="bottom-links">
+ <div className="bottom-links">
           {isLogin ? (
             <p>
               Don’t have an account?{' '}
@@ -115,6 +156,16 @@ const LoginRegisterSidebar = ({ isOpen, onClose, onLoginSuccess }: Props) => {
             </p>
           )}
         </div>
+          </form>
+          
+        ) : (
+          // ✅ Register flow using your AuthFlow component
+          <div style={{ padding: '1rem 0' }}>
+            <AuthFlow mode="signup" />
+          </div>
+        )}
+
+       
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ const EmailStep = ({ email, setEmail, setStep, mode, loading, setLoading }: Prop
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} className='register-form'>
       <input
         type="email"
         placeholder="Enter your email"

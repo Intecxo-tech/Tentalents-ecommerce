@@ -151,9 +151,18 @@ const onSubmit = async (data: FormData) => {
       }
     );
 
-    toast.success('User registered successfully!');
-    // Optionally, redirect to login page after successful registration
-    router.push('/login'); 
+   const loginResponse = await axios.post(`https://user-service-e1em.onrender.com/api/auth/login`, {
+  email,
+  password: data.password,
+});
+
+const token = loginResponse.data?.data?.token;
+if (!token) throw new Error('Token missing in response');
+
+localStorage.setItem('token', token);
+toast.success('Registration and login successful!');
+router.push('/myaccount');
+
 
     // If you want to stay on the same page and just reset, comment out the above line
   } catch (err: any) {
@@ -243,7 +252,7 @@ const handleGoogleCallback = async (response: any) => {
     console.log('Google ID Token:', response.credential);
 
     const res = await axios.post(
-      `https://user-service-e1em.onrender.com/api/auth/google-login}`,
+      `https://user-service-e1em.onrender.com/api/auth/google-login`,
       {
         provider: 'google',
         idToken: response.credential,

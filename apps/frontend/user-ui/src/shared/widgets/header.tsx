@@ -57,19 +57,21 @@ const router = useRouter();
     }
 
     setIsLoading(true);
-    try {
-      const res = await fetch(`https://search-service-mo6h.onrender.com/api/search?${params.toString()}`);
-      const data = await res.json();
+ try {
+  const res = await fetch(`https://search-service-mo6h.onrender.com/api/search?${params.toString()}`);
+  const data = await res.json();
+  console.log('Search API result for query:', searchQuery, data);
 
-      if (data.status === 'success') {
-        setSearchResults(data.data);
-      } else {
-        setSearchResults([]);
-      }
-    } catch (error) {
-      console.error('Error fetching search results:', error);
-      setSearchResults([]);
-    }
+ if (data.success && Array.isArray(data.data)) {
+  setSearchResults(data.data);
+} else {
+  setSearchResults([]);
+}
+} catch (error) {
+  console.error('Error fetching search results:', error);
+  setSearchResults([]);
+}
+
     setIsLoading(false);
   };
 
