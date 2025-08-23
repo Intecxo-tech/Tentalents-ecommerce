@@ -183,7 +183,7 @@ export const products:productItems[]=[
 export const pages:footerPages[]=[
   {
    title:'My Account',
-   href:"/account"
+   href:"/myaccount"
   },
   {
    title:'Discount',
@@ -199,7 +199,7 @@ export const pages:footerPages[]=[
   },
   {
    title:'Shops',
-   href:"/shops"
+   href:"/shop"
   },
   {
    title:'Blogs & Newsletter',

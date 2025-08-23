@@ -29,14 +29,30 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
     }
 
     setLoading(true);
-    try {
-      const addresses = await getAllAddresses(); 
-      setAddresses(Array.isArray(addresses) ? addresses : []);
-    } catch (error) {
-      console.error('Error fetching addresses:', error);
-      toast.error('Failed to load addresses');
-      setAddresses([]); // fallback to empty
-    } finally {
+  try {
+  const addresses = await getAllAddresses(); 
+
+  if (!Array.isArray(addresses)) {
+    console.warn('Unexpected address response:', addresses);
+    setAddresses([]);
+    return;
+  }
+
+  setAddresses(addresses); // valid response, even if empty
+} catch (error: any) {
+  console.error('Error fetching addresses:', error);
+
+  // Only show toast if it's an actual network/server error
+  if (error?.message && error.message.toLowerCase().includes('network')) {
+    toast.error('Network error while fetching addresses');
+  } else {
+    // Optional: log it but don’t show toast
+    console.warn('Skipping toast for empty or unknown error while fetching addresses');
+  }
+
+  setAddresses([]);
+}
+ finally {
       setLoading(false);
     }
   };
