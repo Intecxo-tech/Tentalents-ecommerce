@@ -151,18 +151,21 @@ const onSubmit = async (data: FormData) => {
       }
     );
 
-   const loginResponse = await axios.post(`https://user-service-e1em.onrender.com/api/auth/login`, {
-  email,
-  password: data.password,
-});
+ const loginResponse = await axios.post(
+  `https://user-service-e1em.onrender.com/api/auth/login`,
+  {
+    email: getValues('email'),  // <- use latest
+    password: data.password,
+  }
+);
 
 const token = loginResponse.data?.data?.token;
 if (!token) throw new Error('Token missing in response');
 
-localStorage.setItem('token', token);
+localStorage.setItem('token', token);  // ✅ Save token
 toast.success('Registration and login successful!');
 router.push('/myaccount');
-
+// ✅ Redirect after login
 
     // If you want to stay on the same page and just reset, comment out the above line
   } catch (err: any) {
@@ -242,7 +245,7 @@ router.push('/myaccount');
 
   return () => {
     document.body.removeChild(script);
-  };
+  }; 
 }, []);
 const handleGoogleCallback = async (response: any) => {
   try {
@@ -251,16 +254,18 @@ const handleGoogleCallback = async (response: any) => {
     // Log the Google token for debugging
     console.log('Google ID Token:', response.credential);
 
-    const res = await axios.post(
-      `https://user-service-e1em.onrender.com/api/auth/google-login`,
-      {
-        provider: 'google',
-        idToken: response.credential,
-      }
-    );
+  const res = await axios.post(`https://user-service-e1em.onrender.com/api/auth/google-login`, {
+  provider: 'google',
+  idToken: response.credential,
+});
 
-    toast.success('Logged in successfully!');
-    router.push('/myaccount');
+const token = res.data?.data?.token;
+if (!token) throw new Error('Token missing in response');
+
+localStorage.setItem('token', token); // ✅ Save token
+toast.success('Logged in successfully!');
+router.push('/myaccount');
+
   } catch (error: any) {
     console.error('Google login failed:', error?.response?.data || error.message);
     toast.error(error?.response?.data?.message || 'Google login failed.');
@@ -274,13 +279,18 @@ const handleFirebaseGoogleSignIn = async () => {
     const result = await signInWithPopup(auth, provider);
     const firebaseIdToken = await result.user.getIdToken();
 
-    await axios.post(`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`, {
-      provider: 'google',
-      idToken: firebaseIdToken,
-    });
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`, {
+  provider: 'google',
+  idToken: firebaseIdToken,
+});
 
-    toast.success('Logged in successfully!');
-    router.push('/myaccount');
+const token = res.data?.data?.token;
+if (!token) throw new Error('Token missing in response');
+
+localStorage.setItem('token', token); // ✅ Save token
+toast.success('Logged in successfully!');
+router.push('/myaccount');
+
   } catch (error) {
     console.error(error);
     toast.error('Google login failed.');

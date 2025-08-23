@@ -13,6 +13,9 @@
     height: 100%;
    
 }
+.product-grid-tem{
+  align-items: flex-start;
+}
 .columns-2 {
   grid-template-columns: repeat(2, 1fr);
  
@@ -42,6 +45,7 @@ flex-direction: column;
  background: var(--lightbackground);
     padding:20px 25px;
     border-radius: 10px;
+    width: 100%;
 }
 
 

@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
@@ -10,6 +11,7 @@ type Props = {
   mode: 'login' | 'signup';
   loading: boolean;
   setLoading: (val: boolean) => void;
+    onLoginSuccess?: (token: string) => void;
 };
 
 type FormData = {
@@ -17,38 +19,51 @@ type FormData = {
   confirmPassword?: string;
 };
 
-const PasswordStep = ({ email, otp, mode, loading, setLoading }: Props) => {
+const PasswordStep = ({ email, otp, mode, loading, setLoading, onLoginSuccess }: Props) => {
   const router = useRouter();
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>();
 
-  const onSubmit = async (data: FormData) => {
-    setLoading(true);
-    try {
-      if (mode === 'signup') {
-        await axios.post(`https://user-service-e1em.onrender.com/api/auth/register/otp/complete`, {
-          email,
-          password: data.password,
-        });
+const onSubmit = async (data: FormData) => {
+  setLoading(true);
+  try {
+if (mode === 'signup') {
+  // Complete registration
+  await axios.post('https://user-service-e1em.onrender.com/api/auth/register/otp/complete', {
+    email,
+    password: data.password,
+    otp,
+  });
 
-        toast.success('Account created!');
-        router.push('/login');
-      } else {
-        const res = await axios.post(`https://user-service-e1em.onrender.com/api/auth/login/otp/complete`, {
-          email,
-          password: data.password,
-        });
+  // Then login with correct endpoint and payload
+  const res = await axios.post('https://user-service-e1em.onrender.com/api/auth/login', {
+    email,
+    password: data.password,
+  });
 
-        const token = res.data?.data?.token;
-        localStorage.setItem('token', token);
-        toast.success('Logged in!');
-        router.push('/myaccount');
-      }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
+  const token = res.data?.token || res.data?.data?.token;
+  if (!token) throw new Error('No token returned from server');
+
+  toast.success('Account created and logged in!');
+  onLoginSuccess?.(token);
+}
+else if (mode === 'login') {
+      // Just login
+      const res = await axios.post('https://user-service-e1em.onrender.com/api/auth/login/otp/complete', {
+        email,
+        password: data.password,
+        otp,
+      });
+      const token = res.data?.token || res.data?.data?.token;
+      if (!token) throw new Error('No token returned from server');
+      toast.success('Logged in successfully!');
+      onLoginSuccess?.(token);
     }
-  };
+  } catch (err: any) {
+    toast.error(err?.response?.data?.message || 'Something went wrong');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className='register-form'>

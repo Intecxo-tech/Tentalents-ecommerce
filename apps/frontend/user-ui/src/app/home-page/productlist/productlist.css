@@ -9,6 +9,9 @@
 
 
 }
+.product-list-items{
+  align-items: flex-start;
+}
 .product-list{
   gap:5px;
 }

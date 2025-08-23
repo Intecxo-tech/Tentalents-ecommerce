@@ -9,6 +9,7 @@ import { auth, provider } from '../../../services/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import Image from 'next/image';
 import Google from '../../../assets/google.png';
+import { useAuth } from '../../auth/callback/AuthContext';
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -20,7 +21,7 @@ const API_URL = 'https://user-service-e1em.onrender.com/api/auth';
 const LoginRegisterSidebar = ({ isOpen, onClose, onLoginSuccess }: Props) => {
   const formRef = useRef<HTMLDivElement>(null);
   const [isLogin, setIsLogin] = useState(true);
-
+  const { login } = useAuth(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -161,7 +162,16 @@ const handleFirebaseGoogleSignIn = async () => {
         ) : (
           // ✅ Register flow using your AuthFlow component
           <div style={{ padding: '1rem 0' }}>
-            <AuthFlow mode="signup" />
+ <AuthFlow
+      mode="signup"
+      onLoginSuccess={(token) => {
+        login({ token });            // Update context state here
+        localStorage.setItem('token', token);
+        toast.success('Logged in successfully!');
+        onClose();                  // Close sidebar
+        // optionally router.push('/myaccount');
+      }}
+/>
           </div>
         )}
 
