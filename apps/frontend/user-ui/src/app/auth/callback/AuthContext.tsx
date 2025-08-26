@@ -56,21 +56,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // login receives an object with token string, decodes and sets user state
-  const login = (userData: { token: string }) => {
-    try {
-      const decoded: DecodedToken = jwtDecode(userData.token);
-      setUser({
-        token: userData.token,
-        email: decoded.email,
-        exp: decoded.exp,
-              id: decoded.userId,  
-      });
-      localStorage.setItem('token', userData.token);
-    } catch {
-      // handle invalid token if needed
-      console.error('Invalid token during login');
-    }
-  };
+const login = (userData: { token: string }) => {
+    console.log('Token received in login:', userData.token);
+  try {
+    
+    const decoded: DecodedToken = jwtDecode(userData.token);
+    
+    setUser({
+      token: userData.token,
+      email: decoded.email,
+      exp: decoded.exp,
+      id: decoded.userId,
+    });
+    localStorage.setItem('token', userData.token);
+  } catch (err) {
+    
+    console.error('Invalid token during login:', userData.token, err);
+  }
+};
+
 
   const logout = () => {
     setUser(null);

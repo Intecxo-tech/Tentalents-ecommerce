@@ -60,11 +60,12 @@ const handleLogin = async (e: React.FormEvent) => {
     toast.success('Login Successful');
 
     // ✅ Save token in localStorage
-    localStorage.setItem('token', data.token);
-console.log('Received token:', data.token);
-    // ✅ Update context
-    login({ token: data.token });  // <-- Add this line
-    console.log('Received token:', data.token);
+    const token = data.token || data.data?.token;
+if (!token) throw new Error('No token received from login response');
+
+localStorage.setItem('token', token);
+login({ token }); // <-- Add this line
+  
 
     // ✅ Optional callback (e.g. for parent)
     onLoginSuccess?.(data);
