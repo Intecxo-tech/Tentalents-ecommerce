@@ -131,16 +131,21 @@
      border:1px solid #EBEBEB;
     border-radius: 10px;
     /* padding:20px 10px; */
+    align-items: center;
+    display: flex;
+    flex-direction: column;
     width: 180px;
+    justify-content: center;
     height:113px;
     text-align: center;
 }
-.container1 p{
+.container1 p, .container2 p{
+    
     color:var(--primary);
     text-decoration: underline;
      font-size: 16px;;
 }
-.container1 span{
+.container1 span,.container2 span{
     color: #CCCCCC;
     font-size: 16px;;
 }

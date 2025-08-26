@@ -1,5 +1,5 @@
-import { PrismaClient,PaymentMethod,PaymentStatus } from '../../../../../../generated/prisma';
-import type { OrderStatus } from '../../../../../../generated/prisma';
+import { PrismaClient,PaymentMethod,PaymentStatus } from '@prisma/client';
+import type { OrderStatus } from '@prisma/client';
 import Stripe from 'stripe';
 import { v4 as uuidv4 } from 'uuid';
 import { buildOrderConfirmationEmail } from '../utils/buildOrderConfirmationEmail';
@@ -430,5 +430,19 @@ editAddress: async (userId: string, addressId: string, data: Partial<AddressInpu
     // Delete the address
     return prisma.address.delete({ where: { id: addressId } });
   },
-  
+  getVendorOrders: async (vendorId: string) => {
+  return prisma.orderItem.findMany({
+    where: { vendorId },
+    include: {
+      product: true,
+      order: {
+        include: {
+          shippingAddress: true,
+          buyer: { select: { name: true, email: true } }
+        }
+      }
+    }
+  });
+}
+
 };

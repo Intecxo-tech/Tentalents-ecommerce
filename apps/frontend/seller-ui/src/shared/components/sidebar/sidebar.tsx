@@ -51,7 +51,7 @@ const SideBarWrapper = ({ isMobileMenuOpen, onCloseMobileMenu }: SideBarWrapperP
           Store
         </div>
         </Link>
-        <Link href='/dashboard/account'>
+        <Link href='/dashboard/myaccount'>
         <div className="itemsec">
           <CircleUser color={getIconColor('/account')} />
           Account

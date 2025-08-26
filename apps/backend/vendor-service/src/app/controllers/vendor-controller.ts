@@ -168,21 +168,47 @@ if (!vendorId) {
  */
 export const completeVendorProfileRegistration = async (req: Request, res: Response) => {
   try {
-    const { userId, ...vendorData } = req.body;
+    const { userId, bankDetails, vendorDetails } = req.body;
+    const files = req.files as Express.Multer.File[]; // KYC files
 
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
+    if (!userId || !bankDetails || !vendorDetails) {
+      return res.status(400).json({ error: 'User ID, bankDetails, and vendorDetails are required' });
     }
 
-    const vendor = await vendorService.completeVendorProfileRegistration(userId, vendorData);
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'KYC documents are required' });
+    }
+
+    // Extract file buffers and filenames
+    const kycBuffers = files.map(file => file.buffer);
+    const kycFilenames = files.map(file => file.originalname);
+
+    const vendor = await vendorService.completeVendorProfileRegistration(
+      userId,
+      vendorDetails,    // vendorData
+      bankDetails,      // bankData
+      kycBuffers,       // KYC file buffers
+      kycFilenames      // optional
+    );
+
     return res.status(201).json({ vendor });
   } catch (err) {
     logger.error('Error completing vendor profile registration', err);
     return res.status(500).json({ error: 'Failed to complete vendor profile' });
   }
 };
+export const updateBankDetailsController = async (req: Request, res: Response) => {
+  try {
+    const { vendorId } = req.params;
+    const bankUpdateData = req.body;
 
-
+    const updatedBank = await vendorService.updateVendorBankDetails(vendorId, bankUpdateData);
+    
+    res.status(200).json({ success: true, data: updatedBank });
+  } catch (err) {
+    res.status(400).json({ success: false });
+  }
+};
 /**
  * Update vendor fields (excluding status-only updates)
  */

@@ -11,11 +11,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/signup/page": [
+    "/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/signup/page.css",
-      "static/chunks/app/signup/page.js"
+      "static/css/app/login/page.css",
+      "static/chunks/app/login/page.js"
     ],
     "/(routes)/dashboard/layout": [
       "static/chunks/webpack.js",
@@ -29,17 +29,28 @@
       "static/css/app/(routes)/dashboard/myaccount/page.css",
       "static/chunks/app/(routes)/dashboard/myaccount/page.js"
     ],
-    "/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/login/page.css",
-      "static/chunks/app/login/page.js"
-    ],
     "/(routes)/dashboard/createproduct/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/(routes)/dashboard/createproduct/page.css",
       "static/chunks/app/(routes)/dashboard/createproduct/page.js"
+    ],
+    "/(routes)/dashboard/store/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(routes)/dashboard/store/page.js"
+    ],
+    "/(routes)/dashboard/product/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(routes)/dashboard/product/page.css",
+      "static/chunks/app/(routes)/dashboard/product/page.js"
+    ],
+    "/(routes)/dashboard/editproduct/[productId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(routes)/dashboard/editproduct/[productId]/page.css",
+      "static/chunks/app/(routes)/dashboard/editproduct/[productId]/page.js"
     ]
   }
 }

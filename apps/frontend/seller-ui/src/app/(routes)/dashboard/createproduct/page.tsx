@@ -40,10 +40,27 @@ productFeatures?: string[];
   dispatchTimeInDays?: number;
   shippingCost?: number;
   variants?: Variant[];
+   // ...existing fields
+  listings?: {
+    id?: string; // <-- Add this
+    price: number;
+    originalPrice?: number;
+    stock: number;
+    unit: string;
+    itemWeight: number;
+    packageLength?: number;
+    packageWidth?: number;
+    packageHeight?: number;
+    deliveryEta?: string;
+    dispatchTimeInDays?: number;
+    shippingCost?: number;
+    sku: string;
+  }[];
 };
 
 
-const CreateProductPage: React.FC = () => {
+const CreateProductPage: React.FC<{ productId?: string }> = ({ productId }) => {
+   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const router = useRouter();
   const {
     register,
@@ -58,11 +75,60 @@ const CreateProductPage: React.FC = () => {
       productFeatures: [''],
     },
   });
+  useEffect(() => {
+  if (!productId) return;
+
+  async function fetchProduct() {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:3003/api/products/${productId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const productData = response.data.data;
+     
+      setExistingImageUrls(productData.imageUrls || []);
+const listing = productData.listings?.[0] || {};
+
+reset({
+  ...productData,
+  ...listing,
+    listings: [{ ...listing }],
+  includedComponents: productData.includedComponents || [''],
+  productFeatures: productData.productFeatures || [''],
+  variants: productData.variants || [{ name: '', value: '' }],
+  itemWeight: parseFloat(listing.itemWeight) || 0,
+  packageLength: parseFloat(listing.packageLength) || undefined,
+  packageWidth: parseFloat(listing.packageWidth) || undefined,
+  packageHeight: parseFloat(listing.packageHeight) || undefined,
+  price: parseFloat(listing.price) || 0,
+  originalPrice: parseFloat(listing.originalPrice) || undefined,
+  stock: parseInt(listing.stock) || 0,
+  shippingCost: parseFloat(listing.shippingCost) || undefined,
+  dispatchTimeInDays: parseInt(listing.dispatchTimeInDays) || undefined,
+});
+
+
+      // Set existing images (if needed)
+      // You can fetch image URLs if your backend returns them
+      // setSelectedFiles(...) if you store images by URLs
+    } catch (err) {
+      console.error('Failed to fetch product', err);
+      toast.error('Failed to fetch product data.');
+    }
+  }
+
+  fetchProduct();
+}, [productId, reset]);
 useEffect(() => {
   const token = localStorage.getItem('token');
+  console.log('Token from localStorage:', token);  // <-- Log token here
   if (token) {
     try {
       const decoded: any = jwtDecode(token);
+      console.log('Decoded token:', decoded); // <-- Log decoded token here
       const vendorIdFromToken = decoded.vendorId || decoded.id;
       if (vendorIdFromToken) {
         reset(prevValues => ({
@@ -101,62 +167,88 @@ useEffect(() => {
 
 
 
+
 const onSubmit = async (data: FormData) => {
   try {
     setUploading(true);
-
     const token = localStorage.getItem('token');
     if (!token) {
-      toast.error('You must be logged in to create a product.');
+      toast.error('You must be logged in');
       return;
     }
 
-    // Helper: convert comma-separated strings to array
     const toArray = (value: string | string[] | undefined) =>
       Array.isArray(value)
         ? value.map(s => s.trim()).filter(Boolean)
         : (value ?? '').split(',').map(s => s.trim()).filter(Boolean);
 
-    // Convert selected files to Base64 (strip prefix)
-    let imagesBase64: string[] = [];
-    if (selectedFiles.length > 0) {
-      imagesBase64 = await Promise.all(
-        selectedFiles.map(file => fileToBase64(file))
-      );
-    }
+    let productIdToUse = productId;
 
+    // ✅ Prepare payload
     const payload = {
       ...data,
       includedComponents: toArray(data.includedComponents),
       productFeatures: toArray(data.productFeatures),
       variants: data.variants?.filter(v => v.name && v.value) || [],
-      images: imagesBase64, // <-- send images to backend
+      images: [], // initially empty
+      listings: [{
+        id: data.listings?.[0]?.id, 
+        price: data.price,
+        originalPrice: data.originalPrice,
+        stock: data.stock,
+        unit: data.unit,
+        itemWeight: data.itemWeight,
+        packageLength: data.packageLength,
+        packageWidth: data.packageWidth,
+        packageHeight: data.packageHeight,
+        deliveryEta: data.deliveryEta,
+        dispatchTimeInDays: data.dispatchTimeInDays,
+        shippingCost: data.shippingCost,
+        sku: data.sku,
+      }],
     };
 
-    console.log('Submitting Product Data:', payload);
+    // ✅ Create or Update Product First
+    if (productId) {
+      await axios.put(`http://localhost:3003/api/products/${productId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } else {
+      const res = await axios.post(`http://localhost:3003/api/products`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    // Send POST request to create product
-    const createRes = await axios.post(
-      'https://product-service-23pc.onrender.com/api/products',
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      productIdToUse = res.data?.data?.product?.id;
 
-    // Check if product object exists in response
-   const createdProductId = createRes.data?.data?.product?.id;
-if (!createdProductId) {
-  throw new Error('Product creation failed: no product ID returned.');
+      if (!productIdToUse) {
+        throw new Error('Product creation failed: No product ID returned');
+      }
+    }
+
+    // ✅ Upload images AFTER getting the productId
+    if (selectedFiles.length > 0 && productIdToUse) {
+      for (const file of selectedFiles) {
+        const base64 = await fileToBase64(file);
+        await axios.post(`http://localhost:3003/api/products/${productIdToUse}/image`, 
+          { imageBase64: base64 },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+    }
+
+  if (productId) {
+  toast.success('Product updated successfully!');
+} else {
+  toast.success('Product created with images!');
+  reset();
+  setSelectedFiles([]);
+  router.push('/dashboard/store'); // only redirect after creating a new product
 }
-    toast.success('Product created successfully!');
 
-    // Reset form & selected files
-    reset();
-    setSelectedFiles([]);
 
-    return createdProductId; // Return product ID if needed
   } catch (err: any) {
-    console.error('Error creating product:', err);
-    toast.error(err?.response?.data?.message || err.message || 'Failed to create product');
+    console.error(err);
+    toast.error(err?.response?.data?.message || 'Something went wrong');
   } finally {
     setUploading(false);
   }
@@ -208,10 +300,13 @@ if (!createdProductId) {
       <button className='bordered-button'>
         <ChevronLeft />
       </button>
-      <div className='title-sect'>
-      <p>Products</p>
-       <h2 className='product-input'>Add A New Product</h2>
-       </div>
+     <div className='title-sect'>
+  <p>Products</p>
+  <h2 className='product-input'>
+    {productId ? 'Edit Product' : 'Add A New Product'}
+  </h2>
+</div>
+
 
      </div>
      <div className="product-headerright">
@@ -222,20 +317,21 @@ if (!createdProductId) {
   onClick={() => {
     reset(); // reset form fields
     setSelectedFiles([]); // reset selected images
-    router.push('/dashboard/store'); // or '/dashboard'
+    // or '/dashboard'
   }}
 >
   Discard
 </button>
        <button className='bordered-button'>Schedule</button>
-       <button
+      <button
   type="button"
   className='background-button'
   disabled={isSubmitting}
   onClick={handleSubmit(onSubmit)}
 >
-  Add Product <PlusIcon />
+  {productId ? 'Update Product' : 'Add Product'} <PlusIcon />
 </button>
+
      </div>
      </div>
     
@@ -427,22 +523,28 @@ if (!createdProductId) {
           </div>
 
       <div className="image-conatainers">
-  <div
+   <div
     className="container1"
     onClick={() => document.getElementById('fileInput0')?.click()}
   >
-    {selectedFiles[0] ? (
-      <img
-        src={URL.createObjectURL(selectedFiles[0])}
-        alt="preview-0"
-        className="image-preview"
-      />
-    ) : (
-      <>
-        <p>Click to Upload</p>
-        <span>or drag and drop</span>
-      </>
-    )}
+      {selectedFiles[0] ? (
+    <img
+      src={URL.createObjectURL(selectedFiles[0])}
+      alt="preview-1"
+      className="image-preview"
+    />
+  ) : existingImageUrls[0] ? (
+    <img
+      src={existingImageUrls[0]}
+      alt="existing-preview-1"
+      className="image-preview"
+    />
+  ) : (
+    <>
+      <p>Click to Upload</p>
+      <span>or drag and drop</span>
+    </>
+  )}
     <input
       id="fileInput0"
       type="file"
@@ -460,114 +562,128 @@ if (!createdProductId) {
       }}
     />
   </div>
- {/* <div>
-          <label>Upload Product Images *</label><br />
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={onFilesChange}
-            disabled={uploading || isSubmitting}
-          />
-          {selectedFiles.length > 0 && (
-            <div>
-              <p>Selected files:</p>
-              <ul>
-                {selectedFiles.map((file, idx) => (
-                  <li key={idx}>{file.name}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div> */}
-  <div
-    className="container1"
-    onClick={() => document.getElementById('fileInput1')?.click()}
-  >
-    {selectedFiles[1] ? (
-      <img
-        src={URL.createObjectURL(selectedFiles[1])}
-        alt="preview-1"
-        className="image-preview"
-      />
-    ) : null}
-    <input
-      id="fileInput1"
-      type="file"
-      accept="image/*"
-      style={{ display: 'none' }}
-      onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          setSelectedFiles((prev) => {
-            const updated = [...prev];
-            updated[1] = file;
-            return updated;
-          });
-        }
-      }}
+<div
+  className="container1"
+  onClick={() => document.getElementById('fileInput1')?.click()}
+>
+  {selectedFiles[1] ? (
+    <img
+      src={URL.createObjectURL(selectedFiles[1])}
+      alt="preview-1"
+      className="image-preview"
     />
-  </div>
+  ) : existingImageUrls[1] ? (
+    <img
+      src={existingImageUrls[1]}
+      alt="existing-preview-1"
+      className="image-preview"
+    />
+  ) : (
+    <>
+      <p>Click to Upload</p>
+      <span>or drag and drop</span>
+    </>
+  )}
+  <input
+    id="fileInput1"
+    type="file"
+    accept="image/*"
+    style={{ display: 'none' }}
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedFiles((prev) => {
+          const updated = [...prev];
+          updated[1] = file;
+          return updated;
+        });
+      }
+    }}
+  />
+</div>
+
 
   <div className="container-space">
-    <div
-      className="container2"
-      onClick={() => document.getElementById('fileInput2')?.click()}
-    >
-      {selectedFiles[2] ? (
-        <img
-          src={URL.createObjectURL(selectedFiles[2])}
-          alt="preview-2"
-          className="image-preview"
-        />
-      ) : null}
-      <input
-        id="fileInput2"
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            setSelectedFiles((prev) => {
-              const updated = [...prev];
-              updated[2] = file;
-              return updated;
-            });
-          }
-        }}
-      />
-    </div>
+   <div
+  className="container2"
+  onClick={() => document.getElementById('fileInput2')?.click()}
+>
+  {selectedFiles[2] ? (
+    <img
+      src={URL.createObjectURL(selectedFiles[2])}
+      alt="preview-1"
+      className="image-preview"
+    />
+  ) : existingImageUrls[2] ? (
+    <img
+      src={existingImageUrls[2]}
+      alt="existing-preview-1"
+      className="image-preview"
+    />
+  ) : (
+    <>
+      <p>Click to Upload</p>
+      <span>or drag and drop</span>
+    </>
+  )}
+  <input
+    id="fileInput2"
+    type="file"
+    accept="image/*"
+    style={{ display: 'none' }}
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedFiles((prev) => {
+          const updated = [...prev];
+          updated[2] = file;
+          return updated;
+        });
+      }
+    }}
+  />
+</div>
 
-    <div
-      className="container2"
-      onClick={() => document.getElementById('fileInput3')?.click()}
-    >
-      {selectedFiles[3] ? (
-        <img
-          src={URL.createObjectURL(selectedFiles[3])}
-          alt="preview-3"
-          className="image-preview"
-        />
-      ) : null}
-      <input
-        id="fileInput3"
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            setSelectedFiles((prev) => {
-              const updated = [...prev];
-              updated[3] = file;
-              return updated;
-            });
-          }
-        }}
-      />
-    </div>
-  </div>
+<div
+  className="container2"
+  onClick={() => document.getElementById('fileInput3')?.click()}
+>
+   {selectedFiles[3] ? (
+    <img
+      src={URL.createObjectURL(selectedFiles[3])}
+      alt="preview-1"
+      className="image-preview"
+    />
+  ) : existingImageUrls[3] ? (
+    <img
+      src={existingImageUrls[3]}
+      alt="existing-preview-1"
+      className="image-preview"
+    />
+  ) : (
+    <>
+      <p>Click to Upload</p>
+      <span>or drag and drop</span>
+    </>
+  )}
+  <input
+    id="fileInput3"
+    type="file"
+    accept="image/*"
+    style={{ display: 'none' }}
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedFiles((prev) => {
+          const updated = [...prev];
+          updated[3] = file;
+          return updated;
+        });
+      }
+    }}
+  />
+</div>
+</div>
 </div>
 
           

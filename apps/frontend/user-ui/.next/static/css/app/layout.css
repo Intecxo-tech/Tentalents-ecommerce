@@ -191,7 +191,9 @@
 .options input[type='checkbox'] {
   transform: scale(1.1);
 }
-
+.logincontainer2{
+  width: 100%;
+}
 
 
 .bottom-links {

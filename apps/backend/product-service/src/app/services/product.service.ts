@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma , VendorStatus } from '@prisma/client';
 import { v4 as uuid } from 'uuid';
 import { minioClient } from '@shared/minio';
 import { MinioBuckets, MinioFolderPaths } from '@shared/minio';
@@ -81,14 +81,20 @@ async createProduct(data: any) {
     if (
       !title || !category || !sku ||
       !priceDecimal || !originalPriceDecimal || !stock || !unit ||
-      !itemWeight || !vendorId || !Array.isArray(images) || images.length === 0
+      !itemWeight || !vendorId 
     ) {
       throw new Error('Missing required fields for product creation (including images)');
     }
 
     // Check vendor existence
-    const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
-    if (!vendor) throw new Error('Vendor not found');
+   const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
+
+if (!vendor) throw new Error('Vendor not found');
+
+// ✅ Check if vendor status is "APPROVED"
+if (vendor.status !== VendorStatus.approved) {
+  throw new Error('Vendor is not approved to add products.');
+}
 
     const generatedSlug = await generateUniqueSlug(title);
 
@@ -119,6 +125,19 @@ async createProduct(data: any) {
 
     // Process images
     let uploadedImageUrls: string[] = [];
+console.log('Received images:', images);
+images.forEach((img: string, i: number) => {
+  const isBase64 = !/^https?:\/\//.test(img);
+  console.log(`Image ${i + 1}: isBase64 = ${isBase64}, length = ${img.length}`);
+  if (isBase64) {
+    const matches = img.match(/^data:image\/([a-zA-Z]*);base64,([^\"]*)/);
+    if (!matches || matches.length !== 3) {
+      console.warn(`Image ${i + 1} might be malformed base64`);
+    } else {
+      console.log(`Image ${i + 1} MIME type: ${matches[1]}`);
+    }
+  }
+});
 
     uploadedImageUrls = await Promise.all(
       images.map(async (img: string, i: number) => {
@@ -246,21 +265,150 @@ async createProduct(data: any) {
   /**
    * 🛠️ Update product details
    */
-  async updateProduct(id: string, data: any) {
-    return prisma.product.update({
-      where: { id },
-      data,
-    });
-  },
+async updateProduct(id: string, data: any) {
+  const { listings, ...productData } = data;
+
+  // Prepare update payload for product
+  const updatePayload: any = {
+    title: productData.title,
+    description: productData.description,
+    category: productData.category,
+    subCategory: productData.subCategory,
+    slug: productData.slug,
+    brand: productData.brand,
+    includedComponents: productData.includedComponents || [],
+    numberOfItems: productData.numberOfItems,
+    enclosureMaterial: productData.enclosureMaterial,
+    productCareInstructions: productData.productCareInstructions,
+    productFeatures: productData.productFeatures || [],
+    imageUrls: productData.imageUrls,
+  };
+
+  // ✅ Step 1: Update product
+  const updatedProduct = await prisma.product.update({
+    where: { id },
+    data: updatePayload,
+  });
+
+  // ✅ Step 2: Update listings if any
+  if (Array.isArray(listings)) {
+    for (const listing of listings) {
+      if (!listing.id) {
+        console.warn('Skipping listing update due to missing ID:', listing);
+        continue;
+      }
+
+      // 🛠️ Update product listing
+      await prisma.productListing.update({
+        where: { id: listing.id },
+        data: {
+          sku: listing.sku,
+          price: new Prisma.Decimal(listing.price),
+          originalPrice: new Prisma.Decimal(listing.originalPrice),
+          stock: listing.stock,
+          unit: listing.unit,
+          itemWeight: new Prisma.Decimal(listing.itemWeight),
+          packageLength: listing.packageLength,
+          packageWidth: listing.packageWidth,
+          packageHeight: listing.packageHeight,
+          deliveryEta: listing.deliveryEta,
+          status: listing.status || 'ACTIVE',
+          dispatchTimeInDays: listing.dispatchTimeInDays,
+          shippingCost: new Prisma.Decimal(listing.shippingCost || 0),
+          brand: listing.brand,
+          includedComponents: listing.includedComponents || [],
+          numberOfItems: listing.numberOfItems,
+          enclosureMaterial: listing.enclosureMaterial,
+          productCareInstructions: listing.productCareInstructions,
+          productFeatures: listing.productFeatures || [],
+        },
+      });
+
+      // 🧪 Debug
+      console.log(`Updated listing ${listing.id}`);
+
+      // 🔁 Variants update
+      if (Array.isArray(listing.variants)) {
+        const existingVariants = await prisma.productVariant.findMany({
+          where: { productListingId: listing.id },
+        });
+
+        const payloadVariantIds = listing.variants
+          .filter((v: any) => v.id)
+          .map((v: any) => v.id);
+
+        // Delete removed variants
+        const variantsToDelete = existingVariants.filter(
+          (v) => !payloadVariantIds.includes(v.id)
+        );
+        for (const variant of variantsToDelete) {
+          await prisma.productVariant.delete({ where: { id: variant.id } });
+        }
+
+        // Upsert variants
+        for (const variant of listing.variants) {
+          if (variant.id) {
+            await prisma.productVariant.update({
+              where: { id: variant.id },
+              data: {
+                name: variant.name,
+                value: variant.value,
+              },
+            });
+          } else {
+            await prisma.productVariant.create({
+              data: {
+                productListingId: listing.id,
+                name: variant.name,
+                value: variant.value,
+              },
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return updatedProduct;
+},
+
+
+
 
   /**
    * ❌ Delete product
    */
-  async deleteProduct(id: string) {
-    return prisma.product.delete({
-      where: { id },
+ async deleteProduct(id: string) {
+  // Delete CartItems referencing this product
+  await prisma.cartItem.deleteMany({
+    where: { productId: id },
+  });
+
+  // Delete productVariants referencing productListings of this product
+  const listings = await prisma.productListing.findMany({
+    where: { productId: id },
+  });
+
+  const listingIds = listings.map(l => l.id);
+
+  if (listingIds.length > 0) {
+    await prisma.productVariant.deleteMany({
+      where: {
+        productListingId: { in: listingIds },
+      },
     });
-  },
+
+    // Delete listings
+    await prisma.productListing.deleteMany({
+      where: { id: { in: listingIds } },
+    });
+  }
+
+  // Finally delete the product
+  return prisma.product.delete({
+    where: { id },
+  });
+},
 
   /**
    * Fetch products for card view with prices, image, rating, vendor etc.
@@ -367,6 +515,34 @@ async isUserAuthorizedForProduct(userId: string, productId: string): Promise<boo
     });
   
   },
+async getProductsByVendorId(vendorId: string) {
+  console.log('Fetching products for vendorId:', vendorId);
+
+  const products = await prisma.product.findMany({
+    where: {
+      listings: {
+        some: {
+          vendorId,
+        },
+      },
+    },
+    include: {
+      listings: {
+        where: {
+          vendorId,
+        },
+        include: {
+          variants: true,
+        },
+      },
+      ratings: true,
+    },
+  });
+
+  console.log(`Fetched ${products.length} products for vendorId:`, vendorId);
+  return products;
+}
+
 
   
 };

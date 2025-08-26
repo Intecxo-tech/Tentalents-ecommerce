@@ -6,7 +6,7 @@ import {jwtDecode} from 'jwt-decode'; // fix import without curly braces
 type DecodedToken = {
   email?: string;
   exp?: number;
-   userId?: string;
+  userId?: string; 
   // Add other fields your token contains if needed
 };
 

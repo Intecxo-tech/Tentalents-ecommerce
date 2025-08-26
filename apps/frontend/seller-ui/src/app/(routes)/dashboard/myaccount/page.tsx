@@ -2,8 +2,10 @@
 import React, { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
+import Image from 'next/image';
 import './account.css'
 import toast from 'react-hot-toast';
+import Editbutton from '../../../../assets/editbutton.png'
 type Vendor = {
   id: string;
   userId: string;
@@ -35,7 +37,7 @@ console.log('🔑 JWT Token:', token);
   const [saving, setSaving] = useState(false);
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingKyc, setUploadingKyc] = useState(false);
-
+const fileInputRef = React.useRef<HTMLInputElement>(null);
   // 🔍 Decode token and extract vendor ID
   useEffect(() => {
     if (!token) {
@@ -216,40 +218,51 @@ const response = await fetch(`http://localhost:3010/api/vendor/profile-image/${v
   router.push('/login'); // Redirect to login page
 };
   // Upload KYC documents handler (multiple files)
-  const handleKycUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !vendor) return;
-    const files = Array.from(e.target.files);
+// Upload individual KYC document by type
+const handleKycUploadTyped = async (e: ChangeEvent<HTMLInputElement>, docType: 'pan' | 'aadhaar' | 'certificate') => {
+  if (!e.target.files || e.target.files.length === 0 || !vendor) return;
+  const file = e.target.files[0];
 
-    const formData = new FormData();
-    files.forEach(file => formData.append('kycDocs', file));
+  const formData = new FormData();
+  formData.append('kycDoc', file);
+  formData.append('type', docType); // Optional: if your backend accepts type
 
-    try {
-      setUploadingKyc(true);
-      setError(null);
+  try {
+    setUploadingKyc(true);
+    setError(null);
 
-      const response = await fetch(`http://localhost:3010/api/vendor/kyc-docs/${vendorId}`, {
-  method: 'POST',
-  headers: {
-    Authorization: token ? `Bearer ${token}` : '',
-  },
-  body: formData,
-});
+    const response = await fetch(`http://localhost:3010/api/vendor/kyc-docs/${vendorId}`, {
+      method: 'POST',
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      body: formData,
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to upload KYC documents');
-      }
-
-      const data = await response.json();
-      // Append new docs URLs to existing ones
-      setVendor({ ...vendor, kycDocsUrl: [...vendor.kycDocsUrl, ...data.kycDocsUrls] });
-      alert('KYC documents uploaded successfully!');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setUploadingKyc(false);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to upload document');
     }
-  };
+
+    const data = await response.json();
+
+    // You can tag URLs based on the docType
+    const taggedUrl = `${data.url}?doc=${docType}`;
+
+    setVendor({
+      ...vendor,
+      kycDocsUrl: [...vendor.kycDocsUrl, taggedUrl]
+    });
+
+    toast.success(`${docType.toUpperCase()} uploaded successfully!`);
+  } catch (err: any) {
+    setError(err.message);
+    toast.error(`Upload error: ${err.message}`);
+  } finally {
+    setUploadingKyc(false);
+  }
+};
+
 
   if (loading) return <p>Loading vendor details...</p>;
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
@@ -276,72 +289,70 @@ const response = await fetch(`http://localhost:3010/api/vendor/profile-image/${v
      
       
 {/* Profile Image Upload */}
-<div style={{ marginBottom: '1rem' }}>
-  {vendor.profileImage ? (
-    <img
-      src={vendor.profileImage}
-      alt="Profile"
-      style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px' }}
-    />
-  ) : (
-    <div
-      style={{
-        width: '150px',
-        height: '150px',
-        backgroundColor: '#ccc',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '8px',
-        color: '#666',
-      }}
-    >
-      No Profile Image
-    </div>
-  )}
-  <input
-    type="file"
-    accept="image/*"
-    onChange={handleProfileImageUpload}
-    disabled={uploadingProfile}
-    style={{ marginTop: '8px' }}
-  />
-  {uploadingProfile && <p>Uploading profile image...</p>}
-</div>
+<div className="section1">
+  <h2 className='heading2'>Personal Details</h2>
+  <div className="personaldetails">
+  <div className="personal-left">
 
-{/* KYC Documents Upload */}
-<div style={{ marginBottom: '1rem' }}>
-  <h4>KYC Documents:</h4>
-  {vendor.kycDocsUrl.length > 0 ? (
-    vendor.kycDocsUrl.map((docUrl, idx) => (
-      <div key={idx}>
-        <a href={docUrl} target="_blank" rel="noopener noreferrer">
-          Document {idx + 1}
-        </a>
+  <div
+    className="profiledetailsleft"
+    onClick={() => !uploadingProfile && fileInputRef.current?.click()}
+    style={{ cursor: uploadingProfile ? 'wait' : 'pointer', position: 'relative', width: '80px', height: '80px' }}
+  >
+    {vendor.profileImage ? (
+      <Image
+        src={vendor.profileImage}
+        alt="Profile"
+        className="profile-img"
+        style={{
+          width: '80px',
+          height: '80px',
+          objectFit: 'cover',
+          borderRadius: '8px'
+        }}
+      />
+    ) : (
+      <div
+        style={{
+          width: '150px',
+          height: '150px',
+          backgroundColor: '#ccc',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '8px',
+          color: '#666',
+        }}
+        className='profile-image-placeholder'
+      >
+        No Profile Image
       </div>
-    ))
-  ) : (
-    <p>No KYC documents uploaded</p>
-  )}
-  <input
-    type="file"
-    multiple
-    accept="application/pdf,image/*"
-    onChange={handleKycUpload}
-    disabled={uploadingKyc}
-  />
-  {uploadingKyc && <p>Uploading KYC documents...</p>}
+    )}
+
+    <input
+      type="file"
+      ref={fileInputRef}
+      accept="image/*"
+      style={{ display: 'none' }}
+      disabled={uploadingProfile}
+      onChange={handleProfileImageUpload}
+    />
+
+    {/* Edit button overlay */}
+    <div className="editbutton">
+      <Image src={Editbutton} alt="Edit" style={{ cursor: 'pointer' }} />
+    </div>
+
+    {/* Optional: uploading overlay/spinner can go here */}
+  </div>
+
+  {uploadingProfile && <p>Uploading profile image...</p>}
+ 
+
+
 </div>
-
-      {/* Profile Image */}
-    
-
-      {/* KYC Documents */}
-     
-
-      {/* Editable Form */}
-      <form onSubmit={handleSave}>
-        <div className='first-column'>
+<div className="personal-right">
+ <div className='first-column'>
 
        
         
@@ -365,7 +376,112 @@ const response = await fetch(`http://localhost:3010/api/vendor/profile-image/${v
           />
      
          </div>
- <div className='first-column'>
+          <div className='first-column'>
+       
+       
+    
+
+       
+          <input
+            type="tel"
+            name="phone"
+            value={vendor.phone}
+            onChange={handleChange}
+            placeholder="Enter phone number"
+          
+          />
+            <textarea
+            name="address"
+            value={vendor.address || ''}
+            onChange={handleChange}
+            placeholder="Enter address"
+          
+          />
+  
+        </div>
+   </div>
+
+      
+        </div>
+
+</div>
+{/* KYC Documents Upload */}
+{/* 📂 KYC Documents Upload Section */}
+<div className="kycdocs">
+  <h2 className='heading2'>Business Details</h2>
+  <div className="businessdetail">
+     <div className='first-column top-column'>
+ 
+
+  
+  {/* PAN Card (Required) */}
+ <div className="adharside">
+    <label>PAN Card (Required):</label>
+    {vendor.kycDocsUrl.find(url => url.includes('pan')) ? (
+      <div>
+        <a href={vendor.kycDocsUrl.find(url => url.includes('pan'))} target="_blank" rel="noopener noreferrer">
+          View Uploaded PAN Card
+        </a>
+      </div>
+    ) : (
+      <p style={{ color: 'red' }}>No PAN card uploaded</p>
+    )}
+    <input
+      type="file"
+      accept="image/*,application/pdf"
+      onChange={(e) => handleKycUploadTyped(e, 'pan')}
+      disabled={uploadingKyc}
+    />
+</div>
+
+  {/* Aadhaar Card (Optional) */}
+<div className="adharside">
+    <label>Aadhaar Card (Optional):</label>
+    {vendor.kycDocsUrl.find(url => url.includes('aadhaar')) ? (
+      <div>
+        <a href={vendor.kycDocsUrl.find(url => url.includes('aadhaar'))} target="_blank" rel="noopener noreferrer">
+          View Uploaded Aadhaar
+        </a>
+      </div>
+    ) : (
+      <p>No Aadhaar card uploaded</p>
+    )}
+    <input
+      type="file"
+      accept="image/*,application/pdf"
+      onChange={(e) => handleKycUploadTyped(e, 'aadhaar')}
+      disabled={uploadingKyc}
+    />
+ 
+  </div>
+</div>
+  {/* Certificate of Incorporation (Optional) */}
+  
+ 
+    <label>Private Limited Incorporation Certificate (Optional):</label>
+    {vendor.kycDocsUrl.find(url => url.includes('certificate')) ? (
+      <div>
+        <a href={vendor.kycDocsUrl.find(url => url.includes('certificate'))} target="_blank" rel="noopener noreferrer">
+          View Certificate
+        </a>
+      </div>
+    ) : (
+      <p>No incorporation certificate uploaded</p>
+    )}
+    <input
+      type="file"
+      accept="image/*,application/pdf"
+      onChange={(e) => handleKycUploadTyped(e, 'certificate')}
+      disabled={uploadingKyc}
+    />
+
+
+  {uploadingKyc && <p>Uploading document...</p>}
+
+
+ 
+   
+       <div className='first-column'>
        
           <input
             type="text"
@@ -378,29 +494,7 @@ const response = await fetch(`http://localhost:3010/api/vendor/profile-image/${v
     
 
        
-          <input
-            type="tel"
-            name="phone"
-            value={vendor.phone}
-            onChange={handleChange}
-            placeholder="Enter phone number"
-          
-          />
-  
-        </div>
-         <div className='first-column'>
-
-      
-          <textarea
-            name="address"
-            value={vendor.address || ''}
-            onChange={handleChange}
-            placeholder="Enter address"
-          
-          />
-    
-        
-          <input
+           <input
             type="text"
             name="gstNumber"
             value={vendor.gstNumber || ''}
@@ -408,12 +502,73 @@ const response = await fetch(`http://localhost:3010/api/vendor/profile-image/${v
             placeholder="Enter GST number"
             
           />
-   
-        </div>
-
- 
+  
        
-      </form>
+    </div>
+  </div>
+</div>
+<div className="bankdetails">
+  <h2 className='heading2'>
+    Bank Details
+  </h2>
+  <div className="bank-detailsform">
+    <form >
+       <div className='first-column'>
+       
+         <input
+          type="text"
+          name="accountHolder"
+          placeholder='Account Holder Name'
+          onChange={handleChange}
+          required
+      
+        />
+    
+
+       
+          <input
+          type="text"
+          name="accountNumber"
+        placeholder='Account Number'
+          onChange={handleChange}
+          required
+       
+        />
+  
+       
+    </div>
+    <div className="first-column">
+       <input
+          type="text"
+          name="ifscCode"
+        placeholder='IFSC Code'
+          onChange={handleChange}
+          required
+        
+        />
+        <input
+          type="text"
+          name="bankName"
+          placeholder='Bank Name'
+          onChange={handleChange}
+          required
+        
+        />
+    </div>
+    </form>
+  </div>
+
+</div>
+
+
+      {/* Profile Image */}
+    
+
+      {/* KYC Documents */}
+     
+
+      {/* Editable Form */}
+    
     </div>
   );
 };

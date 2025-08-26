@@ -60,6 +60,10 @@
 .cursor-pointer {
   cursor: pointer;
 }
+.columns-4 {
+  -moz-columns: 4;
+       columns: 4;
+}
 .flex-col {
   flex-direction: column;
 }
@@ -109,6 +113,9 @@
 .tracking-\[0\.04rem\] {
   --tw-tracking: 0.04rem;
   letter-spacing: 0.04rem;
+}
+.text-\[grey\] {
+  color: grey;
 }
 .text-\[var\(--grey\)\] {
   color: var(--grey);

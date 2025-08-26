@@ -3,13 +3,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './loginregister.css';
 import toast from 'react-hot-toast';
-import AuthFlow from '../auth/Authflow'; // 👈 import your AuthFlow component
+// import AuthFlow from '../auth/Authflow'; 
 import '../../(routes)/login/login.css';
 import { auth, provider } from '../../../services/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import Image from 'next/image';
 import Google from '../../../assets/google.png';
 import { useAuth } from '../../auth/callback/AuthContext';
+// import SignUpForm from '../signupflow/signupflow'
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -41,31 +42,41 @@ const LoginRegisterSidebar = ({ isOpen, onClose, onLoginSuccess }: Props) => {
     };
   }, [isOpen, onClose]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const res = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || 'Login failed');
+    if (!res.ok) throw new Error(data.message || 'Login failed');
 
-      toast.success('Login Successful');
-      localStorage.setItem('token', data.token);
-      onLoginSuccess?.(data);
-      onClose();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    toast.success('Login Successful');
+
+    // ✅ Save token in localStorage
+    localStorage.setItem('token', data.token);
+console.log('Received token:', data.token);
+    // ✅ Update context
+    login({ token: data.token });  // <-- Add this line
+    console.log('Received token:', data.token);
+
+    // ✅ Optional callback (e.g. for parent)
+    onLoginSuccess?.(data);
+
+    onClose();
+  } catch (err: any) {
+    toast.error(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 const handleFirebaseGoogleSignIn = async () => {
   try {
     setLoading(true);
@@ -162,16 +173,15 @@ const handleFirebaseGoogleSignIn = async () => {
         ) : (
           // ✅ Register flow using your AuthFlow component
           <div style={{ padding: '1rem 0' }}>
- <AuthFlow
-      mode="signup"
-      onLoginSuccess={(token) => {
-        login({ token });            // Update context state here
-        localStorage.setItem('token', token);
-        toast.success('Logged in successfully!');
-        onClose();                  // Close sidebar
-        // optionally router.push('/myaccount');
-      }}
-/>
+{/* <SignUpForm
+  onSuccess={(token) => {
+    login({ token });
+    localStorage.setItem('token', token);
+    toast.success('Logged in successfully!');
+    onClose();
+  }}
+/> */}
+
           </div>
         )}
 

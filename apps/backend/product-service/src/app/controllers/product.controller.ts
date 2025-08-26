@@ -241,3 +241,31 @@ export const getProductsForCard = async (_req: Request, res: Response, next: Nex
     next(err);
   }
 };
+export const getProductsByVendor = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    console.log('GET /vendor/products called');
+
+    const userId = getUserIdOrThrow(req, res);
+    if (!userId) return;
+
+    console.log('User ID:', userId);
+
+    // Find vendorId from userId first
+    const vendor = await prisma.vendor.findUnique({ where: { userId } });
+    console.log('Vendor found:', vendor);
+
+    if (!vendor) {
+      console.warn('Vendor not found for user:', userId);
+      return res.status(404).json({ message: 'Vendor not found for user' });
+    }
+
+    // Use vendor.id to fetch products
+    const vendorProducts = await productService.getProductsByVendorId(vendor.id);
+    console.log(`Found ${vendorProducts.length} products for vendorId:`, vendor.id);
+
+    sendSuccess(res, '✅ Vendor products fetched successfully', vendorProducts);
+  } catch (err) {
+    console.error('❌ Error in getProductsByVendor:', err);
+    next(err);
+  }
+};

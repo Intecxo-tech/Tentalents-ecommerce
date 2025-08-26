@@ -64,32 +64,62 @@ completeVendorUserRegistration: async (email: string, password: string) => {
 
   const hashedPassword = await hashPassword(password);
 
-  // Step 1: Create User
+  // ✅ Create only the user as buyer for now
   const user = await prisma.user.create({
     data: {
       email,
       password: hashedPassword,
-      role: UserRole.seller,
+      role: UserRole.buyer, // Note: initially a buyer
     },
   });
 
-  // Step 2: Create Vendor with same email and password
-  const vendor = await prisma.vendor.create({
-    data: {
-      user: { connect: { id: user.id } },
-      email,
-      password: hashedPassword, // ✅ Save here
-      name: '',
-      phone: '',
-      businessName: '',
-      status: PrismaVendorStatus.pending,
-    },
-  });
+  // ❌ Remove vendor creation here
 
-  // Step 3: Delete OTP entry
   await prisma.pendingUserOtp.delete({ where: { email } });
 
-  // Step 4: Emit Kafka events
+  const token = generateJWT({ userId: user.id, email: user.email, role: user.role });
+
+  logger.info(`[VendorService] User created (buyer role) for ${email}`);
+  return { token, userId: user.id, email: user.email, role: user.role };
+},
+
+  // Step 4: Register vendor details (after user created)
+completeVendorProfileRegistration: async (
+  userId: string,
+  vendorData: Omit<Prisma.VendorCreateInput, 'userId' | 'status'>,
+  bankData: Omit<Prisma.BankDetailCreateInput, 'vendorId'>,
+  kycFiles: Buffer[],
+  kycFilenames?: string[]
+) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('User not found');
+
+  // 1. Upload KYC documents
+  const kycDocsUrls = await Promise.all(
+    kycFiles.map((buffer, index) =>
+      uploadToCloudinary(buffer, 'vendor_kyc_documents', kycFilenames?.[index])
+    )
+  );
+
+  // 2. Create Vendor
+  const vendor = await prisma.vendor.create({
+    data: {
+      ...vendorData,
+      user: { connect: { id: userId } },
+      status: PrismaVendorStatus.pending,
+      kycDocsUrl: kycDocsUrls,
+    },
+  });
+
+  // 3. Create Bank Detail
+  await prisma.bankDetail.create({
+    data: {
+      ...bankData,
+      vendor: { connect: { id: vendor.id } },
+    },
+  });
+
+  // 4. Emit Kafka events (optional)
   const createdEvent: VendorCreatedEvent = {
     vendorId: vendor.id,
     name: vendor.name,
@@ -99,7 +129,7 @@ completeVendorUserRegistration: async (email: string, password: string) => {
   const statusUpdatedEvent: VendorStatusUpdatedEvent = {
     vendorId: vendor.id,
     status: vendor.status as VendorStatus,
-    updatedAt: vendor.createdAt.toISOString(),
+    updatedAt: vendor.updatedAt.toISOString(),
   };
 
   await Promise.all([
@@ -113,53 +143,11 @@ completeVendorUserRegistration: async (email: string, password: string) => {
     }),
   ]);
 
-  const token = generateJWT({ userId: user.id, email: user.email, role: user.role });
+  logger.info(`[VendorService] Vendor profile created for user: ${userId}`);
 
-  logger.info(`[VendorService] Vendor user + profile created for ${email}`);
-  return { token, userId: user.id, email: user.email, role: user.role };
+  return vendor;
 },
-  // Step 4: Register vendor details (after user created)
-  completeVendorProfileRegistration: async (userId: string, vendorData: Omit<Prisma.VendorCreateInput, 'userId'>) => {
-    // Check user exists
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error('User not found');
 
-    // Create vendor linked to user
-    const vendor = await prisma.vendor.create({
-      data: {
-        ...vendorData,
-        user: { connect: { id: userId } },
-        status: PrismaVendorStatus.pending,
-      },
-    });
-
-    // Emit Kafka events
-    const createdEvent: VendorCreatedEvent = {
-      vendorId: vendor.id,
-      name: vendor.name,
-      status: vendor.status as VendorStatus,
-      createdAt: vendor.createdAt.toISOString(),
-    };
-    const statusUpdatedEvent: VendorStatusUpdatedEvent = {
-      vendorId: vendor.id,
-      status: vendor.status as VendorStatus,
-      updatedAt: vendor.createdAt.toISOString(),
-    };
-
-    await Promise.all([
-      produceKafkaEvent({
-        topic: KAFKA_TOPICS.VENDOR.CREATED,
-        messages: [{ value: JSON.stringify(createdEvent) }],
-      }),
-      produceKafkaEvent({
-        topic: KAFKA_TOPICS.VENDOR.STATUS_UPDATED,
-        messages: [{ value: JSON.stringify(statusUpdatedEvent) }],
-      }),
-    ]);
-
-    logger.info(`[VendorService] Vendor profile completed for user ${userId}`);
-    return vendor;
-  },
 
   async updateStatus(id: string, status: PrismaVendorStatus) {
     const vendor = await prisma.vendor.update({
@@ -183,6 +171,23 @@ completeVendorUserRegistration: async (email: string, password: string) => {
     logger.info(`[${SERVICE_NAMES.VENDOR}] Vendor status updated: ${vendor.id}`);
     return vendor;
   },
+updateVendorBankDetails: async (vendorId: string, bankUpdateData: Partial<Prisma.BankDetailUpdateInput>) => {
+  try {
+    const existingBank = await prisma.bankDetail.findFirst({ where: { vendorId } });
+    if (!existingBank) throw new Error('Bank details not found for vendor');
+
+    const updatedBank = await prisma.bankDetail.update({
+      where: { id: existingBank.id },
+      data: bankUpdateData,
+    });
+
+    logger.info(`[VendorService] Bank details updated for vendorId: ${vendorId}`);
+    return updatedBank;
+  } catch (err) {
+    logger.error('[VendorService] updateVendorBankDetails error:', err);
+    throw err;
+  }
+},
 
 //   async getById(id: string) {
 //     return prisma.vendor.findUnique({ where: { id } });

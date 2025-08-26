@@ -6,6 +6,7 @@ import type { FileFilterCallback } from 'multer';
 import {
   updateVendor,
   getVendorById,
+    updateBankDetailsController,
   getAllVendors,
   deleteVendor,
   uploadVendorDocuments,
@@ -48,12 +49,12 @@ const upload = multer({
 });
 
 router.post('/google', loginOrRegisterWithGoogle);
-router.get('/vendor/profile/:vendorId', authMiddleware(), getVendorProfileByVendorId);
+router.get('/profile/:vendorId', authMiddleware(), getVendorProfileByVendorId);
 // === Public registration routes (no auth) ===
 router.post('/register/initiate-otp', initiateVendorRegistrationOtp);
 router.post('/register/verify-otp', verifyVendorEmailOtp);
 router.post('/register/user', completeVendorUserRegistration);
-
+router.put('/vendors/:vendorId/bank-details', updateBankDetailsController);
 router.post('/login', loginVendor);
 
 // === Protected routes (auth required) ===
