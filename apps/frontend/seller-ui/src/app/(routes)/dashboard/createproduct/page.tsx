@@ -81,7 +81,7 @@ const CreateProductPage: React.FC<{ productId?: string }> = ({ productId }) => {
   async function fetchProduct() {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:3003/api/products/${productId}`, {
+      const response = await axios.get(`https://product-service-23pc.onrender.com/api/products/${productId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -210,11 +210,11 @@ const onSubmit = async (data: FormData) => {
 
     // ✅ Create or Update Product First
     if (productId) {
-      await axios.put(`http://localhost:3003/api/products/${productId}`, payload, {
+      await axios.put(`https://product-service-23pc.onrender.com/api/products/${productId}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } else {
-      const res = await axios.post(`http://localhost:3003/api/products`, payload, {
+      const res = await axios.post(`https://product-service-23pc.onrender.com/api/products`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -229,7 +229,7 @@ const onSubmit = async (data: FormData) => {
     if (selectedFiles.length > 0 && productIdToUse) {
       for (const file of selectedFiles) {
         const base64 = await fileToBase64(file);
-        await axios.post(`http://localhost:3003/api/products/${productIdToUse}/image`, 
+        await axios.post(`https://product-service-23pc.onrender.com/api/products/${productIdToUse}/image`, 
           { imageBase64: base64 },
           { headers: { Authorization: `Bearer ${token}` } }
         );

@@ -596,4 +596,3 @@ router.push('/myaccount');
 
 export default SignUp;
 
-

@@ -37,7 +37,7 @@ const Page: React.FC = () => {
     async function fetchVendorProducts() {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:3003/api/products/vendor/products', {
+        const response = await axios.get('https://product-service-23pc.onrender.com/api/products/vendor/products', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -61,7 +61,7 @@ const Page: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      await axios.delete(`http://localhost:3003/api/products/${productId}`, {
+      await axios.delete(`https://product-service-23pc.onrender.com/api/products/${productId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

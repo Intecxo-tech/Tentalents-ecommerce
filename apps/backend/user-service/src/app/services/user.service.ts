@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from '../../../../../../generated/prisma';
+import { PrismaClient, UserRole } from '@prisma/client';
 import { hashPassword, comparePassword, generateJWT } from '@shared/auth';
 import { produceKafkaEvent as publishEvent } from '@shared/kafka';
 import { KAFKA_TOPICS } from '@shared/kafka';
