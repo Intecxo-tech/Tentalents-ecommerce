@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import '../../(routes)/login/login.css';
 import { auth, provider } from '../../../services/firebase';
 import { signInWithPopup } from 'firebase/auth';
+import SignUpForm from '../signupForm/signupForm'; 
 import Image from 'next/image';
 import Google from '../../../assets/google.png';
 import { useAuth } from '../../auth/callback/AuthContext';
@@ -174,14 +175,14 @@ const handleFirebaseGoogleSignIn = async () => {
         ) : (
           // ✅ Register flow using your AuthFlow component
           <div style={{ padding: '1rem 0' }}>
-{/* <SignUpForm
+<SignUpForm
   onSuccess={(token) => {
     login({ token });
     localStorage.setItem('token', token);
     toast.success('Logged in successfully!');
     onClose();
   }}
-/> */}
+/>
 
           </div>
         )}
