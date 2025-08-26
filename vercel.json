@@ -1,5 +1,0 @@
-{
-  "buildCommand": "npx nx build user-ui --prod",
-  "outputDirectory": "dist/apps/frontend/user-ui/.next",
-  "framework": "nextjs"
-}
