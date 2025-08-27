@@ -1,13 +1,12 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '../../../generated/invoice-service';
+import { PrismaClient } from '@prisma/client';
 import { generateInvoiceAndUpload } from '@shared/utils';
-import { getPresignedUrl } from '@shared/minio'; // ✅ Corrected import
+import { getPresignedUrl } from '@shared/minio';
 
 const prisma = new PrismaClient();
 
 /**
- * Generate an invoice and upload PDF to MinIO.
- * Associates it with order and vendor.
+ * Generate an invoice PDF, upload it to MinIO, and create a record in Prisma.
  */
 export async function manualInvoiceGeneration(req: Request, res: Response) {
   const { orderId } = req.params;
@@ -35,23 +34,23 @@ export async function manualInvoiceGeneration(req: Request, res: Response) {
         .json({ error: 'Invoice already exists for this order' });
     }
 
-    const vendorId = order.items[0]?.sellerId;
+    const vendorId = order.items[0]?.vendorId;
     if (!vendorId) {
       return res
         .status(400)
         .json({ error: 'No vendor associated with order items' });
     }
 
-    const filePath = await generateInvoiceAndUpload(orderId);
-    const bucket = 'invoices';
+    // Generate invoice PDF and upload it to MinIO
+    const pdfUrl = await generateInvoiceAndUpload(orderId);
 
+    // Create invoice record in Prisma
     const invoice = await prisma.invoice.create({
       data: {
         orderId,
         vendorId,
-        pdfUrl: '', // You could optionally store signed URL here
-        filePath,
-        bucket,
+        pdfUrl, // Store uploaded PDF URL directly
+        // issuedAt will default to now()
       },
     });
 
@@ -63,7 +62,7 @@ export async function manualInvoiceGeneration(req: Request, res: Response) {
 }
 
 /**
- * Get signed URL from MinIO for invoice PDF download.
+ * Get a signed URL from MinIO for downloading the invoice PDF.
  */
 export async function getInvoiceDownloadUrl(req: Request, res: Response) {
   const { invoiceId } = req.params;
@@ -73,15 +72,16 @@ export async function getInvoiceDownloadUrl(req: Request, res: Response) {
       where: { id: invoiceId },
     });
 
-    if (!invoice || !invoice.filePath || !invoice.bucket) {
+    if (!invoice || !invoice.pdfUrl) {
       return res
         .status(404)
-        .json({ error: 'Invoice not found or file data missing' });
+        .json({ error: 'Invoice not found or PDF URL missing' });
     }
 
+    // Generate a temporary signed URL for download
     const signedUrl = await getPresignedUrl({
-      bucketName: invoice.bucket,
-      objectName: invoice.filePath,
+      bucketName: 'invoices',      // your MinIO bucket name
+      objectName: invoice.pdfUrl,  // PDF file name stored in pdfUrl
     });
 
     return res.json({ signedUrl });
