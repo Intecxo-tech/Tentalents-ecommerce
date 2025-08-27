@@ -8,8 +8,7 @@
     "lint": "npx nx lint",
     "test": "npx nx test",
     "dev:seller-ui": "nx serve seller-ui",
-
- "dev:user-ui": "nx serve user-ui",
+    "dev:user-ui": "nx serve user-ui",
     "format": "nx format:write",
     "dev": "nx run-many --target=serve --all",
     "auth-docs": "node apps/auth-service/src/swagger.js",
@@ -120,6 +119,7 @@
     "stripe": "^18.4.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0",
     "winston": "^3.17.0",
     "zod": "^3.22.4"
   },
@@ -152,6 +152,6 @@
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.8.3"
   }
 }

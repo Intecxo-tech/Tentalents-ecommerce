@@ -1,5 +1,3 @@
-// apps/invoice-service/src/app/dto/invoice.dto.ts
-
 export interface InvoiceItem {
   title: string;
   quantity: number;
