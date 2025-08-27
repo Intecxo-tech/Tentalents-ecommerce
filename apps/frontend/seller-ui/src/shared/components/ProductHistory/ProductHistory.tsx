@@ -10,7 +10,7 @@ const statusOptions = [
 ];
 const ProductHistory = () => {
   return (
-   <div className="p-[15px] rounded-[10px] bg-white flex flex-col gap-[10px] flex-1">
+   <div className="productHistory p-[15px] rounded-[10px] bg-white flex flex-col gap-[10px] flex-1">
 
          <div className="inventoryheading flex align-center justify-between gap-[10px] ">
                 <div className='flex justify-flex-start items-center gap-[10px]'>

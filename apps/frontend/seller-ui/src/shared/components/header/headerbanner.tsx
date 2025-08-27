@@ -8,10 +8,10 @@ import './headerbanner.css';
 import '../sidebar/sidebar.css'
 
 interface HeaderBannerProps {
-  showSidebar?: boolean; // optional, default true
+  onToggleSidebar?: () => void;
 }
 
-const HeaderBanner: React.FC<HeaderBannerProps> = ({ showSidebar = true }) => {
+const HeaderBanner: React.FC<HeaderBannerProps> = ({ onToggleSidebar }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleSidebar = () => setIsMobileMenuOpen(prev => !prev);
@@ -20,12 +20,12 @@ const HeaderBanner: React.FC<HeaderBannerProps> = ({ showSidebar = true }) => {
   return (
     <>
       {/* Conditionally render Sidebar */}
-      {showSidebar && (
+      {/* {showSidebar && (
         <SideBarWrapper
           isMobileMenuOpen={isMobileMenuOpen}
           onCloseMobileMenu={closeSidebar}
         />
-      )}
+      )} */}
 
       <div className="headerbanner">
         <div className="search-container">
@@ -39,11 +39,11 @@ const HeaderBanner: React.FC<HeaderBannerProps> = ({ showSidebar = true }) => {
 
         <div className="rightside">
           {/* Hamburger (only visible in mobile via CSS) */}
-          {showSidebar && (
-            <button className="hamburger-icon" onClick={toggleSidebar}>
-              <Menu />
-            </button>
-          )}
+         {onToggleSidebar && (
+  <button className="hamburger-icon" onClick={onToggleSidebar}>
+    <Menu />
+  </button>
+)}
 
           <button className="background-button">
             Bulk Upload <Upload />

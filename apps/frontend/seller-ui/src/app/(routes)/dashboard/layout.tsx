@@ -10,14 +10,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="layout-wrapper">
       {/* Sidebar */}
-      <SideBarWrapper
+
+ <SideBarWrapper
         isMobileMenuOpen={isMobileMenuOpen}
         onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
       />
+  
+     
 
       {/* Main Content */}
       <main className="layout-content">
-      <HeaderBanner />
+      <HeaderBanner   onToggleSidebar={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         {children}
       </main>
     </div>

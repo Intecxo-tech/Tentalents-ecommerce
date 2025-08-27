@@ -8,8 +8,7 @@
     "lint": "npx nx lint",
     "test": "npx nx test",
     "dev:seller-ui": "nx serve seller-ui",
-
- "dev:user-ui": "nx serve user-ui",
+    "dev:user-ui": "nx serve user-ui",
     "format": "nx format:write",
     "dev": "nx run-many --target=serve --all",
     "auth-docs": "node apps/auth-service/src/swagger.js",
@@ -118,6 +117,7 @@
     "react-phone-input-2": "^2.15.1",
     "redis": "^5.8.1",
     "stripe": "^18.4.0",
+    "styled-components": "^6.1.19",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0",

@@ -249,7 +249,7 @@ export const getProductsByVendor = async (req: Request, res: Response, next: Nex
     if (!userId) return;
 
     console.log('User ID:', userId);
-
+const products = await productService.getAllProducts();
     // Find vendorId from userId first
     const vendor = await prisma.vendor.findUnique({ where: { userId } });
     console.log('Vendor found:', vendor);

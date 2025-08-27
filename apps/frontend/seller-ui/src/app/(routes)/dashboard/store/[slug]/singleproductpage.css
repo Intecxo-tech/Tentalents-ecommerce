@@ -1,0 +1,422 @@
+.productpage{
+    display:flex;
+    align-items:flex-start;
+    justify-content: space-between;
+    margin:20px 0px;
+    gap:40px;
+    margin-bottom: 90px;
+}
+.image-gallery {
+  width: 100%;
+  max-width: 100%; /* Prevent overflow */
+}
+
+.thumbnail-gallery {
+  display: flex;
+  margin:10px 0px;
+  gap: 10px;
+  max-width: 100%;
+  overflow-x: auto; /* Optional: enable scroll if needed */
+}
+.thumbnail-image{
+    border-radius:10px;
+    padding:5px;
+    background-color: var(--lightbackground);
+}
+.thumbnail-image  img{
+    border-radius: 10px;
+}
+.featured-image {
+    background-color: #D8D3D333; /* Make the image container pop */
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* border: 1px solid var(--bordergrey); Optional: subtle border */
+}
+
+.featured-image img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
+}
+.productpage-right{
+    width:25%;
+    background-color: var(--lightbackground);
+    border-radius: 10px;
+    padding:10px 15px;
+}
+.productpage-middle{
+    width:60%;
+}
+.productpage-left{
+    width:50%;
+}
+.price2{
+    font-size: 24px;
+    font-weight: 500;
+    color:black;
+    padding-left:15px;
+}
+
+.offer-price{
+    padding-left:5px;
+    font-size: 24px;
+    font-weight: 500;
+    color:var(--grey)
+}
+.pricesection{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+        padding-top:10px;
+       /* padding:25px 0px; */
+   
+    /* border-bottom:1px solid var(--bordergrey); */
+}
+.pricecontainer{
+ 
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+
+}
+.productrating p{
+    padding:10px 15px;
+    font-size: 13px;;
+     background-color: var(--secondary);
+    color:white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:5px;
+
+
+}
+.productrating span{
+    color:var(--normalblue)
+}
+.staricon{
+    width:15px;
+    height:15px;
+}
+   
+
+
+.first-section{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.peoplebought{
+     padding:10px 15px;
+    font-size: 13px;;
+     background-color: var(--secondary);
+    color:white;
+    border-radius: 10px;
+    font-weight: 400;
+
+}
+.producttitle{
+    font-size: 20px;
+    font-weight: 500;
+    padding:25px 0px;
+    border-bottom: 1px solid var(--bordergrey);
+}
+.productdesc-heading h2{
+     font-size: 20px;
+    font-weight: 500;
+    padding:25px 0px;
+}
+.calculate-discount{
+    font-size: 13px;
+    color:var(--secondary);
+    padding:7px;
+    border:1px solid var(--secondary);
+    border-radius: 10px;
+}
+.coupon-section form{
+    display: flex;
+    align-items: center;
+    border:1px solid var(--primary);
+    border-radius: 10px;
+
+}
+
+.coupon-section form input{
+    /* border: 1px solid var(--primary); */
+    border-radius: 10px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    padding:10px 15px;
+    background-color: transparent;
+}
+.coupon-section form input::placeholder {
+  color:var(--lightgrey);          /* Your desired color */
+         /* Ensures full opacity, especially in Firefox */
+}
+.couponbutton{
+    border-right: 0px;
+    border-top: 0px;
+    border-bottom: 0px;;
+    margin: 0px;
+}
+.productdesc-heading{
+    border-top:1px solid var(--bordergrey);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+/* decsription */
+.productdescription p{
+    font-size: 15px;
+    color:var(--grey);
+}
+.productdescription img{
+    width:100%;
+    height: 100%;
+}
+.storeinfo ,.storeinfo-review{
+    margin:20px 0px;
+    padding:10px ;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border:1px solid #d8d8d8;
+    border-radius: 10px;
+}
+.storeinfo-review{
+    margin:10px 0px;
+}
+.storeinfo-left{
+    display: flex;
+    gap:10px;
+    
+    align-items: center;
+}
+.storeinfo-left p{
+    font-size: 12px;
+    color:var(--grey);
+}
+.storeinfo-left h2{
+    font-size: 16px;
+    font-weight: 500;
+    color:var(--lightblack);
+}
+.storeinfo-right p{
+    font-size: 13px;
+    color:var(--grey);
+    padding:10px;
+    border-radius: 10px;;
+    background-color: var(--lightbackground);
+    font-weight: 500;
+}
+
+/* product right section */
+.pricesection1{
+    display: flex;
+    align-items: center;
+    
+    padding:15px 0px;
+    border-bottom: 1px solid var(--bordergrey);
+    justify-content: space-between;
+}
+
+/* measuremnets */
+table{
+    width:100%;
+    border-collapse: collapse;
+}
+table tr{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding:5px 0px;
+ 
+}
+table tr td{
+    font-size: 15px;
+}
+.label{
+    color:var(--grey);
+
+}
+.value{
+    text-align: right;
+    width:70%;
+}
+
+.sellername{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.sellername h2{
+    color: var(--secondary);
+}
+.storeinfo-review{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.review-top{
+     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:5px;
+}
+.reviewer-info{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.reviewrating{
+      display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:5px;
+
+}
+.review-date{
+    padding:10px;
+    border-radius: 10px;
+    background-color: var(--lightbackground);
+}
+.reviewer-info p{
+    color:var(--secondary)
+}
+.reviewhelp{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.review-description p{
+    font-size: 14px;
+    color:var(--grey);
+}
+.review-description{
+    margin:10px 0px;
+}
+.reviewbuttons{
+    margin:5px 0px;
+}
+.review-description h2{
+    font-size: 16px;;
+}
+.singlereview{
+  margin:10px 0px;
+    padding:10px;
+    border-radius: 10px;;
+    border: 1px solid var(--bordergrey);
+}
+.delivery-date h2{
+    font-size: 14px;
+    font-weight: 400;
+    color:black;
+
+}
+.delivery-date{
+    
+     padding:15px 15px;
+    border-bottom: 1px solid var(--bordergrey);
+}
+.locationaddress{
+    padding:15px 15px;
+    border-bottom: 1px solid var(--bordergrey);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.pencil{
+    color:var(--primary);
+}
+.map{
+color:var(--secondary);
+}
+.adtocart-wrapper{
+ padding:15px 15px;
+    border-bottom: 1px solid var(--bordergrey);
+}
+.counter{
+   
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border:1px solid var(--primary);
+    border-radius: 10px;
+  padding:0px 10px;
+    margin-bottom: 10px;
+}
+.addtocart{
+    width:100%;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+.counter input {
+  width: 50px;
+  margin:0px;
+  background-color: var(--lightbackground);
+  text-align: center;
+}
+.counter-icon{
+    cursor: pointer;
+}
+.paymentimages{
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-bottom:10px;
+}
+.paymentwrapper{
+     padding:15px 15px;
+    border-bottom: 1px solid var(--bordergrey);
+}
+.featuredproducts{
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap:20px;
+    margin: 20px 0px;
+}
+.productslisting{
+    background-color: transparent;
+    padding:0px  !important;
+
+}
+.heavydiscount,.popularproducts{
+    background-color: var(--lightbackground);
+    border-radius: 10px;
+    
+}
+.discountheading{
+    padding:10px 20px;
+    padding-bottom: 0px;
+}
+
+
+@media(max-width:768px){
+.productpage{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+.productpage-left,.productpage-middle,.productpage-right{
+    width: 100%;
+}
+.storereviewbutton .background-button{
+    gap:5px
+}
+.storeinfo-review{
+    gap:5px;
+}
+}

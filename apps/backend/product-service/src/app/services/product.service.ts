@@ -533,15 +533,29 @@ async getProductsByVendorId(vendorId: string) {
         },
         include: {
           variants: true,
+          vendor: {
+            include: {
+              user: true, // vendor user info (name, email, etc)
+              // Add any other vendor related relations/fields here
+              // For example, if vendor has ratings, details, title, description fields, etc:
+              ratings: true,
+              // Assuming vendor has description and other fields directly on model:
+              // No extra include needed, just get them from the vendor object
+
+              // You can also include nested relations if needed:
+              productListings: true, // if you want all product listings by the vendor
+            },
+          },
         },
       },
-      ratings: true,
+      ratings: true, // product ratings
     },
   });
 
   console.log(`Fetched ${products.length} products for vendorId:`, vendorId);
   return products;
 }
+
 
 
   

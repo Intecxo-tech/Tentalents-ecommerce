@@ -10,7 +10,7 @@ const statusOptions = [
 const Balance = () => {
   return (
    <div>
-    <div className="p-[15px] rounded-[10px] bg-white flex flex-col gap-[10px] flex-1">
+    <div className="Balance p-[15px] rounded-[10px]  flex flex-col gap-[10px] flex-1">
         <div className="balanceheading flex justify-between items-center ">
            <div className="flex justify-flex-start gap-[10px] items-center">
             <Image src={Balanceicon} alt="balanceicon" />

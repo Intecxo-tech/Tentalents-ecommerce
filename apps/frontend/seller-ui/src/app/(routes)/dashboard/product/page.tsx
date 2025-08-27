@@ -4,6 +4,7 @@ import axios from 'axios';
 import './product.css';
 import { useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
+import Link from 'next/link';
 interface Variant {
   id: string;
   name: string;
@@ -20,9 +21,11 @@ interface Listing {
 }
 
 interface Product {
+    slug: string;
   id: string;
   title: string;
   category: string;
+   href: string;
   imageUrls: string[];
   listings: Listing[];
 }
@@ -94,7 +97,8 @@ const Page: React.FC = () => {
           : 0;
 
         return (
-          <div className="product-card" key={product.id}>
+<Link href={`/dashboard/store/${product.slug}`} key={product.id}>
+    <div className="product-card">
             <div className="image-wrapper">
               {hasDiscount && (
                 <p className="discount">{discountPercent}% OFF</p>
@@ -128,8 +132,10 @@ const Page: React.FC = () => {
               <button className='backgroundwhite-button' onClick={() => handleDelete(product.id)}>Delete</button>
             </div>
           </div>
+             </Link>
         );
       })}
+   
     </div>
   );
 };
