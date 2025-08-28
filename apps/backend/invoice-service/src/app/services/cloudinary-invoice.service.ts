@@ -63,7 +63,7 @@ export class CloudinaryInvoiceService {
       filename: `${orderId}_user`,
     };
 
-    // Generate PDFs and upload
+    // Generate PDFs and upload in parallel
     const [vendorInvoiceUrl, userInvoiceUrl] = await Promise.all([
       this.generateAndUploadInvoice(vendorInvoiceDto, folder, vendorProfileImage),
       this.generateAndUploadInvoice(userInvoiceDto, folder),
@@ -118,7 +118,7 @@ export class CloudinaryInvoiceService {
   ): Promise<string> {
     const { title, headerInfo, items, grandTotal, filename, paymentLink } = dto;
 
-    // Fetch vendor profile image if any
+    // Fetch profile image if any
     let profileBuffer: Buffer | undefined;
     if (profileImage) {
       try {
@@ -151,28 +151,69 @@ export class CloudinaryInvoiceService {
         doc.moveDown().fontSize(14).text(headerInfo);
         doc.moveDown();
 
+        // Horizontal line
+        doc.moveTo(doc.x, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke();
+        doc.moveDown();
+
         // Profile image
         if (profileBuffer) {
-          doc.image(profileBuffer, { width: 100, height: 100 });
-          doc.moveDown();
+          doc.image(profileBuffer, doc.page.width - 150, doc.y, { width: 100, height: 100 });
+          doc.moveDown(2);
         }
 
-        // Items table
+        // Items table header
         doc.fontSize(16).text('Items:', { underline: true });
+        doc.moveDown(0.5);
+
+        // Column widths
+        const colWidths = { title: 250, qty: 50, unit: 80, total: 80 };
+
+        // Table header
+        doc.fontSize(12).font('Helvetica-Bold');
+        doc.text('Item', doc.x, doc.y, { width: colWidths.title, continued: true });
+        doc.text('Qty', doc.x, doc.y, { width: colWidths.qty, continued: true, align: 'center' });
+        doc.text('Unit Price', doc.x, doc.y, { width: colWidths.unit, continued: true, align: 'right' });
+        doc.text('Total', doc.x, doc.y, { width: colWidths.total, align: 'right' });
+        doc.moveDown(0.5).font('Helvetica');
+
+        // Items
         items.forEach((item) => {
-          doc
-            .fontSize(12)
-            .text(`${item.title} (x${item.quantity}) - ₹${item.unitPrice} each = ₹${item.totalPrice}`);
+          doc.text(item.title, doc.x, doc.y, { width: colWidths.title, continued: true });
+          doc.text(`${item.quantity}`, doc.x, doc.y, { width: colWidths.qty, continued: true, align: 'center' });
+          doc.text(`₹${item.unitPrice}`, doc.x, doc.y, { width: colWidths.unit, continued: true, align: 'right' });
+          doc.text(`₹${item.totalPrice}`, doc.x, doc.y, { width: colWidths.total, align: 'right' });
+          doc.moveDown(0.2);
         });
 
-        doc.moveDown().fontSize(16).text(`Grand Total: ₹${grandTotal}`);
+        doc.moveDown(1);
 
+        // Grand total
+        doc.fontSize(16).font('Helvetica-Bold').text(`Grand Total: ₹${grandTotal}`, { align: 'right' });
+        doc.font('Helvetica');
+
+        // Payment link as button
         if (paymentLink) {
-          doc.moveDown().fontSize(14).fillColor('blue').text(`Pay Here: ${paymentLink}`);
+          const buttonWidth = 200;
+          const buttonHeight = 25;
+          const x = doc.x;
+          const y = doc.y + 10;
+
+          doc.rect(x, y, buttonWidth, buttonHeight).fill('#007bff');
+          doc.fillColor('white').text('Pay Here', x, y + 5, {
+            width: buttonWidth,
+            align: 'center',
+            link: paymentLink,
+            underline: true,
+          });
+          doc.moveDown(3);
+          doc.fillColor('black');
         }
 
         // Footer
-        doc.moveDown().fontSize(12).fillColor('black').text('Tentalents – committed to excellence.', { align: 'center' });
+        doc.moveDown(2)
+          .fontSize(10)
+          .fillColor('grey')
+          .text('Tentalents – committed to excellence.', { align: 'center' });
 
         doc.end();
       } catch (err) {
