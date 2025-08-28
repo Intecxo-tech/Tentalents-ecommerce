@@ -72,7 +72,7 @@ if (decoded.vendorId) {
 }
 
 toast.success('Login successful!');
-router.push('/myaccount');
+router.push('/dashboard/myaccount');
 
   } catch (err: any) {
     console.error('Login error:', err);
@@ -90,7 +90,7 @@ router.push('/myaccount');
       console.log('jwt token',token)
       const isExpired = decoded.exp * 1000 < Date.now();
       if (!isExpired) {
-       router.push('/myaccount');
+       router.push('/dashboard/myaccount');
       } else {
         localStorage.removeItem('token'); // remove expired token
       }
@@ -142,7 +142,7 @@ const token = res.data?.token;  // Adjust based on your backend response shape
 if (!token) throw new Error('Token missing in response');
 localStorage.setItem('token', token);
 toast.success('Logged in successfully!');
-router.push('/myaccount');
+router.push('/dashboard/myaccount');
   } catch (error: any) {
     console.error('Google login failed:', error?.response?.data || error.message);
     toast.error(error?.response?.data?.message || 'Google login failed.');
@@ -165,7 +165,7 @@ const token = res.data?.token;
 if (!token) throw new Error('Token missing in response');
 localStorage.setItem('token', token);
 toast.success('Logged in successfully!');
-router.push('/myaccount');
+router.push('/dashboard/myaccount');
   } catch (error) {
     console.error(error);
     toast.error('Google login failed.');

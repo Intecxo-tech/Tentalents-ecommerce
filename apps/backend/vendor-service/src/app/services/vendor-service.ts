@@ -11,7 +11,7 @@ import { logger } from '@shared/logger';
 import { sendEmail } from '@shared/email';
 const prisma = new PrismaClient();
 import {uploadToCloudinary} from '@shared/auth'
-
+import * as crypto from 'crypto';
 export const vendorService = {
 initiateVendorRegistrationOtp: async (email: string) => {
   try {
@@ -198,8 +198,9 @@ updateVendorBankDetails: async (vendorId: string, bankUpdateData: Partial<Prisma
 //   return prisma.vendor.findFirst({ where: { userId } });
 // },
   handleUserBecameVendor: async (event: { userId: string; email: string; phone: string; altphone?: string }) => {
+  
     const { userId, email, phone, altphone } = event;
-
+  const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(email).digest('hex')}?d=identicon`;
     const existingVendor = await prisma.vendor.findFirst({ where: { userId } });
     if (existingVendor) {
       logger.info(`[${SERVICE_NAMES.VENDOR}] Vendor already exists for user: ${userId}`);
@@ -214,6 +215,7 @@ updateVendorBankDetails: async (vendorId: string, bankUpdateData: Partial<Prisma
         name: '',          // Can be updated later
         businessName: '',  // Optional until vendor completes profile
         status: PrismaVendorStatus.pending,
+          profileImage: gravatarUrl,
       },
     });
 
@@ -441,7 +443,7 @@ loginOrRegisterWithGoogleIdToken: async (idToken: string) => {
 
     // Check if user exists
     let user = await prisma.user.findUnique({ where: { email } });
-
+const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(email).digest('hex')}?d=identicon`;
     if (!user) {
       // Create new user with seller role
       user = await prisma.user.create({
@@ -460,6 +462,7 @@ loginOrRegisterWithGoogleIdToken: async (idToken: string) => {
           phone: decodedToken.phone_number ?? '',
           businessName: '',
           status: PrismaVendorStatus.pending,
+           profileImage: gravatarUrl,
         },
       });
 
