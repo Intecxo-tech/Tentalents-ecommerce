@@ -3,7 +3,7 @@ import axios from 'axios';
 import { uploadToCloudinary } from '@shared/auth';
 import { logger } from '@shared/logger';
 import { PrismaClient } from '@prisma/client';
-import { sendEmail } from '@shared/email'; // shared email utility
+import { sendEmail } from '@shared/email';
 import { GenerateInvoiceDto, InvoiceItem } from '../dto/invoice-dto';
 
 const prisma = new PrismaClient();
@@ -16,17 +16,13 @@ interface InvoiceOptions {
   userEmail: string;
   vendorName: string;
   vendorEmail: string;
-  vendorProfileImage?: string; // Cloudinary URL
+  vendorProfileImage?: string;
   items: InvoiceItem[];
   totalAmount: number;
   paymentLink?: string;
 }
 
 export class CloudinaryInvoiceService {
-  /**
-   * Generates vendor + user invoices, uploads to Cloudinary, saves records in DB,
-   * and sends user invoice via email
-   */
   static async generateVendorAndUserInvoices(options: InvoiceOptions) {
     const {
       orderId,
@@ -44,7 +40,6 @@ export class CloudinaryInvoiceService {
 
     const folder = 'invoices';
 
-    // Prepare DTOs
     const vendorInvoiceDto: GenerateInvoiceDto = {
       title: `Invoice for Order #${orderId} (Vendor Copy)`,
       headerInfo: `Vendor: ${vendorName}\nEmail: ${vendorEmail}`,
@@ -63,7 +58,6 @@ export class CloudinaryInvoiceService {
       filename: `${orderId}_user`,
     };
 
-    // Generate PDFs and upload in parallel
     const [vendorInvoiceUrl, userInvoiceUrl] = await Promise.all([
       this.generateAndUploadInvoice(vendorInvoiceDto, folder, vendorProfileImage),
       this.generateAndUploadInvoice(userInvoiceDto, folder),
@@ -72,25 +66,9 @@ export class CloudinaryInvoiceService {
     logger.info(`[cloudinary-invoice-service] Vendor Invoice URL: ${vendorInvoiceUrl}`);
     logger.info(`[cloudinary-invoice-service] User Invoice URL:   ${userInvoiceUrl}`);
 
-    // Save Vendor invoice in DB
-    await prisma.invoice.create({
-      data: {
-        orderId,
-        vendorId,
-        pdfUrl: vendorInvoiceUrl,
-      },
-    });
+    await prisma.invoice.create({ data: { orderId, vendorId, pdfUrl: vendorInvoiceUrl } });
+    await prisma.invoice.create({ data: { orderId, vendorId, pdfUrl: userInvoiceUrl } });
 
-    // Save User invoice in DB
-    await prisma.invoice.create({
-      data: {
-        orderId,
-        vendorId, // still link vendor for multi-vendor orders
-        pdfUrl: userInvoiceUrl,
-      },
-    });
-
-    // Send User invoice via email
     try {
       await sendEmail({
         to: userEmail,
@@ -118,7 +96,6 @@ export class CloudinaryInvoiceService {
   ): Promise<string> {
     const { title, headerInfo, items, grandTotal, filename, paymentLink } = dto;
 
-    // Fetch profile image if any
     let profileBuffer: Buffer | undefined;
     if (profileImage) {
       try {
@@ -147,36 +124,32 @@ export class CloudinaryInvoiceService {
         });
 
         // Header
-        doc.fontSize(22).text(title, { underline: true });
-        doc.moveDown().fontSize(14).text(headerInfo);
+        doc.fontSize(22).font('Helvetica-Bold').text(title, { underline: true, align: 'center' });
+        doc.moveDown();
+        doc.fontSize(12).font('Helvetica').text(headerInfo, { align: 'center' });
         doc.moveDown();
 
         // Horizontal line
         doc.moveTo(doc.x, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke();
         doc.moveDown();
 
-        // Profile image
+        // Profile image top-right
         if (profileBuffer) {
           doc.image(profileBuffer, doc.page.width - 150, doc.y, { width: 100, height: 100 });
           doc.moveDown(2);
         }
 
-        // Items table header
-        doc.fontSize(16).text('Items:', { underline: true });
+        // Items table
+        doc.fontSize(14).font('Helvetica-Bold').text('Itemized Details', { underline: true });
         doc.moveDown(0.5);
 
-        // Column widths
         const colWidths = { title: 250, qty: 50, unit: 80, total: 80 };
-
-        // Table header
-        doc.fontSize(12).font('Helvetica-Bold');
-        doc.text('Item', doc.x, doc.y, { width: colWidths.title, continued: true });
+        doc.fontSize(12).text('Item', doc.x, doc.y, { width: colWidths.title, continued: true });
         doc.text('Qty', doc.x, doc.y, { width: colWidths.qty, continued: true, align: 'center' });
         doc.text('Unit Price', doc.x, doc.y, { width: colWidths.unit, continued: true, align: 'right' });
         doc.text('Total', doc.x, doc.y, { width: colWidths.total, align: 'right' });
         doc.moveDown(0.5).font('Helvetica');
 
-        // Items
         items.forEach((item) => {
           doc.text(item.title, doc.x, doc.y, { width: colWidths.title, continued: true });
           doc.text(`${item.quantity}`, doc.x, doc.y, { width: colWidths.qty, continued: true, align: 'center' });
@@ -186,12 +159,10 @@ export class CloudinaryInvoiceService {
         });
 
         doc.moveDown(1);
-
-        // Grand total
         doc.fontSize(16).font('Helvetica-Bold').text(`Grand Total: ₹${grandTotal}`, { align: 'right' });
         doc.font('Helvetica');
 
-        // Payment link as button
+        // Payment button
         if (paymentLink) {
           const buttonWidth = 200;
           const buttonHeight = 25;
