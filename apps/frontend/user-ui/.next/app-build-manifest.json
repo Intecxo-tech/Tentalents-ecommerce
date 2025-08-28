@@ -24,28 +24,11 @@
       "static/css/app/myaccount/page.css",
       "static/chunks/app/myaccount/page.js"
     ],
-    "/shop/[slug]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/shop/[slug]/page.css",
-      "static/chunks/app/shop/[slug]/page.js"
-    ],
     "/cart/checkout/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/cart/checkout/page.css",
       "static/chunks/app/cart/checkout/page.js"
-    ],
-    "/orders/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/orders/page.css",
-      "static/chunks/app/orders/page.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

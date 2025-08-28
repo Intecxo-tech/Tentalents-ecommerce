@@ -65,9 +65,22 @@ const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddr
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as Node;
-      if (formRef.current && !formRef.current.contains(target)) {
-        onClose();
-      }
+    const htmlTarget = e.target as HTMLElement;
+
+// Ignore click if inside phone input dropdown
+if (
+  htmlTarget.closest('.react-tel-input') || // phone input container
+  htmlTarget.closest('.flag-dropdown') ||   // country selector button
+  htmlTarget.closest('.country-list')       // dropdown list
+) {
+  return; // Don't close the popup
+}
+
+// Close only if outside the popup
+if (formRef.current && !formRef.current.contains(htmlTarget)) {
+  onClose();
+}
+
     };
 
     if (isOpen) {
