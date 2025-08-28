@@ -58,6 +58,7 @@ export class CloudinaryInvoiceService {
       filename: `${orderId}_user`,
     };
 
+    // Generate PDFs and upload
     const [vendorInvoiceUrl, userInvoiceUrl] = await Promise.all([
       this.generateAndUploadInvoice(vendorInvoiceDto, folder, vendorProfileImage),
       this.generateAndUploadInvoice(userInvoiceDto, folder),
@@ -66,9 +67,14 @@ export class CloudinaryInvoiceService {
     logger.info(`[cloudinary-invoice-service] Vendor Invoice URL: ${vendorInvoiceUrl}`);
     logger.info(`[cloudinary-invoice-service] User Invoice URL:   ${userInvoiceUrl}`);
 
-    await prisma.invoice.create({ data: { orderId, vendorId, pdfUrl: vendorInvoiceUrl } });
-    await prisma.invoice.create({ data: { orderId, vendorId, pdfUrl: userInvoiceUrl } });
+    // Use upsert to prevent unique constraint errors
+    await prisma.invoice.upsert({
+      where: { orderId },
+      update: { pdfUrl: vendorInvoiceUrl },
+      create: { orderId, vendorId, pdfUrl: vendorInvoiceUrl },
+    });
 
+    // Send user invoice via email
     try {
       await sendEmail({
         to: userEmail,
@@ -194,3 +200,6 @@ export class CloudinaryInvoiceService {
     });
   }
 }
+
+
+

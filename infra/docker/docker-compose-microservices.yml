@@ -1,0 +1,194 @@
+version: '3.9'
+
+services:
+  user-service:
+    build: ./apps/backend/user-service
+    container_name: user-service
+    ports:
+      - "3012:3012"
+    env_file:
+      - ./apps/backend/user-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  product-service:
+    build: ./apps/backend/product-service
+    container_name: product-service
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./apps/backend/product-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  order-service:
+    build: ./apps/backend/order-service
+    container_name: order-service
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./apps/backend/order-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  rating-service:
+    build: ./apps/backend/rating-service
+    container_name: rating-service
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./apps/backend/rating-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  email-service:
+    build: ./apps/backend/email-service
+    container_name: email-service
+    ports:
+      - "3004:3004"
+    env_file:
+      - ./apps/backend/email-service/.env
+    depends_on:
+      - kafka
+
+  payment-service:
+    build: ./apps/backend/payment-service
+    container_name: payment-service
+    ports:
+      - "3005:3005"
+    env_file:
+      - ./apps/backend/payment-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  search-service:
+    build: ./apps/backend/search-service
+    container_name: search-service
+    ports:
+      - "3006:3006"
+    env_file:
+      - ./apps/backend/search-service/.env
+    depends_on:
+      - kafka
+      - redis
+
+  cart-service:
+    build: ./apps/backend/cart-service
+    container_name: cart-service
+    ports:
+      - "3020:3020"
+    env_file:
+      - ./apps/backend/cart-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  admin-service:
+    build: ./apps/backend/admin-service
+    container_name: admin-service
+    ports:
+      - "3008:3008"
+    env_file:
+      - ./apps/backend/admin-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  invoice-service:
+    build: ./apps/backend/invoice-service
+    container_name: invoice-service
+    ports:
+      - "3009:3009"
+    env_file:
+      - ./apps/backend/invoice-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+      - minio
+
+  analytics-service:
+    build: ./apps/backend/analytics-service
+    container_name: analytics-service
+    ports:
+      - "3010:3010"
+    env_file:
+      - ./apps/backend/analytics-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  vendor-service:
+    build: ./apps/backend/vendor-service
+    container_name: vendor-service
+    ports:
+      - "3011:3011"
+    env_file:
+      - ./apps/backend/vendor-service/.env
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  postgres_data:
+  kafka_data:
+  minio_data:

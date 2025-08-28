@@ -1,4 +1,4 @@
-// File: C:\Users\Karishma khatri\Desktop\Tentalents-ecommerce\apps\frontend\user-ui\src\app\layout.tsx
+// File: /home/swapna/Ecommerce-Project/Tentalents-ecommerce/apps/frontend/user-ui/src/app/layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
