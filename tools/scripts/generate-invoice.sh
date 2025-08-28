@@ -1,31 +1,31 @@
 #!/bin/bash
 
 ORDER_ID=$1
-API_URL=${API_URL:-http://localhost:3002}
+API_URL=${API_URL:-http://localhost:3009}  # Update to your running invoice-service port
 
 if [ -z "$ORDER_ID" ]; then
   echo "Usage: $0 <orderId>"
   exit 1
 fi
 
-# Call TS script to get IDs
-PRISMA_OUTPUT=$(npx ts-node tools/scripts/get-order-ids.ts "$ORDER_ID")
-
-# Check if order exists
-if [ "$PRISMA_OUTPUT" == "{}" ]; then
-  echo "Order $ORDER_ID not found!"
-  exit 1
-fi
-
-# Extract IDs without jq
-USER_ID=$(echo $PRISMA_OUTPUT | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf-8")).userId')
-VENDOR_ID=$(echo $PRISMA_OUTPUT | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf-8")).vendorId')
+# --- Hardcoded IDs for testing ---
+# Replace these with real IDs once DB is back
+USER_ID="221820a1-3f99-4a29-b9b7-f41f85359949"
+VENDOR_ID="28801612-d8f7-45d1-8c86-5ac8769ecacb"
+USER_NAME="Test User"
+USER_EMAIL="testuser@example.com"
 
 echo "Order: $ORDER_ID"
 echo "Vendor: $VENDOR_ID"
 echo "User: $USER_ID"
 
 # Call Cloudinary invoice API
-curl -X POST "$API_URL/api/cloudinary-orders/$ORDER_ID" \
+curl -X POST "$API_URL/api/cloudinary-invoices" \
 -H "Content-Type: application/json" \
--d "{\"vendorId\":\"$VENDOR_ID\",\"userId\":\"$USER_ID\"}"
+-d "{
+  \"orderId\": \"$ORDER_ID\",
+  \"vendorId\": \"$VENDOR_ID\",
+  \"userId\": \"$USER_ID\",
+  \"userName\": \"$USER_NAME\",
+  \"userEmail\": \"$USER_EMAIL\"
+}"
