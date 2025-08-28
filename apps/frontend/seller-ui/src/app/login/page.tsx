@@ -57,13 +57,23 @@ const result = await response.json();
         throw new Error(result.message || 'Login failed');
       }
     }
+const token = result?.token;
+if (!token || typeof token !== 'string') throw new Error('Token missing in response');
 
-    const token = result?.token; // ✅ FIXED HERE
-    if (!token || typeof token !== 'string') throw new Error('Token missing in response');
+localStorage.setItem('token', token);
 
-    localStorage.setItem('token', token);
-    toast.success('Login successful!');
-    router.push('/dashboard/myaccount');
+// ✅ Decode the token to extract vendorId
+const decoded: any = jwtDecode(token);
+console.log('Decoded token:', decoded);
+if (decoded.vendorId) {
+  localStorage.setItem('vendorId', decoded.vendorId);
+} else {
+  console.warn("vendorId missing in token payload");
+}
+
+toast.success('Login successful!');
+router.push('/myaccount');
+
   } catch (err: any) {
     console.error('Login error:', err);
     toast.error(err.message);
@@ -80,7 +90,7 @@ const result = await response.json();
       console.log('jwt token',token)
       const isExpired = decoded.exp * 1000 < Date.now();
       if (!isExpired) {
-       router.push('/dashboard/myaccount');
+       router.push('/myaccount');
       } else {
         localStorage.removeItem('token'); // remove expired token
       }
@@ -155,7 +165,7 @@ const token = res.data?.token;
 if (!token) throw new Error('Token missing in response');
 localStorage.setItem('token', token);
 toast.success('Logged in successfully!');
-router.push('/dashboard/myaccount');
+router.push('/myaccount');
   } catch (error) {
     console.error(error);
     toast.error('Google login failed.');

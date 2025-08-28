@@ -60,7 +60,12 @@
     color:black;
     padding-left:15px;
 }
-
+.product-actions,.product2section{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:10px;
+}
 .offer-price{
     padding-left:5px;
     font-size: 24px;
@@ -110,7 +115,8 @@
 .first-section{
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
+    /* justify-content: flex-start; */
     gap:10px;
 }
 .peoplebought{

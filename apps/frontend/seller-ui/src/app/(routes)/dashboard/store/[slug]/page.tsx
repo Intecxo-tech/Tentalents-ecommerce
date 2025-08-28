@@ -12,6 +12,8 @@ type PageProps = {
    params: Promise<{ slug: string }>;
   // params: { slug: string }; 
 };
+
+
 // type tParams = { slug: string };
 export default async function ProductDetailPage({ params }: PageProps) {
   // const { slug } = props.params;

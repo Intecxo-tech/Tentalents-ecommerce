@@ -172,7 +172,7 @@ const onSubmit = async (data: FormData) => {
     );
 
     toast.success('Vendor registered successfully!');  // change toast message here
-    router.push('/dashboard/myaccount');  // redirect directly to /myaccount
+    router.push('/myaccount');  // redirect directly to /myaccount
   } catch (err: any) {
     toast.error(err?.response?.data?.message || 'Registration error. Please try again.');
   } finally {
@@ -225,7 +225,7 @@ const handleGoogleCallback = async (response: any) => {
     );
 
     toast.success('Logged in successfully!');
-    router.push('/dashboard/myaccount');
+    router.push('/myaccount');
   } catch (error: any) {
     console.error('Google login failed:', error?.response?.data || error.message);
     toast.error(error?.response?.data?.message || 'Google login failed.');
@@ -245,7 +245,7 @@ const handleFirebaseGoogleSignIn = async () => {
     });
 
     toast.success('Logged in successfully!');
-    router.push('/dashboard/myaccount');
+    router.push('/myaccount');
   } catch (error) {
     console.error(error);
     toast.error('Google login failed.');

@@ -126,11 +126,11 @@ const Page: React.FC = () => {
                 <p className="number">(100)</p>
               </div>
             </div>
-
+{/* 
             <div className="card-actions">
               <button className='background-button' onClick={() => handleEdit(product.id)}>Edit</button>
               <button className='backgroundwhite-button' onClick={() => handleDelete(product.id)}>Delete</button>
-            </div>
+            </div> */}
           </div>
              </Link>
         );

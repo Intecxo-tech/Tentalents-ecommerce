@@ -78,6 +78,25 @@ useEffect(() => {
   }
 }, [product?.id]);
 
+const handleEdit = (productId: string) => {
+  router.push(`/dashboard/editproduct/${productId}`);
+};
+
+const handleDelete = async (productId: string) => {
+  if (!window.confirm('Are you sure you want to delete this product?')) return;
+
+  try {
+    await axios.delete(`https://product-service-23pc.onrender.com/api/products/${productId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    toast.success('Product deleted successfully');
+    router.push('/dashboard/store'); // Redirect after delete or do something else
+  } catch (err: any) {
+    toast.error(err.response?.data?.message || 'Failed to delete product');
+  }
+};
 
 
 const averageRating = reviews.length
@@ -130,6 +149,7 @@ const sellerInfo = product.vendor;
       {/* MIDDLE: Rating, Title, Price, Sections */}
       <div className="productpage-middle">
         <div className="first-section">
+          <div className="product2section">
         <div className="productrating">
   <p>
     {averageRating.toFixed(1)} <StarIcon className="staricon" /> <span>({reviewCount})</span>
@@ -139,6 +159,21 @@ const sellerInfo = product.vendor;
           <div className="peoplebought">
             <p>{product.purchaseCount || 0}+ Customer Bought In Last 5mins</p>
           </div>
+          </div>
+           <div className="product-actions">
+    <button
+      className="background-button"
+      onClick={() => handleEdit(product.id)}
+    >
+      Edit
+    </button>
+    <button
+      className="backgroundwhite-button"
+      onClick={() => handleDelete(product.id)}
+    >
+      Delete
+    </button>
+  </div>
         </div>
 
         <h1 className="producttitle">{product.title}</h1>

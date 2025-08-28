@@ -3,7 +3,8 @@
 import React from 'react';
 import StoreLayout from '../../../../shared/components/layouts/StoreLayout';
 import Product from '../product/page'; // or wherever your main component is
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search,PlusIcon } from 'lucide-react';
+import Link from 'next/link';
 
 const Page = () => {
   return (
@@ -12,6 +13,7 @@ const Page = () => {
       <div className="header-left">
         <h2>Store Overview</h2>
       </div>
+      <div className="rightsidebar">
             <div className="search-bar" style={{ position: 'relative' }}>
               <div className="search-categories">
                 Categories
@@ -28,6 +30,12 @@ const Page = () => {
               <div className="search-button">
                 <Search className="search-icon" size={20} />
               </div>
+              </div>
+            <Link href="/dashboard/createproduct">
+  <button className="background-button">
+    Add Product <PlusIcon />
+  </button>
+</Link>
               </div>
       </div>
       <Product />

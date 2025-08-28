@@ -253,7 +253,22 @@ const onSubmit = async (data: FormData) => {
     setUploading(false);
   }
 };
+ const handleBackClick = () => {
+    if (productId) {
+      // In EDIT mode, navigate to the specific product's detail page
+      router.push(`/dashboard/store/${productId}`);
+    } else {
+      // In CREATE mode, navigate to the main store page
+      router.push('/dashboard/store');
+    }
+  };
 
+  const handleDiscard = () => {
+    // For both create and edit mode, reset the form and go to the main store page
+    reset();
+    setSelectedFiles([]);
+    router.push('/dashboard/store');
+  };
 
 // const uploadImages = async (productId: string) => {
 //   const token = localStorage.getItem('token');
@@ -293,11 +308,11 @@ const onSubmit = async (data: FormData) => {
 
 
   return (
-    <div >
+    <div className='mainproductpage'>
      <div className="producst-main">
         
      <div className="product-headerleft">
-      <button className='bordered-button'>
+      <button className='bordered-button' >
         <ChevronLeft />
       </button>
      <div className='title-sect'>
@@ -316,13 +331,14 @@ const onSubmit = async (data: FormData) => {
   type="button"
   onClick={() => {
     reset(); // reset form fields
-    setSelectedFiles([]); // reset selected images
+    setSelectedFiles([]);
+    handleDiscard; // reset selected images
     // or '/dashboard'
   }}
 >
   Discard
 </button>
-       <button className='bordered-button'>Schedule</button>
+
       <button
   type="button"
   className='background-button'

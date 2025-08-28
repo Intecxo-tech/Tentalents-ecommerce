@@ -25,6 +25,7 @@
   min-height: 100vh;
 }
 .layout-content{
+    /* padding: 0px 20px; */
     width: 100%;
 }
 /* .sidebarcontent{

@@ -228,6 +228,8 @@ textarea::placeholder {
   font-size: 16px;
   color:var(--black-grey);
   font-weight: 500;
+  margin:10px 0px;
+  margin-bottom: 0px;
 
 }
 .product-title2{

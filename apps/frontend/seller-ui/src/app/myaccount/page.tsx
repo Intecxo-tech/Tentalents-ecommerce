@@ -5,7 +5,9 @@ import { jwtDecode } from 'jwt-decode';
 import Image from 'next/image';
 import './account.css'
 import toast from 'react-hot-toast';
-import Editbutton from '../../../../assets/editbutton.png'
+import Editbutton from '../../assets/editbutton.png'
+// import { Menu } from 'lucide-react';
+import Menu from '../../shared/components/menu/menu';
 type Vendor = {
   id: string;
   userId: string;
@@ -271,6 +273,8 @@ const handleKycUploadTyped = async (e: ChangeEvent<HTMLInputElement>, docType: '
 
 
   return (
+    <div>
+        <Menu />
     <div className='account-page'>
       <div className="headertop">
  <div className="headingarea">
@@ -569,6 +573,7 @@ const handleKycUploadTyped = async (e: ChangeEvent<HTMLInputElement>, docType: '
 
       {/* Editable Form */}
     
+    </div>
     </div>
   );
 };
