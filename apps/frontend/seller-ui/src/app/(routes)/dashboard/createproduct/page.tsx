@@ -59,7 +59,7 @@ productFeatures?: string[];
 };
 
 
-const Page: React.FC<{ productId?: string }> = ({ productId }) => {
+const CreateProduct: React.FC<{ productId?: string }> = ({ productId }) => {
    const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const router = useRouter();
   const {
@@ -835,4 +835,4 @@ const onSubmit = async (data: FormData) => {
   );
 };
 
-export default Page;
+export default CreateProduct;
