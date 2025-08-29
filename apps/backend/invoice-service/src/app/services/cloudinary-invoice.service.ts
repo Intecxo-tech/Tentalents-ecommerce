@@ -46,7 +46,7 @@ export class CloudinaryInvoiceService {
       items,
       grandTotal: totalAmount,
       paymentLink,
-      filename: `${orderId}_vendor`,
+      filename: `${orderId}_vendor.pdf`,
     };
 
     const userInvoiceDto: GenerateInvoiceDto = {
@@ -55,10 +55,10 @@ export class CloudinaryInvoiceService {
       items,
       grandTotal: totalAmount,
       paymentLink,
-      filename: `${orderId}_user`,
+      filename: `${orderId}_user.pdf`,
     };
 
-    // Generate PDFs and upload
+    // Generate PDFs and upload as raw files
     const [vendorInvoiceUrl, userInvoiceUrl] = await Promise.all([
       this.generateAndUploadInvoice(vendorInvoiceDto, folder, vendorProfileImage),
       this.generateAndUploadInvoice(userInvoiceDto, folder),
@@ -67,7 +67,7 @@ export class CloudinaryInvoiceService {
     logger.info(`[cloudinary-invoice-service] Vendor Invoice URL: ${vendorInvoiceUrl}`);
     logger.info(`[cloudinary-invoice-service] User Invoice URL:   ${userInvoiceUrl}`);
 
-    // Use upsert to prevent unique constraint errors
+    // Save vendor invoice in DB
     await prisma.invoice.upsert({
       where: { orderId },
       update: { pdfUrl: vendorInvoiceUrl },
@@ -121,6 +121,9 @@ export class CloudinaryInvoiceService {
         doc.on('end', async () => {
           try {
             const pdfBuffer = Buffer.concat(chunks);
+
+            // ✅ Upload PDF as raw file to Cloudinary
+            // Now using only 3 args: pdfBuffer, folder, filename
             const url = await uploadToCloudinary(pdfBuffer, folder, filename);
             resolve(url);
           } catch (err) {
@@ -200,6 +203,3 @@ export class CloudinaryInvoiceService {
     });
   }
 }
-
-
-
