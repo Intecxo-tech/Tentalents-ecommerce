@@ -102,6 +102,8 @@ export class CloudinaryInvoiceService {
   ): Promise<string> {
     const { title, headerInfo, items, grandTotal, filename, paymentLink } = dto;
 
+    if (!filename) throw new Error('Invoice filename is missing'); // ✅ Safety check
+
     let profileBuffer: Buffer | undefined;
     if (profileImage) {
       try {
@@ -123,7 +125,6 @@ export class CloudinaryInvoiceService {
             const pdfBuffer = Buffer.concat(chunks);
 
             // ✅ Upload PDF as raw file to Cloudinary
-            // Now using only 3 args: pdfBuffer, folder, filename
             const url = await uploadToCloudinary(pdfBuffer, folder, filename);
             resolve(url);
           } catch (err) {
