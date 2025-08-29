@@ -34,7 +34,8 @@ interface AddressInput {
 }
 
 const prisma = new PrismaClient();
-const stripe = new Stripe(process.env.STRIPE_PAYMENT_SECRET_KEY!, { apiVersion: '2022-11-15' });
+const stripe = new Stripe(process.env.STRIPE_PAYMENT_SECRET_KEY!, { apiVersion: '2025-07-30.basil' });
+
 
 const VALID_STATUSES: OrderStatus[] = [
   'pending', 'confirmed', 'shipped', 'delivered', 'canceled', 'returned', 'refunded',
