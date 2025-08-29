@@ -7,62 +7,78 @@ import {
   addAddress,
   editAddress,
   deleteAddress,
-  getUserAddresses 
+  getUserAddresses,
+  getVendorOrders
 } from '../controllers/order.controller';
 import { authMiddleware, requireRole } from '@shared/auth';
 
 const router = Router();
+
+// ------------------- Address routes -------------------
 router.get(
   '/addresses',
-  authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
-  getUserAddresses  // Fetch all addresses for the authenticated user
-);
-router.post(
-  '/addresses',
-  authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
-  addAddress  // Add a new address for the authenticated user
+  authMiddleware(['buyer', 'buyer_seller']),
+  getUserAddresses
 );
 
+router.post(
+  '/addresses',
+  authMiddleware(['buyer', 'buyer_seller']),
+  addAddress
+);
 
 router.patch(
   '/addresses/:id',
-  authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
-  editAddress  // Edit an existing address for the authenticated user
+  authMiddleware(['buyer', 'buyer_seller']),
+  editAddress
 );
 
 router.delete(
   '/addresses/:id',
-  authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
-  deleteAddress  // Delete an address for the authenticated user
+  authMiddleware(['buyer', 'buyer_seller']),
+  deleteAddress
 );
-// Orders routes
+
+// ------------------- Buyer Orders routes -------------------
 router.post(
-  '/', 
-  authMiddleware(['buyer', 'buyer_seller']),  // Ensuring the user is authenticated
+  '/',
+  authMiddleware(['buyer', 'buyer_seller']),
   placeOrder
 );
 
 router.get(
-  '/', 
-  authMiddleware(),  // Ensure user is authenticated
-  requireRole('buyer', 'buyer_seller'),  // Ensure the correct role
-  getUserOrders  // Fetch all orders for the authenticated user
+  '/',
+  authMiddleware(['buyer', 'buyer_seller']),
+  getUserOrders
 );
 
 router.get(
-  '/:id', 
-  authMiddleware(),  // User needs to be authenticated
-  getOrderById  // Fetch a specific order by ID
-);
-
-router.patch(
   '/:id',
-  authMiddleware(), 
-  requireRole('admin', 'super_admin'),  // Only admins can update order status
-  updateOrderStatus  // Update the order status
+  authMiddleware(['buyer', 'buyer_seller', 'vendor', 'admin']),
+  getOrderById
 );
 
-// Address routes
+// ------------------- Order status update -------------------
+// Admin can update any order
+router.patch(
+  '/:id/status',
+  authMiddleware(['admin', 'super_admin']),
+  updateOrderStatus
+);
 
+// ------------------- Vendor Orders routes -------------------
+// Vendor can view their orders
+router.get(
+  '/vendor/orders',
+  authMiddleware(['vendor']),
+  getVendorOrders
+);
+
+// Vendor can update their own order status
+router.patch(
+  '/vendor/orders/:id/status',
+  authMiddleware(['vendor']),
+  updateOrderStatus
+);
 
 export default router;

@@ -4,22 +4,17 @@ import { produceKafkaEvent } from '@shared/kafka';
 import { sendSuccess } from '@shared/utils';
 import type { AuthPayload } from '@shared/auth';
 import { addressService } from '../services/order.service';
+
 interface AuthedRequest extends Request {
   user?: AuthPayload;
 }
 
-export const placeOrder = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+// ------------------- Buyer endpoints -------------------
+export const placeOrder = async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: '❌ Unauthorized: missing user ID' });
-    }
+    if (!userId) return res.status(401).json({ message: '❌ Unauthorized: missing user ID' });
 
-    // Pass the request body directly to placeOrder, which already does address validation
     const order = await orderService.placeOrder(userId, req.body);
 
     await produceKafkaEvent({
@@ -33,19 +28,10 @@ export const placeOrder = async (
   }
 };
 
-
-export const getUserOrders = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+export const getUserOrders = async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.userId;
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ message: '❌ Unauthorized: missing user ID' });
-    }
+    if (!userId) return res.status(401).json({ message: '❌ Unauthorized: missing user ID' });
 
     const orders = await orderService.getOrdersByUser(userId);
     sendSuccess(res, '📦 Orders fetched', orders);
@@ -54,21 +40,13 @@ export const getUserOrders = async (
   }
 };
 
-export const getOrderById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getOrderById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const orderId = req.params.id;
-    if (!orderId) {
-      return res.status(400).json({ message: '❌ Order ID is required' });
-    }
+    if (!orderId) return res.status(400).json({ message: '❌ Order ID is required' });
 
     const order = await orderService.getOrderById(orderId);
-    if (!order) {
-      return res.status(404).json({ message: '❌ Order not found' });
-    }
+    if (!order) return res.status(404).json({ message: '❌ Order not found' });
 
     sendSuccess(res, '📄 Order details fetched', order);
   } catch (err) {
@@ -76,36 +54,43 @@ export const getOrderById = async (
   }
 };
 
-export const updateOrderStatus = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+// ------------------- Vendor endpoints -------------------
+export const getVendorOrders = async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
+    const vendorId = req.user?.userId;
+    if (!vendorId) return res.status(401).json({ message: '❌ Unauthorized: missing vendor ID' });
+
+    const orders = await orderService.getVendorOrders(vendorId);
+    sendSuccess(res, '📦 Vendor orders fetched', orders);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateOrderStatus = async (req: AuthedRequest, res: Response, next: NextFunction) => {
+  try {
+    const vendorId = req.user?.userId;
     const orderId = req.params.id;
     const { status } = req.body;
 
-    if (!status) {
-      return res
-        .status(400)
-        .json({ message: '❌ Missing order status in request body' });
-    }
+    if (!vendorId) return res.status(401).json({ message: '❌ Unauthorized: missing vendor ID' });
+    if (!status) return res.status(400).json({ message: '❌ Missing order status in request body' });
 
-    const updated = await orderService.updateOrderStatus(orderId, status);
-   await produceKafkaEvent({
-  topic: 'order.updated',
-  messages: [{ value: JSON.stringify(updated) }],
-});
+    const updated = await orderService.updateOrderStatus(orderId, vendorId, status);
+
+    await produceKafkaEvent({
+      topic: 'order.updated',
+      messages: [{ value: JSON.stringify(updated) }],
+    });
+
     sendSuccess(res, '✅ Order status updated', updated);
   } catch (err) {
     next(err);
   }
 };
-export const addAddress = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+
+// ------------------- Address endpoints -------------------
+export const addAddress = async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.userId;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
@@ -117,11 +102,7 @@ export const addAddress = async (
   }
 };
 
-export const editAddress = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+export const editAddress = async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.userId;
     const addressId = req.params.id;
@@ -134,11 +115,7 @@ export const editAddress = async (
   }
 };
 
-export const deleteAddress = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+export const deleteAddress = async (req: AuthedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.userId;
     const addressId = req.params.id;
@@ -155,11 +132,10 @@ export const getUserAddresses = async (req: AuthedRequest, res: Response, next: 
   try {
     const userId = req.user?.userId;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-    console.log(`Fetching addresses for userId: ${userId}`);
-    // Make sure we're calling the correct service for fetching addresses
-    const addresses = await addressService.getAddressesByUser(userId); // Correct service
-    sendSuccess(res, '📍 Addresses fetched', addresses); 
+
+    const addresses = await addressService.getAddressesByUser(userId);
+    sendSuccess(res, '📍 Addresses fetched', addresses);
   } catch (err) {
-    next(err);  // Handle any errors
+    next(err);
   }
 };
