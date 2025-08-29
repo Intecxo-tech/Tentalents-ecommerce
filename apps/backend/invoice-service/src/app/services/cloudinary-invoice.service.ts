@@ -123,14 +123,17 @@ export class CloudinaryInvoiceService {
         doc.on('end', async () => {
           try {
             const pdfBuffer = Buffer.concat(chunks);
-
-            // ✅ Upload PDF as raw file to Cloudinary
             const url = await uploadToCloudinary(pdfBuffer, folder, filename);
             resolve(url);
           } catch (err) {
             logger.error('[cloudinary-invoice-service] ❌ Upload failed:', err);
             reject(err);
           }
+        });
+
+        doc.on('error', (err) => {
+          logger.error('[cloudinary-invoice-service] ❌ PDF doc error:', err);
+          reject(err);
         });
 
         // Header
@@ -140,13 +143,19 @@ export class CloudinaryInvoiceService {
         doc.moveDown();
 
         // Horizontal line
-        doc.moveTo(doc.x, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke();
+        doc.moveTo(doc.page.margins.left, doc.y)
+           .lineTo(doc.page.width - doc.page.margins.right, doc.y)
+           .stroke();
         doc.moveDown();
 
         // Profile image top-right
         if (profileBuffer) {
-          doc.image(profileBuffer, doc.page.width - 150, doc.y, { width: 100, height: 100 });
-          doc.moveDown(2);
+          try {
+            doc.image(profileBuffer, doc.page.width - 150, doc.y, { width: 100, height: 100 });
+            doc.moveDown(2);
+          } catch (err) {
+            logger.warn('[cloudinary-invoice-service] ❌ Failed to add profile image:', err);
+          }
         }
 
         // Items table
@@ -154,17 +163,20 @@ export class CloudinaryInvoiceService {
         doc.moveDown(0.5);
 
         const colWidths = { title: 250, qty: 50, unit: 80, total: 80 };
-        doc.fontSize(12).text('Item', doc.x, doc.y, { width: colWidths.title, continued: true });
-        doc.text('Qty', doc.x, doc.y, { width: colWidths.qty, continued: true, align: 'center' });
-        doc.text('Unit Price', doc.x, doc.y, { width: colWidths.unit, continued: true, align: 'right' });
-        doc.text('Total', doc.x, doc.y, { width: colWidths.total, align: 'right' });
-        doc.moveDown(0.5).font('Helvetica');
+        doc.fontSize(12).font('Helvetica');
+        // Table header
+        doc.text('Item', { width: colWidths.title, continued: true });
+        doc.text('Qty', { width: colWidths.qty, continued: true, align: 'center' });
+        doc.text('Unit Price', { width: colWidths.unit, continued: true, align: 'right' });
+        doc.text('Total', { width: colWidths.total, align: 'right' });
+        doc.moveDown(0.5);
 
+        // Table rows
         items.forEach((item) => {
-          doc.text(item.title, doc.x, doc.y, { width: colWidths.title, continued: true });
-          doc.text(`${item.quantity}`, doc.x, doc.y, { width: colWidths.qty, continued: true, align: 'center' });
-          doc.text(`₹${item.unitPrice}`, doc.x, doc.y, { width: colWidths.unit, continued: true, align: 'right' });
-          doc.text(`₹${item.totalPrice}`, doc.x, doc.y, { width: colWidths.total, align: 'right' });
+          doc.text(item.title, { width: colWidths.title, continued: true });
+          doc.text(`${item.quantity}`, { width: colWidths.qty, continued: true, align: 'center' });
+          doc.text(`₹${item.unitPrice}`, { width: colWidths.unit, continued: true, align: 'right' });
+          doc.text(`₹${item.totalPrice}`, { width: colWidths.total, align: 'right' });
           doc.moveDown(0.2);
         });
 
@@ -172,11 +184,11 @@ export class CloudinaryInvoiceService {
         doc.fontSize(16).font('Helvetica-Bold').text(`Grand Total: ₹${grandTotal}`, { align: 'right' });
         doc.font('Helvetica');
 
-        // Payment button
+        // Payment link
         if (paymentLink) {
           const buttonWidth = 200;
           const buttonHeight = 25;
-          const x = doc.x;
+          const x = doc.page.margins.left;
           const y = doc.y + 10;
 
           doc.rect(x, y, buttonWidth, buttonHeight).fill('#007bff');
@@ -192,9 +204,9 @@ export class CloudinaryInvoiceService {
 
         // Footer
         doc.moveDown(2)
-          .fontSize(10)
-          .fillColor('grey')
-          .text('Tentalents – committed to excellence.', { align: 'center' });
+           .fontSize(10)
+           .fillColor('grey')
+           .text('Tentalents – committed to excellence.', { align: 'center' });
 
         doc.end();
       } catch (err) {
