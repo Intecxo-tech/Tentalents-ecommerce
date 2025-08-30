@@ -1,13 +1,10 @@
-// auth/type.ts
-
 // Define constant ROLES object
 export const ROLES = {
   BUYER: 'buyer',
-  SELLER: 'seller',
-  BUYER_SELLER: 'buyer_seller',
+  VENDOR: 'vendor', // Replaced SELLER with VENDOR
+  BUYER_VENDOR: 'buyer_vendor', // Combined role for buyer and vendor
   ADMIN: 'admin',
   SUPER_ADMIN: 'super_admin',
-  VENDOR: 'vendor',
 } as const;
 
 // Create union type from ROLES values
@@ -15,7 +12,7 @@ export type UserRole = (typeof ROLES)[keyof typeof ROLES];
 
 // Auth payload to include optional userId and role (which can be an array of roles)
 export interface AuthPayload {
-  userId?: string; // optional for vendors
+  userId?: string;  // optional for vendors
   email: string;
   role: UserRole | UserRole[];  // Allowing role to be a single role or an array of roles
   iat?: number;
@@ -24,10 +21,16 @@ export interface AuthPayload {
 }
 
 // Role-check helpers using ROLES constant
-export const isBuyer = (user?: AuthPayload) => user?.role === ROLES.BUYER;
-export const isSeller = (user?: AuthPayload) => user?.role === ROLES.SELLER;
-export const isBuyerSeller = (user?: AuthPayload) =>
-  user?.role === ROLES.BUYER_SELLER;
-export const isAdmin = (user?: AuthPayload) => user?.role === ROLES.ADMIN;
-export const isSuperAdmin = (user?: AuthPayload) =>
-  user?.role === ROLES.SUPER_ADMIN;
+
+// Utility function to check if the user has a specific role
+export const hasRole = (role: UserRole, user?: AuthPayload): boolean => {
+  if (!user?.role) return false;
+  // If role is an array, check if the role exists in the array, else check for single role
+  return Array.isArray(user.role) ? user.role.includes(role) : user.role === role;
+};
+
+export const isBuyer = (user?: AuthPayload) => hasRole(ROLES.BUYER, user);
+export const isVendor = (user?: AuthPayload) => hasRole(ROLES.VENDOR, user); // Updated to check for VENDOR
+export const isBuyerVendor = (user?: AuthPayload) => hasRole(ROLES.BUYER_VENDOR, user); // For combined role
+export const isAdmin = (user?: AuthPayload) => hasRole(ROLES.ADMIN, user);
+export const isSuperAdmin = (user?: AuthPayload) => hasRole(ROLES.SUPER_ADMIN, user);
