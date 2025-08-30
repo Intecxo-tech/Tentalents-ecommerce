@@ -49,6 +49,11 @@
        margin-top: 0px ;
 
 }
+.bankheading{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 /* .accountpage-right .menu-left .background-button{
     justify-content: space-between;
     display: flex;

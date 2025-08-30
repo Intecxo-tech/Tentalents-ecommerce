@@ -173,17 +173,20 @@ await prisma.bankDetail.create({
     logger.info(`[${SERVICE_NAMES.VENDOR}] Vendor status updated: ${vendor.id}`);
     return vendor;
   },
-updateVendorBankDetails: async (
+// A new function with "upsert" logic
+updateOrAddVendorBankDetails: async (
   vendorId: string,
-  bankUpdateData: Partial<Prisma.BankDetailUpdateInput>,  // Fields that should be updated
-  cancelledChequeFile?: Express.Multer.File  // Optional file for bank verification
+  bankData: Omit<Prisma.BankDetailCreateInput, 'vendor'>, // Use create input type
+  cancelledChequeFile?: Express.Multer.File
 ) => {
   try {
-    // Check if the vendor exists
-    const existingBank = await prisma.bankDetail.findFirst({ where: { vendorId } });
-    if (!existingBank) {
-      throw new Error('Bank details not found for vendor');
+    // Check if the VENDOR exists, which is the parent record
+    const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
+    if (!vendor) {
+      throw new Error('Vendor not found');
     }
+
+    let finalBankData = { ...bankData };
 
     // Upload the cancelled cheque file if it's provided
     if (cancelledChequeFile) {
@@ -192,23 +195,30 @@ updateVendorBankDetails: async (
         'vendor_bank_cheques',
         `cheque_${vendorId}`
       );
-      bankUpdateData.cancelledcheque = chequeUrl;  // Update the bank data with the new cheque URL
+      finalBankData.cancelledcheque = chequeUrl;
     }
 
-    // Update the bank details
-    const updatedBank = await prisma.bankDetail.update({
-      where: { id: existingBank.id },
-      data: bankUpdateData,  // Update only the fields that are passed
+    const bankDetails = await prisma.bankDetail.upsert({
+      // 1. WHERE: How to find the existing record
+      where: {
+        vendorId: vendorId, // Assumes vendorId is unique on BankDetail
+      },
+      // 2. UPDATE: What to do if it's found
+      update: finalBankData,
+      // 3. CREATE: What to do if it's NOT found
+      create: {
+        ...finalBankData,
+        vendor: { connect: { id: vendorId } }, // Connect to the vendor
+      },
     });
 
-    logger.info(`[VendorService] Bank details updated for vendorId: ${vendorId}`);
-    return updatedBank;
+    logger.info(`[VendorService] Bank details upserted for vendorId: ${vendorId}`);
+    return bankDetails;
   } catch (err) {
-    logger.error('[VendorService] updateVendorBankDetails error:', err);
+    logger.error('[VendorService] upsertVendorBankDetails error:', err);
     throw err;
   }
 },
-
 
   handleUserBecameVendor: async (event: { userId: string; email: string; phone: string; altphone?: string }) => {
   

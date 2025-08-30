@@ -570,6 +570,19 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
   {/* Displaying the file name once uploaded */}
  
 </div>
+
+  
+
+
+ 
+   
+      
+  </div>
+  
+</div>
+
+
+</div>
 <div className="bankdetails">
   <div className="bankheading">
     <h2 className='heading2'>
@@ -623,36 +636,9 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
   required
 />
     </div>
-     {/* <div className="upload-container">
-      <span className="upload-label">Upload Cancelled Cheque</span>
-
-      <label htmlFor="certificate-upload" className="upload-icon">
-        <FaUpload size={15} />
-      </label>
-
-      <input
-        type="file"
-        id="certificate-upload"
-        accept=".pdf,.doc,.docx,.png,.jpg"
-        onChange={handleFileChange}
-        style={{ display: 'none' }}
-      />
-
-      {fileName && <p className="file-name">{fileName}</p>}
-    </div> */}
+ 
     </form>
   </div>
-  
-
-
- 
-   
-      
-  </div>
-</div>
-
-
-</div>
 </div>
 
       {/* Profile Image */}

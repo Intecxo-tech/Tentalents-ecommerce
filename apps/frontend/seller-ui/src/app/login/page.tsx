@@ -175,7 +175,7 @@ router.push('/dashboard/myaccount');
 };
 
   return (
-    <div>
+    <div className='login-pagesidebar'>
   <Menu />
     <div className="login-page">
   

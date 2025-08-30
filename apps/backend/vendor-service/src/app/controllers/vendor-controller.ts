@@ -214,13 +214,24 @@ export const completeVendorProfileRegistration = async (req: Request, res: Respo
 export const updateBankDetailsController = async (req: Request, res: Response) => {
   try {
     const { vendorId } = req.params;
+    
+    // The text data from the form is in req.body
     const bankUpdateData = req.body;
 
-    const updatedBank = await vendorService.updateVendorBankDetails(vendorId, bankUpdateData);
+    // The uploaded file (if any) is in req.file, added by multer
+    const cancelledChequeFile = req.file;
+
+    // Call the correct service function with all three arguments
+    const updatedBank = await vendorService.updateOrAddVendorBankDetails(
+      vendorId,
+      bankUpdateData,
+      cancelledChequeFile
+    );
     
     res.status(200).json({ success: true, data: updatedBank });
-  } catch (err) {
-    res.status(400).json({ success: false });
+  } catch (err: any) {
+    logger.error('[updateBankDetailsController] Error:', err.message);
+    res.status(400).json({ success: false, message: err.message || 'An unknown error occurred' });
   }
 };
 /**
