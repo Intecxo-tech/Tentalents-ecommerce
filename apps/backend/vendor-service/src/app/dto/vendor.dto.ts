@@ -12,6 +12,8 @@ export interface CreateVendorDto {
    address?: string;
   gstNumber?: string;
   profileImage?: string;
+    panNumber?: string; // Add panNumber here
+  AadharNumber?: string; // Add AadharNumber here
 }
 
 export interface UpdateVendorDto extends Partial<CreateVendorDto> {}
@@ -32,7 +34,10 @@ export const createVendorDtoToPrisma = (
     status: (dto.status ?? SharedVendorStatus.PENDING) as unknown as PrismaVendorStatus,
     address: dto.address ?? null,
     gstNumber: dto.gstNumber ?? null,
+    AadharNumber:dto.AadharNumber ?? null,
+    panNumber:dto.panNumber ?? null,
     profileImage: dto.profileImage ?? null,
+
   };
 
   if (dto.userId) {

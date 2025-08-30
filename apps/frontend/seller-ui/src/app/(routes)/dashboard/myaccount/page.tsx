@@ -130,6 +130,7 @@ const handleBankSave = async () => {
     setSaving(false);
   }
 };
+
 useEffect(() => {
   const fetchVendor = async () => {
     if (!vendorId || !token) {
@@ -161,6 +162,11 @@ useEffect(() => {
 
       setVendor(data.vendor);  // Save the fetched vendor data to state
 
+      // Log the fetched fields (profileImage, gstNumber, kycDocsUrl)
+      console.log('🔍 Vendor Profile Image:', data.vendor.profileImage);
+      console.log('🔍 Vendor GST Number:', data.vendor.gstNumber);
+      console.log('🔍 Vendor KYC Docs:', data.vendor.kycDocsUrl);
+
       // Check if bankDetails are included in the response
       console.log('🔍 Bank Details:', data.vendor.bankDetails);
 
@@ -174,6 +180,7 @@ useEffect(() => {
         console.warn('⚠️ No bank details found for this vendor');
       }
 
+      // Check if KYC docs URL is present
       if (data.vendor.kycDocsUrl && data.vendor.kycDocsUrl.length > 0) {
         const fullUrl = data.vendor.kycDocsUrl[0];
         const fileNameFromUrl = fullUrl.split('/').pop()?.split('?')[0] || 'Document';
@@ -195,75 +202,9 @@ useEffect(() => {
 useEffect(() => {
   if (vendor) {
     console.log('📌 Vendor state updated:', vendor);
-    console.log('📌 Vendor Bank Details:', vendor.bankDetails);
-  }
-}, [vendor]);
-
-useEffect(() => {
-  const fetchVendor = async () => {
-    if (!vendorId || !token) {
-      console.log('⏳ Waiting for vendorId and token...');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      console.log(`📦 Fetching vendor details for ID: ${vendorId}`);  // Logs the vendorId for which you're fetching details
-
-      const response = await fetch(`http://localhost:3010/api/vendor/${vendorId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,  // Send the token with the request
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ Error fetching vendor:', errorData);
-        throw new Error(errorData.message || 'Failed to fetch vendor details');
-      }
-
-      const data = await response.json();  // Parse the response data
-      console.log('🔍 Vendor data fetched:', JSON.stringify(data, null, 2));  // Log the full vendor data
-
-      setVendor(data.vendor);  // Save the fetched vendor data to state
-
-      // Check if bankDetails are included in the response
-      console.log('🔍 Bank Details:', data.vendor.bankDetails);
-
-      if (data.vendor.bankDetails) {
-        setVendor({
-          ...data.vendor,
-          bankDetails: data.vendor.bankDetails,
-        });
-        console.log('✅ Bank Details set in state:', data.vendor.bankDetails);
-      } else {
-        console.warn('⚠️ No bank details found for this vendor');
-      }
-
-      if (data.vendor.kycDocsUrl && data.vendor.kycDocsUrl.length > 0) {
-        const fullUrl = data.vendor.kycDocsUrl[0];
-        const fileNameFromUrl = fullUrl.split('/').pop()?.split('?')[0] || 'Document';
-        setCertificateFileName(decodeURIComponent(fileNameFromUrl));  // Extracts the file name from the URL
-      }
-
-    } catch (err: any) {
-      console.error('❌ Fetch vendor error:', err.message);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchVendor();
-}, [vendorId, token]);
-
-// Log vendor and bank details whenever vendor state changes
-useEffect(() => {
-  if (vendor) {
-    console.log('📌 Vendor state updated:', vendor);
+    console.log('📌 Vendor Profile Image:', vendor.profileImage);
+    console.log('📌 Vendor GST Number:', vendor.gstNumber);
+    console.log('📌 Vendor KYC Docs URL:', vendor.kycDocsUrl);
     console.log('📌 Vendor Bank Details:', vendor.bankDetails);
   }
 }, [vendor]);
@@ -364,30 +305,36 @@ const handleBusinessDetailsSave = async (e: FormEvent) => {
   e.preventDefault();
   if (!vendor) return;
 
+  // Preparing the payload to include the updated Aadhar and PAN numbers
   const payload = {
     businessName: vendor.businessName,
     gstNumber: vendor.gstNumber,
-    aadharNumber: vendor.aadharNumber, // Include Aadhar number
+    AadharNumber: vendor.aadharNumber, // Include Aadhar number
     panNumber: vendor.panNumber, // Include PAN number
   };
 
   try {
-    const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/profile/${vendorId}`, {
+    // Sending the PUT request to the backend
+    const response = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
       method: 'PUT',
       headers: {
-        Authorization: token ? `Bearer ${token}` : '',
+        Authorization: token ? `Bearer ${token}` : '', // Ensure token is set
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload), // Send the payload
     });
-
+  
+    // Handling failed request
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to save business details');
     }
 
+    // If the request is successful, update the vendor details in the state
     const data = await response.json();
-    setVendor(data.vendor);
+    setVendor(data.vendor); // Set the updated vendor object
+
+    // Show success message
     toast.success('Business details updated!');
   } catch (err: any) {
     console.error('Error saving business details:', err.message);
@@ -409,7 +356,7 @@ const handleBankDetailsSave = async (e: FormEvent) => {
   try {
     setSaving(true);
     const response = await fetch(
-      `http://localhost:3010/api/vendor/vendors/${vendorId}/bank-details`,
+      `https://vendor-service-8bzv.onrender.com/api/vendor/vendors/${vendorId}/bank-details`,
       {
         method: 'PUT',
         headers: {
@@ -727,7 +674,7 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
    <form onSubmit={handleBusinessDetailsSave}> 
     <div className="bankheading">
   <h2 className='heading2'>Business Details</h2>
- <button className='background-button'>Update Details</button>
+ <button className='background-button' onClick={handleBusinessDetailsSave}>Update Details</button>
  </div>
    <div className='first-column'>
        
@@ -742,15 +689,14 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
     
 
        
-           <input
-            type="text"
-            name="gstNumber"
-            value={vendor.gstNumber || ''}
-            onChange={handleChange}
-            placeholder="Enter GST number"
-            
-          />
-  
+          <input
+  type="text"
+  name="gstNumber"
+  value={vendor.gstNumber || ''}  // Use empty string as fallback if gstNumber is undefined or null
+  onChange={handleChange}
+  placeholder="Enter GST number"
+/>
+
        
     </div>
   <div className="businessdetail">

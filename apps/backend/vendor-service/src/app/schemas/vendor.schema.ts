@@ -14,6 +14,8 @@ export const CreateVendorSchema = z.object({
   address: z.string().optional(),
   gstNumber: z.string().optional(),
   profileImage: z.string().url().optional(),
+   panNumber: z.string().optional(),
+  AadharNumber: z.string().optional(),
 });
 
 export const UpdateVendorSchema = CreateVendorSchema.partial();

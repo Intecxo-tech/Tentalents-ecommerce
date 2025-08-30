@@ -149,14 +149,15 @@ export const getVendorProfileByVendorId = async (req: Request, res: Response) =>
 };
 
 export const updateVendorProfile = async (req: Request, res: Response) => {
-  // cast req to AuthenticatedRequest locally
   const authReq = req as AuthenticatedRequest;
 
   try {
-   const vendorId = req.params.vendorId;
-if (!vendorId) {
-  return res.status(400).json({ error: 'Vendor ID is required in the route' });
-}
+    const vendorId = req.params.vendorId;
+
+    if (!vendorId) {
+      return res.status(400).json({ error: 'Vendor ID is required in the route' });
+    }
+
     if (!authReq.user?.userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -168,9 +169,30 @@ if (!vendorId) {
 
     const dto: UpdateVendorDto = result.data;
 
-    // Remove status field if you don't want it updated here
-    const { status, ...profileFields } = dto;
+    // Log to inspect what is coming in the request body
+    console.log('DTO:', dto);
 
+    // Explicitly type profileFields to include panNumber and AadharNumber
+    const { panNumber, AadharNumber, status, ...profileFields }: { 
+      panNumber?: string; 
+      AadharNumber?: string; 
+      status?: SharedVendorStatus; 
+      [key: string]: any; 
+    } = dto;
+
+    // Add panNumber and AadharNumber to the update fields
+    if (panNumber) {
+      profileFields.panNumber = panNumber;
+    }
+
+    if (AadharNumber) {
+      profileFields.AadharNumber = AadharNumber;
+    }
+
+    // Log the final profileFields to check if panNumber and AadharNumber are correctly included
+    console.log('Updated Fields:', profileFields);
+
+    // Update the vendor profile in the database
     const updatedVendor = await prisma.vendor.update({
       where: { id: vendorId },
       data: profileFields,
@@ -182,6 +204,8 @@ if (!vendorId) {
     return res.status(500).json({ error: 'Failed to update vendor profile' });
   }
 };
+
+
 /**
  * Step 4: Complete vendor profile registration
  */

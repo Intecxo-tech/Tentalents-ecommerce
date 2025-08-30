@@ -396,48 +396,40 @@ getByVendorId: async (vendorId: string) => {
     if (!vendorId) throw new Error('Vendor ID is required');
     
     console.log(`[VendorService] Fetching details for vendorId: ${vendorId}`);
-    
+
     // Log before executing Prisma query
     console.log('[VendorService] Before executing Prisma query...');
     
-  const vendor = await prisma.vendor.findUnique({
-  where: { id: vendorId },
-  include: {
-    user: {
-      select: {
-        id: true,
-        email: true,
-        role: true,
-      }
-    },
-    bankDetail: true,
-  },
-});
+    const vendor = await prisma.vendor.findUnique({
+      where: { id: vendorId },
+      include: {
+        user: {  // Correct relation for user
+          select: {
+            id: true,
+            email: true,
+            role: true,
+          },
+        },
+        bankDetail: true,  // Correct relation for bank details
+        ratings: true,     // Including ratings related to the vendor
+        orderItems: true,  // Including order items related to the vendor
+        invoices: true,    // Including invoices related to the vendor
+        productListings: true, // Including product listings
+        cartItems: true,    // Including cart items if needed
+        addresses: true,    // Including vendor addresses
+      },
+    });
 
-console.log('[VendorService] Vendor with Bank Details:', vendor);
+    console.log('[VendorService] Vendor with all details:', vendor);
 
-    
     if (!vendor) {
       console.error('[VendorService] Vendor not found!');
       throw new Error('Vendor not found');
     }
-    
-    // Log detailed vendor data after successful query
-    console.log('[VendorService] Vendor Details:', {
-      id: vendor.id,
-      email: vendor.email,
-      name: vendor.name,
-      phone: vendor.phone,
-      businessName: vendor.businessName,
-      status: vendor.status,
-      createdAt: vendor.createdAt,
-      updatedAt: vendor.updatedAt,
-      user: vendor.user,
-      bankDetails: vendor.bankDetail,
-    });
-    
+
     logger.info(`[VendorService] Vendor profile fetched successfully for vendorId: ${vendorId}`);
     
+    // Returning all necessary vendor details
     return {
       id: vendor.id,
       email: vendor.email,
@@ -447,8 +439,19 @@ console.log('[VendorService] Vendor with Bank Details:', vendor);
       status: vendor.status,
       createdAt: vendor.createdAt,
       updatedAt: vendor.updatedAt,
-      user: vendor.user,
-      bankDetails: vendor.bankDetail, // Return the bank details here
+      user: vendor.user,  // Return the user relation
+      bankDetails: vendor.bankDetail, // Return the bank detail relation
+      profileImage: vendor.profileImage, // Return the profileImage field
+      gstNumber: vendor.gstNumber,      // Return the gstNumber field
+      kycDocsUrl: vendor.kycDocsUrl,    // Return the kycDocsUrl field
+      panNumber: vendor.panNumber,      // Return the panNumber field
+      aadharNumber: vendor.AadharNumber, // Return the aadharNumber field
+      address: vendor.address,      // Return the addresses
+      ratings: vendor.ratings,          // Return the ratings
+      orderItems: vendor.orderItems,    // Return the order items
+      invoices: vendor.invoices,        // Return the invoices
+      productListings: vendor.productListings, // Return product listings
+      cartItems: vendor.cartItems,      // Return cart items
     };
   } catch (err) {
     console.error('[VendorService] Error fetching vendor by ID:', err);
@@ -459,24 +462,47 @@ console.log('[VendorService] Vendor with Bank Details:', vendor);
 
 
 
+
 updateVendorProfile: async (
   vendorId: string,
-  updateData: Partial<Omit<Prisma.VendorUpdateInput, 'id' | 'user'>>
+  updateData: Partial<Omit<Prisma.VendorUpdateInput, 'id' | 'user'>> & {
+    panNumber?: string;
+    AadharNumber?: string;
+  }
 ) => {
   try {
-    // Directly update whatever fields the user passes
-    const vendor = await prisma.vendor.update({
+    // Ensure panNumber and AadharNumber are part of the updateData
+    const { panNumber, AadharNumber, ...restOfData } = updateData;
+
+    // Prepare the update data for the vendor
+    const updatedVendorData: Prisma.VendorUpdateInput = {
+      ...restOfData,
+    };
+
+    // If panNumber or AadharNumber are provided, add them to the update payload
+    if (panNumber) {
+      updatedVendorData.panNumber = panNumber;
+    }
+
+    if (AadharNumber) {
+      updatedVendorData.AadharNumber = AadharNumber;
+    }
+
+    // Update the vendor profile with the updated data
+    const updatedVendor = await prisma.vendor.update({
       where: { id: vendorId },
-      data: updateData,
+      data: updatedVendorData,
     });
 
     logger.info(`[VendorService] Vendor profile updated for vendorId: ${vendorId}`);
-    return vendor;
+
+    return updatedVendor;
   } catch (err) {
     logger.error('[VendorService] updateVendorProfile error:', err);
     throw err;
   }
 },
+
 
 loginOrRegisterWithGoogleIdToken: async (idToken: string) => {
   try {
