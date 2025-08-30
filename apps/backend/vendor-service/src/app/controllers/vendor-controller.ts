@@ -499,50 +499,77 @@ export const loginOrRegisterWithGoogle = async (req: Request, res: Response) => 
 };
 
 export const uploadVendorProfileImageController = async (req: Request, res: Response) => {
-  console.log('BODY:', req.body);
   try {
     const vendorId = req.params.vendorId;
-    const { file } = req.body; // expecting base64 string here
+    const { file } = req.body;  // base64 string expected here
 
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Convert base64 string to buffer
-    const base64Data = file.replace(/^data:image\/\w+;base64,/, '');
-    const imageBuffer = Buffer.from(base64Data, 'base64');
+    // Validate base64 format and extract mime type + data
+    const matches = file.match(/^data:(image\/\w+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ error: 'Invalid base64 image format' });
+    }
 
-    const imageUrl = await vendorService.uploadVendorProfileImage(vendorId, {
-      buffer: imageBuffer,
-      mimetype: 'image/png', // or detect from string
-      originalname: `profile_${vendorId}.png`,
+    const mimeType = matches[1];
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Upload to Cloudinary
+    const uploadedImageUrl = await vendorService.uploadVendorProfileImage(vendorId, {
+      buffer,
+      mimetype: mimeType,
+      originalname: `profile_${vendorId}`, // you can append extension if you want
     } as Express.Multer.File);
-console.log('BODY:', req.body); // or
-console.log('Base64 Data:', file); 
-    res.status(200).json({ imageUrl });
+
+    res.status(200).json({ imageUrl: uploadedImageUrl });
   } catch (err: any) {
-    logger.error('Failed to upload profile image:', err);
+    console.error('Failed to upload profile image:', err);
     res.status(500).json({ error: err.message || 'Failed to upload profile image' });
   }
 };
 
-
 export const uploadVendorKYCDocumentsController = async (req: Request, res: Response) => {
   try {
     const vendorId = req.params.vendorId;
-    const files = req.files as Express.Multer.File[]; // Expect multiple files
+    console.log(`[Controller] Received request to upload KYC documents for vendorId: ${vendorId}`);
+    console.log(`[Controller] Incoming Request Body: `, req.body);  // Log the body
 
-    if (!files || files.length === 0) {
-      return res.status(400).json({ error: 'No files uploaded' });
+    const { files } = req.body;
+
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      console.warn('[Controller] No base64 files provided');
+      return res.status(400).json({ error: 'No files provided' });
     }
 
-    const buffers = files.map(file => file.buffer);
-    const filenames = files.map(file => file.originalname);
+    // Decode base64 files and extract mimeType
+    const filesWithMeta = files.map((file: any) => {
+      const matches = file.base64.match(/^data:(.+);base64,(.+)$/);
+      if (!matches || matches.length !== 3) {
+        throw new Error('Invalid base64 format');
+      }
 
-    const updatedVendor = await vendorService.uploadVendorKYCDocuments(vendorId, buffers, filenames);
+      return {
+        buffer: Buffer.from(matches[2], 'base64'),
+        mimeType: matches[1],
+        filename: file.filename,
+      };
+    });
+
+    const buffers = filesWithMeta.map(f => f.buffer);
+    const filenames = filesWithMeta.map((f, i) => f.filename || `kyc_doc_${Date.now()}_${i}`);
+    const mimeTypes = filesWithMeta.map(f => f.mimeType);
+
+    // Pass buffers, filenames, and mimeTypes to service
+    const updatedVendor = await vendorService.uploadVendorKYCDocuments(vendorId, buffers, filenames, mimeTypes);
+
+    console.log(`[Controller] Successfully uploaded KYC docs, returning updated vendor`);
+
     res.status(200).json({ kycDocsUrl: updatedVendor.kycDocsUrl });
   } catch (err: any) {
+    console.error('[Controller] Failed to upload KYC documents:', err);
     res.status(500).json({ error: err.message || 'Failed to upload KYC documents' });
   }
 };
-

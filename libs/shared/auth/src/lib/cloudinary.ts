@@ -1,8 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 
-
-
 cloudinary.config({
   cloud_name: 'tentalents',
   api_key: '287733285458618',  // <-- must be a string!
@@ -10,19 +8,27 @@ cloudinary.config({
   secure: true,
 });
 
-
 export const uploadToCloudinary = async (
   fileBuffer: Buffer,
   folder: string = 'general',
-  filename?: string
+  filename?: string,
+  mimeType?: string  // <-- Add mimeType parameter here
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
+    // Default resource type is 'auto'
+    const uploadOptions: any = {
+      folder,
+      public_id: filename,
+      resource_type: 'auto',
+    };
+
+    // For PDFs (or other non-image files), use resource_type 'raw'
+    if (mimeType === 'application/pdf') {
+      uploadOptions.resource_type = 'raw';
+    }
+
     const stream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        public_id: filename,
-        resource_type: 'auto',
-      },
+      uploadOptions,
       (error, result) => {
         if (error) {
           console.error('Cloudinary upload error:', error);

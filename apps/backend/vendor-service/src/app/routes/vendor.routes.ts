@@ -89,14 +89,14 @@ router.get(
 router.post(
   '/profile-image/:vendorId',
   authMiddleware(UserRole.SELLER),
-  upload.single('profileImage'), // Add this middleware
   uploadVendorProfileImageController
 );
+
 // Route expects 'files' for KYC docs multiple files
 router.post(
   '/kyc-docs/:vendorId',
   authMiddleware(UserRole.SELLER),
-  upload.array('files'),
   uploadVendorKYCDocumentsController
 );
+
 export default router;

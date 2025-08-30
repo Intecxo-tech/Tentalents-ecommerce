@@ -91,6 +91,8 @@ completeVendorProfileRegistration: async (
   bankData: Omit<Prisma.BankDetailCreateInput, 'vendorId'>,
   kycFiles?: Buffer[],
   kycFilenames?: string[],
+    cancelledChequeFile?: Buffer,
+  cancelledChequeFilename?: string,
   produceEvents: boolean = true  // <-- new optional param with default true
 ) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -123,13 +125,23 @@ completeVendorProfileRegistration: async (
   const vendor = await prisma.vendor.create({
     data: vendorCreateData,
   });
+  let chequeUrl: string | undefined;
+if (cancelledChequeFile) {
+  chequeUrl = await uploadToCloudinary(
+    cancelledChequeFile,
+    'vendor_bank_cheques',
+    `cheque_${vendor.id}`
+  );
+  bankData.cancelledcheque = chequeUrl; // also update bankData
+}
 
-  await prisma.bankDetail.create({
-    data: {
-      ...bankData,
-      vendor: { connect: { id: vendor.id } },
-    },
-  });
+await prisma.bankDetail.create({
+  data: {
+    ...bankData,
+    vendor: { connect: { id: vendor.id } },
+  },
+});
+
 
 
   logger.info(`[VendorService] Vendor profile created for user: ${userId}`);
@@ -161,14 +173,32 @@ completeVendorProfileRegistration: async (
     logger.info(`[${SERVICE_NAMES.VENDOR}] Vendor status updated: ${vendor.id}`);
     return vendor;
   },
-updateVendorBankDetails: async (vendorId: string, bankUpdateData: Partial<Prisma.BankDetailUpdateInput>) => {
+updateVendorBankDetails: async (
+  vendorId: string,
+  bankUpdateData: Partial<Prisma.BankDetailUpdateInput>,  // Fields that should be updated
+  cancelledChequeFile?: Express.Multer.File  // Optional file for bank verification
+) => {
   try {
+    // Check if the vendor exists
     const existingBank = await prisma.bankDetail.findFirst({ where: { vendorId } });
-    if (!existingBank) throw new Error('Bank details not found for vendor');
+    if (!existingBank) {
+      throw new Error('Bank details not found for vendor');
+    }
 
+    // Upload the cancelled cheque file if it's provided
+    if (cancelledChequeFile) {
+      const chequeUrl = await uploadToCloudinary(
+        cancelledChequeFile.buffer,
+        'vendor_bank_cheques',
+        `cheque_${vendorId}`
+      );
+      bankUpdateData.cancelledcheque = chequeUrl;  // Update the bank data with the new cheque URL
+    }
+
+    // Update the bank details
     const updatedBank = await prisma.bankDetail.update({
       where: { id: existingBank.id },
-      data: bankUpdateData,
+      data: bankUpdateData,  // Update only the fields that are passed
     });
 
     logger.info(`[VendorService] Bank details updated for vendorId: ${vendorId}`);
@@ -178,6 +208,7 @@ updateVendorBankDetails: async (vendorId: string, bankUpdateData: Partial<Prisma
     throw err;
   }
 },
+
 
   handleUserBecameVendor: async (event: { userId: string; email: string; phone: string; altphone?: string }) => {
   
@@ -513,18 +544,37 @@ uploadVendorProfileImage: async (vendorId: string, file: Express.Multer.File): P
   }
 },
 
-uploadVendorKYCDocuments: async (vendorId: string, files: Buffer[], filenames?: string[]) => {
+uploadVendorKYCDocuments: async (
+  vendorId: string,
+  files: Buffer[],
+  filenames?: string[],
+  mimeTypes?: string[]
+  
+) => {
   try {
-    const uploadPromises = files.map((fileBuffer, index) =>
-      uploadToCloudinary(fileBuffer, 'vendor_kyc_documents', filenames?.[index])
-    );
+    console.log(`[VendorService] Starting KYC upload for vendorId: ${vendorId}`);
+    console.log(`[VendorService] Number of files to upload: ${files.length}`);
+
+    // Upload all files with mimeType info
+    const uploadPromises = files.map((fileBuffer, index) => {
+      const filename = filenames?.[index] || `kyc_doc_${Date.now()}_${index}`;
+      const mimeType = mimeTypes?.[index];
+      console.log(`[VendorService] Uploading file: ${filename}, mimeType: ${mimeType}`);
+
+      return uploadToCloudinary(fileBuffer, 'vendor_kyc_documents', filename, mimeType);
+    });
 
     const urls = await Promise.all(uploadPromises);
+    console.log(`[VendorService] Uploaded URLs:`, urls);
 
     const vendor = await prisma.vendor.findUnique({ where: { id: vendorId } });
-    if (!vendor) throw new Error('Vendor not found');
+    if (!vendor) {
+      console.error(`[VendorService] Vendor not found with id: ${vendorId}`);
+      throw new Error('Vendor not found');
+    }
 
     const existingDocs: string[] = vendor.kycDocsUrl ?? [];
+    console.log(`[VendorService] Existing KYC URLs count: ${existingDocs.length}`);
 
     const updatedVendor = await prisma.vendor.update({
       where: { id: vendorId },
@@ -533,12 +583,13 @@ uploadVendorKYCDocuments: async (vendorId: string, files: Buffer[], filenames?: 
       },
     });
 
-    logger.info(`[VendorService] KYC documents uploaded for vendorId: ${vendorId}`);
+    console.log(`[VendorService] Vendor updated successfully with new KYC URLs`);
     return updatedVendor;
   } catch (error) {
-    logger.error('[VendorService] uploadVendorKYCDocuments error:', error);
+    console.error('[VendorService] uploadVendorKYCDocuments error:', error);
     throw error;
   }
 },
+
 
 };

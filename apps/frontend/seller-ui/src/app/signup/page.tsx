@@ -172,7 +172,7 @@ const onSubmit = async (data: FormData) => {
     );
 
     toast.success('Vendor registered successfully!');  // change toast message here
-    router.push('/myaccount');  // redirect directly to /myaccount
+    router.push('/dashboard/myaccount');  // redirect directly to /myaccount
   } catch (err: any) {
     toast.error(err?.response?.data?.message || 'Registration error. Please try again.');
   } finally {
