@@ -195,17 +195,14 @@ updateOrAddVendorBankDetails: async (
         'vendor_bank_cheques',
         `cheque_${vendorId}`
       );
-      finalBankData.cancelledcheque = chequeUrl;
+      finalBankData.cancelledcheque = chequeUrl;  // Add the cancelled cheque URL
     }
 
     const bankDetails = await prisma.bankDetail.upsert({
-      // 1. WHERE: How to find the existing record
       where: {
         vendorId: vendorId, // Assumes vendorId is unique on BankDetail
       },
-      // 2. UPDATE: What to do if it's found
       update: finalBankData,
-      // 3. CREATE: What to do if it's NOT found
       create: {
         ...finalBankData,
         vendor: { connect: { id: vendorId } }, // Connect to the vendor
@@ -219,7 +216,6 @@ updateOrAddVendorBankDetails: async (
     throw err;
   }
 },
-
   handleUserBecameVendor: async (event: { userId: string; email: string; phone: string; altphone?: string }) => {
   
     const { userId, email, phone, altphone } = event;
@@ -394,30 +390,54 @@ if (!user) {
       throw err;
     }
   },
+// Get Vendor Details Including Bank Details
 getByVendorId: async (vendorId: string) => {
   try {
     if (!vendorId) throw new Error('Vendor ID is required');
+    
+    console.log(`[VendorService] Fetching details for vendorId: ${vendorId}`);
+    
+    // Log before executing Prisma query
+    console.log('[VendorService] Before executing Prisma query...');
+    
+  const vendor = await prisma.vendor.findUnique({
+  where: { id: vendorId },
+  include: {
+    user: {
+      select: {
+        id: true,
+        email: true,
+        role: true,
+      }
+    },
+    bankDetail: true,
+  },
+});
 
-    const vendor = await prisma.vendor.findUnique({
-      where: { id: vendorId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          }
-        },
-      },
-    });
+console.log('[VendorService] Vendor with Bank Details:', vendor);
 
+    
     if (!vendor) {
+      console.error('[VendorService] Vendor not found!');
       throw new Error('Vendor not found');
     }
-
-    logger.info(`[VendorService] Vendor profile fetched for vendorId: ${vendorId}`);
-
-    // Optional: Return a DTO hiding sensitive info like passwords
+    
+    // Log detailed vendor data after successful query
+    console.log('[VendorService] Vendor Details:', {
+      id: vendor.id,
+      email: vendor.email,
+      name: vendor.name,
+      phone: vendor.phone,
+      businessName: vendor.businessName,
+      status: vendor.status,
+      createdAt: vendor.createdAt,
+      updatedAt: vendor.updatedAt,
+      user: vendor.user,
+      bankDetails: vendor.bankDetail,
+    });
+    
+    logger.info(`[VendorService] Vendor profile fetched successfully for vendorId: ${vendorId}`);
+    
     return {
       id: vendor.id,
       email: vendor.email,
@@ -428,12 +448,16 @@ getByVendorId: async (vendorId: string) => {
       createdAt: vendor.createdAt,
       updatedAt: vendor.updatedAt,
       user: vendor.user,
+      bankDetails: vendor.bankDetail, // Return the bank details here
     };
   } catch (err) {
+    console.error('[VendorService] Error fetching vendor by ID:', err);
     logger.error('[VendorService] getByVendorId error:', err);
     throw err;
   }
 },
+
+
 
 updateVendorProfile: async (
   vendorId: string,
@@ -571,7 +595,7 @@ uploadVendorKYCDocuments: async (
       const mimeType = mimeTypes?.[index];
       console.log(`[VendorService] Uploading file: ${filename}, mimeType: ${mimeType}`);
 
-      return uploadToCloudinary(fileBuffer, 'vendor_kyc_documents', filename, mimeType);
+      return uploadToCloudinary(fileBuffer, 'vendor_kyc_documents', filename);
     });
 
     const urls = await Promise.all(uploadPromises);

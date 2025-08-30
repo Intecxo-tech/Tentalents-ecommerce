@@ -121,7 +121,25 @@ export const getVendorProfileByVendorId = async (req: Request, res: Response) =>
       return res.status(400).json({ error: 'Vendor ID is required' });
     }
 
+    console.log(`[Controller] Fetching profile for vendorId: ${vendorId}`);
+
+    // Fetch vendor details from the service
     const vendor = await vendorService.getByVendorId(vendorId);
+
+    // Log the full vendor details returned from the service
+    console.log(`[Controller] Fetched Vendor Profile: `, vendor);
+
+    // Log the individual fields to make sure you're capturing everything
+    console.log(`[Controller] Vendor ID: ${vendor.id}`);
+    console.log(`[Controller] Vendor Email: ${vendor.email}`);
+    console.log(`[Controller] Vendor Name: ${vendor.name}`);
+    console.log(`[Controller] Vendor Phone: ${vendor.phone}`);
+    console.log(`[Controller] Vendor Business Name: ${vendor.businessName}`);
+    console.log(`[Controller] Vendor Status: ${vendor.status}`);
+    console.log(`[Controller] Vendor Created At: ${vendor.createdAt}`);
+    console.log(`[Controller] Vendor Updated At: ${vendor.updatedAt}`);
+    console.log(`[Controller] User Details: `, vendor.user);
+    console.log(`[Controller] Bank Details: `, vendor.bankDetails);
 
     return res.status(200).json({ vendor });
   } catch (err) {
@@ -129,6 +147,7 @@ export const getVendorProfileByVendorId = async (req: Request, res: Response) =>
     return res.status(500).json({ error: 'Failed to fetch vendor profile' });
   }
 };
+
 export const updateVendorProfile = async (req: Request, res: Response) => {
   // cast req to AuthenticatedRequest locally
   const authReq = req as AuthenticatedRequest;

@@ -25,6 +25,8 @@ type Vendor = {
   description?: string;
   status: string;
   address: string | null;
+  aadharNumber: string | null;
+  panNumber: string | null;
   gstNumber: string | null;
   kycDocsUrl: string[];
   bankDetails?: {
@@ -93,7 +95,7 @@ const handleBankSave = async () => {
   try {
     setSaving(true);
     const response = await fetch(
-      `http://localhost:3010/api/vendor/vendors/${vendorId}/bank-details`,
+      `https://vendor-service-8bzv.onrender.com/api/vendor/vendors/${vendorId}/bank-details`,
       {
         method: 'PUT',
         headers: {
@@ -128,9 +130,7 @@ const handleBankSave = async () => {
     setSaving(false);
   }
 };
-
-  // 🔍 Fetch vendor details
-  useEffect(() => {
+useEffect(() => {
   const fetchVendor = async () => {
     if (!vendorId || !token) {
       console.log('⏳ Waiting for vendorId and token...');
@@ -141,11 +141,11 @@ const handleBankSave = async () => {
       setLoading(true);
       setError(null);
 
-      console.log(`📦 Fetching vendor details for ID: ${vendorId}`);
+      console.log(`📦 Fetching vendor details for ID: ${vendorId}`);  // Logs the vendorId for which you're fetching details
 
-      const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/${vendorId}`, {
+      const response = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,  // Send the token with the request
           'Content-Type': 'application/json',
         },
       });
@@ -156,14 +156,29 @@ const handleBankSave = async () => {
         throw new Error(errorData.message || 'Failed to fetch vendor details');
       }
 
-      const data = await response.json();
-      setVendor(data.vendor);
+      const data = await response.json();  // Parse the response data
+      console.log('🔍 Vendor data fetched:', JSON.stringify(data, null, 2));  // Log the full vendor data
 
-    if (data.vendor.kycDocsUrl && data.vendor.kycDocsUrl.length > 0) {
-  const fullUrl = data.vendor.kycDocsUrl[0];
-  const fileNameFromUrl = fullUrl.split('/').pop()?.split('?')[0] || 'Document';
-  setCertificateFileName(decodeURIComponent(fileNameFromUrl));
-}
+      setVendor(data.vendor);  // Save the fetched vendor data to state
+
+      // Check if bankDetails are included in the response
+      console.log('🔍 Bank Details:', data.vendor.bankDetails);
+
+      if (data.vendor.bankDetails) {
+        setVendor({
+          ...data.vendor,
+          bankDetails: data.vendor.bankDetails,
+        });
+        console.log('✅ Bank Details set in state:', data.vendor.bankDetails);
+      } else {
+        console.warn('⚠️ No bank details found for this vendor');
+      }
+
+      if (data.vendor.kycDocsUrl && data.vendor.kycDocsUrl.length > 0) {
+        const fullUrl = data.vendor.kycDocsUrl[0];
+        const fileNameFromUrl = fullUrl.split('/').pop()?.split('?')[0] || 'Document';
+        setCertificateFileName(decodeURIComponent(fileNameFromUrl));  // Extracts the file name from the URL
+      }
 
     } catch (err: any) {
       console.error('❌ Fetch vendor error:', err.message);
@@ -176,32 +191,154 @@ const handleBankSave = async () => {
   fetchVendor();
 }, [vendorId, token]);
 
+// Log vendor and bank details whenever vendor state changes
+useEffect(() => {
+  if (vendor) {
+    console.log('📌 Vendor state updated:', vendor);
+    console.log('📌 Vendor Bank Details:', vendor.bankDetails);
+  }
+}, [vendor]);
+
+useEffect(() => {
+  const fetchVendor = async () => {
+    if (!vendorId || !token) {
+      console.log('⏳ Waiting for vendorId and token...');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log(`📦 Fetching vendor details for ID: ${vendorId}`);  // Logs the vendorId for which you're fetching details
+
+      const response = await fetch(`http://localhost:3010/api/vendor/${vendorId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,  // Send the token with the request
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Error fetching vendor:', errorData);
+        throw new Error(errorData.message || 'Failed to fetch vendor details');
+      }
+
+      const data = await response.json();  // Parse the response data
+      console.log('🔍 Vendor data fetched:', JSON.stringify(data, null, 2));  // Log the full vendor data
+
+      setVendor(data.vendor);  // Save the fetched vendor data to state
+
+      // Check if bankDetails are included in the response
+      console.log('🔍 Bank Details:', data.vendor.bankDetails);
+
+      if (data.vendor.bankDetails) {
+        setVendor({
+          ...data.vendor,
+          bankDetails: data.vendor.bankDetails,
+        });
+        console.log('✅ Bank Details set in state:', data.vendor.bankDetails);
+      } else {
+        console.warn('⚠️ No bank details found for this vendor');
+      }
+
+      if (data.vendor.kycDocsUrl && data.vendor.kycDocsUrl.length > 0) {
+        const fullUrl = data.vendor.kycDocsUrl[0];
+        const fileNameFromUrl = fullUrl.split('/').pop()?.split('?')[0] || 'Document';
+        setCertificateFileName(decodeURIComponent(fileNameFromUrl));  // Extracts the file name from the URL
+      }
+
+    } catch (err: any) {
+      console.error('❌ Fetch vendor error:', err.message);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchVendor();
+}, [vendorId, token]);
+
+// Log vendor and bank details whenever vendor state changes
+useEffect(() => {
+  if (vendor) {
+    console.log('📌 Vendor state updated:', vendor);
+    console.log('📌 Vendor Bank Details:', vendor.bankDetails);
+  }
+}, [vendor]);
+
+
+
+
+
+
   // Logout handler
  
 
   // The rest of your component continues...
-const handleSave = async (e: FormEvent) => {
+  
+// const handleSave = async (e: FormEvent) => {
+//   e.preventDefault();
+//   if (!vendor) return;
+//   setSaving(true);
+//   setError(null);
+
+//   const payload = {
+//     name: vendor.name,
+//     businessName: vendor.businessName || '',
+//     phone: vendor.phone,
+//     altphone: vendor.altphone || '',
+//     email: vendor.email,
+//     website: vendor.website || '',
+//     address: vendor.address || '',
+//     description: vendor.description || '',
+//     gstNumber: vendor.gstNumber || '',
+//   };
+
+//   console.log('📤 Sending PUT request with payload:', payload);
+
+//   try {
+//     const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/profile/${vendorId}`, {
+//       method: 'PUT',
+//       headers: {
+//         Authorization: token ? `Bearer ${token}` : '',
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(payload),
+//     });
+
+//     if (!response.ok) {
+//       const errorData = await response.json();
+//       console.error('❌ PUT failed with:', errorData);
+//       throw new Error(errorData.message || 'Failed to save vendor details');
+//     }
+
+//     const data = await response.json();
+//     setVendor(data.vendor);
+//     alert('Vendor profile updated successfully!');
+//   } catch (err: any) {
+//     console.error('❌ Save error:', err.message);
+//     alert(`Error saving profile: ${err.message}`);
+//     setError(err.message);
+//   } finally {
+//     setSaving(false);
+//   }
+// };
+const handlePersonalDetailsSave = async (e: FormEvent) => {
   e.preventDefault();
   if (!vendor) return;
-  setSaving(true);
-  setError(null);
 
   const payload = {
     name: vendor.name,
-    businessName: vendor.businessName || '',
-    phone: vendor.phone,
-    altphone: vendor.altphone || '',
     email: vendor.email,
-    website: vendor.website || '',
-    address: vendor.address || '',
-    description: vendor.description || '',
-    gstNumber: vendor.gstNumber || '',
+    phone: vendor.phone,
+    address: vendor.address,
+    // other personal details
   };
 
-  console.log('📤 Sending PUT request with payload:', payload);
-
   try {
-    const response = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
+    const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/profile/${vendorId}`, {
       method: 'PUT',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -212,26 +349,111 @@ const handleSave = async (e: FormEvent) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('❌ PUT failed with:', errorData);
-      throw new Error(errorData.message || 'Failed to save vendor details');
+      throw new Error(errorData.message || 'Failed to save personal details');
     }
 
     const data = await response.json();
     setVendor(data.vendor);
-    alert('Vendor profile updated successfully!');
+    toast.success('Personal details updated!');
   } catch (err: any) {
-    console.error('❌ Save error:', err.message);
-    alert(`Error saving profile: ${err.message}`);
-    setError(err.message);
+    console.error('Error saving personal details:', err.message);
+    toast.error(`Error: ${err.message}`);
+  }
+};
+const handleBusinessDetailsSave = async (e: FormEvent) => {
+  e.preventDefault();
+  if (!vendor) return;
+
+  const payload = {
+    businessName: vendor.businessName,
+    gstNumber: vendor.gstNumber,
+    aadharNumber: vendor.aadharNumber, // Include Aadhar number
+    panNumber: vendor.panNumber, // Include PAN number
+  };
+
+  try {
+    const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/profile/${vendorId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to save business details');
+    }
+
+    const data = await response.json();
+    setVendor(data.vendor);
+    toast.success('Business details updated!');
+  } catch (err: any) {
+    console.error('Error saving business details:', err.message);
+    toast.error(`Error: ${err.message}`);
+  }
+};
+
+const handleBankDetailsSave = async (e: FormEvent) => {
+  e.preventDefault();
+  if (!vendor || !vendor.bankDetails) return;
+
+  const payload = {
+    accountHolder: vendor.bankDetails.accountHolder,
+    accountNumber: vendor.bankDetails.accountNumber,
+    ifscCode: vendor.bankDetails.ifscCode,
+    bankName: vendor.bankDetails.bankName,
+  };
+
+  try {
+    setSaving(true);
+    const response = await fetch(
+      `http://localhost:3010/api/vendor/vendors/${vendorId}/bank-details`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update bank details');
+    }
+
+    const data = await response.json();
+
+    // Update vendor state with the new bank details
+    setVendor({
+      ...vendor,
+      bankDetails: data.bankDetails || {
+        accountHolder: '',
+        accountNumber: '',
+        ifscCode: '',
+        bankName: '',
+      },
+    });
+
+    toast.success('Bank details updated!');
+  } catch (err: any) {
+    console.error('Error updating bank details:', err.message);
+    toast.error(`Error: ${err.message}`);
   } finally {
     setSaving(false);
   }
 };
- const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (!vendor) return;
-    const { name, value } = e.target;
-    setVendor({ ...vendor, [name]: value });
-  };
+
+const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  if (!vendor) return;
+  const { name, value } = e.target;
+  console.log(name, value); // Check what is being entered
+  setVendor({ ...vendor, [name]: value });
+};
+
   // Upload Profile Image handler
 const handleProfileImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
   if (!e.target.files || e.target.files.length === 0 || !vendor) return;
@@ -255,7 +477,7 @@ const handleProfileImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
       file: base64Image, // key name matches backend expected key
     };
 
-    const response = await fetch(`http://localhost:3010/api/vendor/profile-image/${vendorId}`, {
+    const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/profile-image/${vendorId}`, {
       method: 'POST',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -320,7 +542,7 @@ const handleKycUploadTyped = async (e: ChangeEvent<HTMLInputElement>, docType: s
     console.log('Payload:', payload);
 
     // Send the request to the backend
-    const response = await fetch(`http://localhost:3010/api/vendor/kyc-docs/${vendor.id}`, {
+    const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/kyc-docs/${vendor.id}`, {
       method: 'POST',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -373,7 +595,7 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
 
 
   return (
-<form onSubmit={handleSave}>  
+ 
     <div className='main-pagesetting'>
  
     <div className='account-page'>
@@ -384,9 +606,7 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
       <p className='my-account'>Vendor Account</p>
       </div>
       <div className="headerright">
- <button type="submit" disabled={saving} className='background-button'>
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+
       <button type="button" className='bordered-button' onClick={handleLogout}>
   Logout
 </button>
@@ -397,7 +617,13 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
 {/* Profile Image Upload */}
 <div className="accountpage-section">
 <div className="section1">
-  <h2 className='heading2'>Personal Details</h2>
+  <form onSubmit={handlePersonalDetailsSave}> 
+   <div className="bankheading">
+      <h2 className='heading2'>Personal Details</h2>
+        <button type="submit" disabled={saving} className='background-button'>
+          {saving ? 'Saving...' : 'Update Details'}
+        </button>
+    </div>
   <div className="personaldetails">
   <div className="personal-left">
 
@@ -408,12 +634,13 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
   >
   {vendor.profileImage && (
   <Image
-    src={vendor.profileImage}
-    alt="Profile"
-    className="profile-img"
-       width={90}
-    height={90}
-  />
+  src={vendor.profileImage || '/path/to/fallback-image.png'}
+  alt="Profile"
+  className="profile-img"
+  width={90}
+  height={90}
+/>
+
 )}
 
 
@@ -492,12 +719,16 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
 
       
         </div>
-
+</form>
 </div>
 {/* KYC Documents Upload */}
 {/* 📂 KYC Documents Upload Section */}
 <div className="kycdocs">
+   <form onSubmit={handleBusinessDetailsSave}> 
+    <div className="bankheading">
   <h2 className='heading2'>Business Details</h2>
+ <button className='background-button'>Update Details</button>
+ </div>
    <div className='first-column'>
        
           <input
@@ -525,22 +756,21 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
   <div className="businessdetail">
      <div className='first-column top-column'>
      
-  <input
-            type="text"
-            name="Aadhar Card"
-            value={vendor.address || ''}
-            onChange={handleChange}
-            placeholder="Aadhar Card"
-          
-          />
-    <input
-            type="text"
-            name="PAN Card"
-            value={vendor.address || ''}
-            onChange={handleChange}
-            placeholder="PAN Card"
-          
-          />
+<input
+  type="text"
+  name="aadharNumber"
+  value={vendor.aadharNumber || ''}
+  onChange={handleChange}
+  placeholder="Aadhar Card"
+/>
+ 
+<input
+  type="text"
+  name="panNumber"
+  value={vendor.panNumber || ''}
+  onChange={handleChange}
+  placeholder="PAN Card"
+/>
   
   {/* PAN Card (Required) */}
 
@@ -578,67 +808,68 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
    
       
   </div>
-  
+  </form>
 </div>
 
 
 </div>
 <div className="bankdetails">
+    <form onSubmit={handleBankDetailsSave }> 
   <div className="bankheading">
     <h2 className='heading2'>
     Bank Details
   </h2>
-    <button className='background-button' onClick={handleBankSave} >
-      Save details
+    <button className='background-button' onClick={handleBankDetailsSave} >
+    Update Details
     </button>
   </div>
   
   <div className="bank-detailsform">
-    <form >
+   
        <div className='first-column'>
        
-     <input
-  type="text"
-  name="accountHolder"
-  placeholder="Account Holder Name"
-  value={vendor.bankDetails?.accountHolder || ''}
-  onChange={handleBankChange}
-  required
-/>
+   <input
+      type="text"
+      name="accountHolder"
+      placeholder="Account Holder Name"
+      value={vendor.bankDetails?.accountHolder || ''}
+      onChange={handleBankChange}
+      required
+    />
     
 
        
-       <input
-  type="text"
-  name="accountNumber"
-  placeholder="Account Number"
-  value={vendor.bankDetails?.accountNumber || ''}
-  onChange={handleBankChange}
-  required
-/>
-  
+   <input
+      type="text"
+      name="accountNumber"
+      placeholder="Account Number"
+      value={vendor.bankDetails?.accountNumber || ''}
+      onChange={handleBankChange}
+      required
+    />
        
     </div>
     <div className="first-column">
      <input
-  type="text"
-  name="ifscCode"
-  placeholder="IFSC Code"
-  value={vendor.bankDetails?.ifscCode || ''}
-  onChange={handleBankChange}
-  required
-/><input
-  type="text"
-  name="bankName"
-  placeholder="Bank Name"
-  value={vendor.bankDetails?.bankName || ''}
-  onChange={handleBankChange}
-  required
-/>
+      type="text"
+      name="ifscCode"
+      placeholder="IFSC Code"
+      value={vendor.bankDetails?.ifscCode || ''}
+      onChange={handleBankChange}
+      required
+    /> <input
+      type="text"
+      name="bankName"
+      placeholder="Bank Name"
+      value={vendor.bankDetails?.bankName || ''}
+      onChange={handleBankChange}
+      required
+    />
     </div>
  
-    </form>
+   
   </div>
+  </form>
 </div>
 
       {/* Profile Image */}
@@ -661,7 +892,7 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
           
         </div>
     </div>
-    </form>  
+    
   );
 };
 
