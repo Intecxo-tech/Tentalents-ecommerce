@@ -2,7 +2,5 @@
 import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return <div>
-    page.tsx
-  </div>; // empty page
+  redirect('/login');
 }
