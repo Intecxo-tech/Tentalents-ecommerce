@@ -1,102 +1,35 @@
-// import { Router } from 'express';
-import { Router, Request as ExpressRequest } from 'express';
+import { Router } from 'express';
 import multer from 'multer';
-import type { FileFilterCallback } from 'multer';
-
 import {
-  updateVendor,
-  getVendorById,
-    updateBankDetailsController,
-  getAllVendors,
-  deleteVendor,
-  uploadVendorDocuments,
-  approveVendor,
-  rejectVendor,
-  getVendorAnalytics,
-  convertUserToVendor,
   initiateVendorRegistrationOtp,
   verifyVendorEmailOtp,
   completeVendorUserRegistration,
-  completeVendorProfileRegistration,
- getVendorProfileByVendorId,
-  loginOrRegisterWithGoogle,
- updateVendorProfile,
-   uploadVendorProfileImageController,
-   uploadVendorKYCDocumentsController,
-  loginVendor
-} from '../controllers/vendor-controller';
-
-import { authMiddleware } from '@shared/auth';
+  getVendorProfileByVendorId,
+  updateVendorProfile,
+  approveVendor,
+  rejectVendor
+} from '../controllers/vendor-controller'; // Correct import path
+import { requireAuth } from '@shared/auth'; // Correct import for the authenticate middleware
 import { UserRole } from '@shared/types';
+import type { RequestHandler } from 'express';
 
 const router = Router();
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (
-    req: ExpressRequest,
-    file: Express.Multer.File,
-    cb: FileFilterCallback
-  ) => {
-    const isAccepted =
-      file.mimetype.startsWith('image/') || file.mimetype.startsWith('application/');
-    if (!isAccepted) {
-      return cb(new Error('Only images or documents are allowed'));
-    }
-    cb(null, true);
-  },
-});
+// Multer setup for file uploads (5MB max size)
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
-router.post('/google', loginOrRegisterWithGoogle);
-router.get('/profile/:vendorId', authMiddleware(), getVendorProfileByVendorId);
-// === Public registration routes (no auth) ===
-router.post('/register/initiate-otp', initiateVendorRegistrationOtp);
-router.post('/register/verify-otp', verifyVendorEmailOtp);
-router.post('/register/user', completeVendorUserRegistration);
-router.put('/vendors/:vendorId/bank-details', updateBankDetailsController);
-router.post('/login', loginVendor);
+// Public routes (no authentication required)
+router.post('/register/initiate-otp', initiateVendorRegistrationOtp);  // Initiate OTP
+router.post('/register/verify-otp', verifyVendorEmailOtp);  // Verify OTP
+router.post('/register/user', completeVendorUserRegistration);  // Complete registration
+router.post('/login', () => {});  // Placeholder for vendor login logic
 
-// === Protected routes (auth required) ===
-router.post('/register/profile', authMiddleware([UserRole.BUYER, UserRole.SELLER]), completeVendorProfileRegistration);
+// Protected routes (authentication required)
+router.get('/profile/:vendorId', requireAuth([UserRole.SELLER, UserRole.ADMIN]) as RequestHandler, getVendorProfileByVendorId);  // Get vendor profile
+router.put('/profile/:vendorId', requireAuth([UserRole.SELLER, UserRole.ADMIN]) as RequestHandler, updateVendorProfile);  // Update vendor profile
 
-router.get('/', authMiddleware(UserRole.ADMIN), getAllVendors);
-router.post('/vendor/convert', authMiddleware(), convertUserToVendor);
-router.get('/:id', authMiddleware(), getVendorById);
-router.put(
-  '/profile/:vendorId',
-  authMiddleware([UserRole.SELLER]),
-  updateVendorProfile
-);
-// router.put('/:id', authMiddleware(UserRole.SELLER), updateVendor);
-router.delete('/:id', authMiddleware(UserRole.ADMIN), deleteVendor);
-
-router.post(
-  '/:id/documents',
-  authMiddleware(UserRole.SELLER),
-  upload.array('documents'),
-  uploadVendorDocuments
-);
-
-router.patch('/:id/approve', authMiddleware(UserRole.ADMIN), approveVendor);
-router.patch('/:id/reject', authMiddleware(UserRole.ADMIN), rejectVendor);
-
-router.get(
-  '/:id/analytics',
-  authMiddleware([UserRole.ADMIN, UserRole.SELLER]),
-  getVendorAnalytics
-);
-router.post(
-  '/profile-image/:vendorId',
-  authMiddleware(UserRole.SELLER),
-  uploadVendorProfileImageController
-);
-
-// Route expects 'files' for KYC docs multiple files
-router.post(
-  '/kyc-docs/:vendorId',
-  authMiddleware(UserRole.SELLER),
-  uploadVendorKYCDocumentsController
-);
+// Vendor status updates (admin only)
+router.patch('/:id/approve', requireAuth([UserRole.ADMIN]) as RequestHandler, approveVendor);  // Admin: approve vendor
+router.patch('/:id/reject', requireAuth([UserRole.ADMIN]) as RequestHandler, rejectVendor);  // Admin: reject vendor
 
 export default router;

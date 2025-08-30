@@ -1,6 +1,8 @@
+// auth/type.ts
+
 // Define constant ROLES object
 export const ROLES = {
- BUYER: 'buyer',
+  BUYER: 'buyer',
   SELLER: 'seller',
   BUYER_SELLER: 'buyer_seller',
   ADMIN: 'admin',
@@ -11,16 +13,17 @@ export const ROLES = {
 // Create union type from ROLES values
 export type UserRole = (typeof ROLES)[keyof typeof ROLES];
 
+// Auth payload to include optional userId and role (which can be an array of roles)
 export interface AuthPayload {
   userId?: string; // optional for vendors
   email: string;
-  role: UserRole;
+  role: UserRole | UserRole[];  // Allowing role to be a single role or an array of roles
   iat?: number;
   exp?: number;
   vendorId?: string;
 }
 
-// ✅ Role-check helpers using ROLES constant
+// Role-check helpers using ROLES constant
 export const isBuyer = (user?: AuthPayload) => user?.role === ROLES.BUYER;
 export const isSeller = (user?: AuthPayload) => user?.role === ROLES.SELLER;
 export const isBuyerSeller = (user?: AuthPayload) =>
