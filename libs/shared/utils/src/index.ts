@@ -6,6 +6,7 @@ export * from './lib/formatDate';
 export * from './lib/parseJSON';
 export * from './lib/hash';
 export * from './lib/validator';
+export * from './lib/pdf';
 export * from './lib/response';
 export * from './lib/invoice-generator';
 // libs/shared/utils/src/index.ts
