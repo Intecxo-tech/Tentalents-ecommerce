@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserRole, AuthPayload } from './types'; // ✅ Use shared types
+import { UserRole, AuthPayload } from './types'; 
 
 declare global {
   namespace Express {
@@ -29,11 +29,15 @@ export function requireRole(...allowedRoles: UserRole[]) {
       });
     }
 
-    if (!allowedRoles.includes(user.role)) {
+    // Ensure that user.role is always treated as an array
+    const userRoles = Array.isArray(user.role) ? user.role : [user.role];
+
+    // Check if any of the user's roles are in the allowed roles
+    if (!userRoles.some(role => allowedRoles.includes(role))) {
       return res.status(403).json({
         message: 'Access denied',
         detail: `Required role(s): [${allowedRoles.join(', ')}], but found: '${
-          user.role
+          userRoles.join(', ')
         }'`,
       });
     }

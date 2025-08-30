@@ -42,12 +42,14 @@ export const requireRole = (roles: UserRole | UserRole[]) => {
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    // If user.role is an array, check if any role matches
+    const userRoles = Array.isArray(req.user.role) ? req.user.role : [req.user.role];
+
+    // Check if any of the user's roles are included in the allowed roles
+    if (!userRoles.some(role => allowedRoles.includes(role))) {
       return res.status(403).json({
         message: 'Forbidden',
-        detail: `User does not have the required role(s): ${allowedRoles.join(
-          ', '
-        )}`,
+        detail: `User does not have the required role(s): ${allowedRoles.join(', ')}`,
       });
     }
 
