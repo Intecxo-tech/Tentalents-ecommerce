@@ -54,12 +54,15 @@ model Vendor {
   businessName      String
   phone             String? 
   tokens            UserToken[]
-   firebaseUid String?  @unique 
+  firebaseUid String?  @unique 
   addresses         Address[]   // Relation to User's addresses
   status            VendorStatus     @default(pending)
   address           String?
   gstNumber         String?
   kycDocsUrl        String[]         @default([])
+
+  panNumber     String?
+AadharNumber  String?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   invoices          Invoice[]
@@ -143,7 +146,7 @@ model BankDetail {
   isVerified    Boolean     @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-
+  cancelledcheque  String?
   // Relations
   vendorId      String?     @unique @db.Uuid
   adminId       String?     @unique @db.Uuid

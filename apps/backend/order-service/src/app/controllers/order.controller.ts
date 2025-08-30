@@ -163,3 +163,45 @@ export const getUserAddresses = async (req: AuthedRequest, res: Response, next: 
     next(err);  // Handle any errors
   }
 };
+export const getVendorOrders = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+const vendorId = req.user?.vendorId;
+    if (!vendorId) {
+      return res.status(401).json({ message: 'Unauthorized: Missing vendor ID' });
+    }
+
+   const orders = await orderService.getVendorOrders(vendorId);
+    sendSuccess(res, '📦 Vendor orders fetched', orders);
+  } catch (err) {
+    next(err);
+  }
+};
+export const updateDispatchStatus = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const orderId = req.params.id;
+    const { dispatchStatus } = req.body;
+
+    if (!dispatchStatus) {
+      return res.status(400).json({ message: 'Dispatch status is required' });
+    }
+
+    const updated = await orderService.updateDispatchStatus(orderId, dispatchStatus);
+
+    await produceKafkaEvent({
+      topic: 'dispatch.status.updated',
+      messages: [{ value: JSON.stringify(updated) }],
+    });
+
+    sendSuccess(res, '🚚 Dispatch status updated', updated);
+  } catch (err) {
+    next(err);
+  }
+};

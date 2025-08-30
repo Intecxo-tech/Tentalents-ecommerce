@@ -352,7 +352,21 @@ getOrdersByUser: async (buyerId: string) => {
     });
   },
 
-
+  getVendorOrders: async (vendorId: string) => {
+  return prisma.orderItem.findMany({
+    where: { vendorId },
+    include: {
+      product: true,
+      order: {
+        include: {
+          shippingAddress: true,
+          buyer: { select: { name: true, email: true } }
+        }
+      }
+    }
+  });
+},
+  
 };
 
 export const addressService = {

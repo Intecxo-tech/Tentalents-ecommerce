@@ -12,7 +12,7 @@ import './page.css'
 
 const page = () => {
   return (
-    <div className='background-[var(--lightblue2)] p-[10px] rounded-[10px]'>
+    <div className='background-[var(--lightblue2)] p-[10px] rounded-[10px] main-pagesettings' >
      
 
    <div className="topsection flex justify-between gap-[10px] background-[white] p-[10px] rounded-[10px] mb-[15px]">
@@ -27,11 +27,11 @@ const page = () => {
   </div>
 </div>
 
-     <div className="flex justify-between gap-6 bottomsection ">
-  <div className=" prodiucttabdsw w-[70%] background-[white]  p-[20px] rounded-[10px]">
+     <div className='inventory-sectionback'>
+  <div className="prodiucttabdsw">
     <ProductTabs />
   </div>
-  <div className=" inventory-sectionw w-[30%] background-[white] p-[20px] rounded-[10px]">
+  <div className="inventory-sectionw">
 
 <InventorySection />
    

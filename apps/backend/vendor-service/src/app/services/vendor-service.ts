@@ -64,16 +64,14 @@ completeVendorUserRegistration: async (email: string, password: string) => {
 
   const hashedPassword = await hashPassword(password);
 
-  // ✅ Create only the user as buyer for now
+  // Create only the user with buyer role (no vendor creation here)
   const user = await prisma.user.create({
     data: {
       email,
       password: hashedPassword,
-      role: UserRole.buyer, // Note: initially a buyer
+      role: UserRole.buyer,
     },
   });
-
-  // ❌ Remove vendor creation here
 
   await prisma.pendingUserOtp.delete({ where: { email } });
 
@@ -83,35 +81,49 @@ completeVendorUserRegistration: async (email: string, password: string) => {
   return { token, userId: user.id, email: user.email, role: user.role };
 },
 
-  // Step 4: Register vendor details (after user created)
+
 completeVendorProfileRegistration: async (
   userId: string,
-  vendorData: Omit<Prisma.VendorCreateInput, 'userId' | 'status'>,
+  vendorData: Omit<
+    Prisma.VendorCreateInput, 
+    'userId' | 'status' | 'kycDocsUrl' | 'bankDetail'
+  > & { panNumber: string }, // enforce mandatory panNumber here
   bankData: Omit<Prisma.BankDetailCreateInput, 'vendorId'>,
-  kycFiles: Buffer[],
-  kycFilenames?: string[]
+  kycFiles?: Buffer[],
+  kycFilenames?: string[],
+  produceEvents: boolean = true  // <-- new optional param with default true
 ) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new Error('User not found');
 
-  // 1. Upload KYC documents
-  const kycDocsUrls = await Promise.all(
-    kycFiles.map((buffer, index) =>
-      uploadToCloudinary(buffer, 'vendor_kyc_documents', kycFilenames?.[index])
-    )
-  );
+  if (!vendorData.name || !vendorData.businessName || !vendorData.panNumber) {
+    throw new Error('Missing mandatory vendor fields: name, businessName, or panNumber');
+  }
 
-  // 2. Create Vendor
+  let kycDocsUrls: string[] = [];
+
+  if (kycFiles && kycFiles.length > 0) {
+    kycDocsUrls = await Promise.all(
+      kycFiles.map((fileBuffer, index) =>
+        uploadToCloudinary(fileBuffer, 'vendor_kyc_documents', kycFilenames?.[index])
+      )
+    );
+  }
+
+  const vendorCreateData: Prisma.VendorCreateInput = {
+    ...vendorData,
+    user: { connect: { id: userId } },
+    status: PrismaVendorStatus.pending,
+  };
+
+  if (kycDocsUrls.length > 0) {
+    vendorCreateData.kycDocsUrl = kycDocsUrls;
+  }
+
   const vendor = await prisma.vendor.create({
-    data: {
-      ...vendorData,
-      user: { connect: { id: userId } },
-      status: PrismaVendorStatus.pending,
-      kycDocsUrl: kycDocsUrls,
-    },
+    data: vendorCreateData,
   });
 
-  // 3. Create Bank Detail
   await prisma.bankDetail.create({
     data: {
       ...bankData,
@@ -119,34 +131,12 @@ completeVendorProfileRegistration: async (
     },
   });
 
-  // 4. Emit Kafka events (optional)
-  const createdEvent: VendorCreatedEvent = {
-    vendorId: vendor.id,
-    name: vendor.name,
-    status: vendor.status as VendorStatus,
-    createdAt: vendor.createdAt.toISOString(),
-  };
-  const statusUpdatedEvent: VendorStatusUpdatedEvent = {
-    vendorId: vendor.id,
-    status: vendor.status as VendorStatus,
-    updatedAt: vendor.updatedAt.toISOString(),
-  };
-
-  await Promise.all([
-    produceKafkaEvent({
-      topic: KAFKA_TOPICS.VENDOR.CREATED,
-      messages: [{ value: JSON.stringify(createdEvent) }],
-    }),
-    produceKafkaEvent({
-      topic: KAFKA_TOPICS.VENDOR.STATUS_UPDATED,
-      messages: [{ value: JSON.stringify(statusUpdatedEvent) }],
-    }),
-  ]);
 
   logger.info(`[VendorService] Vendor profile created for user: ${userId}`);
 
   return vendor;
 },
+
 
 
   async updateStatus(id: string, status: PrismaVendorStatus) {
@@ -189,14 +179,6 @@ updateVendorBankDetails: async (vendorId: string, bankUpdateData: Partial<Prisma
   }
 },
 
-//   async getById(id: string) {
-//     return prisma.vendor.findUnique({ where: { id } });
-//   },
-// async getByUserId(userId: string) {
-  
-  
-//   return prisma.vendor.findFirst({ where: { userId } });
-// },
   handleUserBecameVendor: async (event: { userId: string; email: string; phone: string; altphone?: string }) => {
   
     const { userId, email, phone, altphone } = event;

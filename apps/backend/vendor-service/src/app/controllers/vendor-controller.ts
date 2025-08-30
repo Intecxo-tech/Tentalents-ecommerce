@@ -168,28 +168,41 @@ if (!vendorId) {
  */
 export const completeVendorProfileRegistration = async (req: Request, res: Response) => {
   try {
+    logger.info('Starting completeVendorProfileRegistration');
     const { userId, bankDetails, vendorDetails } = req.body;
-    const files = req.files as Express.Multer.File[]; // KYC files
+    const files = req.files as Express.Multer.File[] | undefined; // KYC files (optional)
+
+    logger.info(`Received userId: ${userId}`);
+    logger.info(`Received bankDetails: ${bankDetails ? 'present' : 'missing'}`);
+    logger.info(`Received vendorDetails: ${vendorDetails ? 'present' : 'missing'}`);
+    logger.info(`Number of files received: ${files ? files.length : 0}`);
 
     if (!userId || !bankDetails || !vendorDetails) {
+      logger.warn('Missing required fields userId, bankDetails or vendorDetails');
       return res.status(400).json({ error: 'User ID, bankDetails, and vendorDetails are required' });
     }
 
-    if (!files || files.length === 0) {
-      return res.status(400).json({ error: 'KYC documents are required' });
-    }
+    // Optional KYC documents
+    let kycBuffers: Buffer[] = [];
+    let kycFilenames: string[] = [];
 
-    // Extract file buffers and filenames
-    const kycBuffers = files.map(file => file.buffer);
-    const kycFilenames = files.map(file => file.originalname);
+    if (files && files.length > 0) {
+      kycBuffers = files.map(file => file.buffer);
+      kycFilenames = files.map(file => file.originalname);
+      logger.info(`Processing ${files.length} KYC documents`);
+    } else {
+      logger.info('No KYC documents uploaded, proceeding without KYC');
+    }
 
     const vendor = await vendorService.completeVendorProfileRegistration(
       userId,
       vendorDetails,    // vendorData
       bankDetails,      // bankData
-      kycBuffers,       // KYC file buffers
+      kycBuffers,       // KYC file buffers, empty array if none
       kycFilenames      // optional
     );
+
+    logger.info(`Vendor profile registration completed successfully for userId: ${userId}`);
 
     return res.status(201).json({ vendor });
   } catch (err) {
@@ -197,6 +210,7 @@ export const completeVendorProfileRegistration = async (req: Request, res: Respo
     return res.status(500).json({ error: 'Failed to complete vendor profile' });
   }
 };
+
 export const updateBankDetailsController = async (req: Request, res: Response) => {
   try {
     const { vendorId } = req.params;
@@ -214,7 +228,7 @@ export const updateBankDetailsController = async (req: Request, res: Response) =
  */
 export const updateVendor = async (req: Request, res: Response) => {
   try {
-   const vendorId = req.params.vendorId;
+    const vendorId = req.params.vendorId;
 
     const result = UpdateVendorSchema.safeParse(req.body);
     if (!result.success) {
@@ -233,27 +247,13 @@ export const updateVendor = async (req: Request, res: Response) => {
       data: updateData,
     });
 
-    if (dto.status !== undefined) {
-      await produceKafkaEvent({
-        topic: KAFKA_TOPICS.VENDOR.STATUS_UPDATED,
-        messages: [
-          {
-            value: JSON.stringify({
-              vendorId: vendor.id,
-              status: vendor.status,
-              updatedAt: vendor.updatedAt.toISOString(),
-            }),
-          },
-        ],
-      });
-    }
-
     return res.status(200).json({ vendor });
   } catch (err) {
     logger.error('Error updating vendor', err);
     return res.status(500).json({ error: 'Failed to update vendor' });
   }
 };
+
 
 /**
  * Get vendor by ID

@@ -20,14 +20,34 @@
 /* Wrap the layout properly */
 .layout-wrapper {
   display: flex;
-  /* justify-content: space-between;
-  align-items: flex-start; */
+  
   min-height: 100vh;
+}
+.prodiucttabdsw{
+      flex: 2;
+
+}
+.inventory-sectionw {
+  flex: 1.5; 
+
 }
 .layout-content{
     /* padding: 0px 20px; */
     width: 100%;
 }
+.bottomsection{
+    width: 100%;
+}
+.inventory-sectionback{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:20px
+}
+/* .inventory-sectionback{
+    display: flex;
+    align-items: center;
+} */
 /* .sidebarcontent{
     width: 30%;
 } */
@@ -40,7 +60,13 @@
 } */
 
 
-
+.main-pagesettings{
+ 
+    width: 100%;
+}
+.topsection{
+    width: 100%;
+}
 @media(max-width:768px){
     .layout-content {
     margin-left: 0;

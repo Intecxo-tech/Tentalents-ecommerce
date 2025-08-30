@@ -7,7 +7,10 @@ import {
   addAddress,
   editAddress,
   deleteAddress,
-  getUserAddresses 
+  getUserAddresses ,
+  getVendorOrders,
+  updateDispatchStatus
+ 
 } from '../controllers/order.controller';
 import { authMiddleware, requireRole } from '@shared/auth';
 
@@ -61,8 +64,17 @@ router.patch(
   requireRole('admin', 'super_admin'),  // Only admins can update order status
   updateOrderStatus  // Update the order status
 );
-
+router.patch(
+  '/vendor/orders/:id/dispatch',
+  authMiddleware(['vendor', 'buyer_seller', 'seller']),
+  updateDispatchStatus
+);
 // Address routes
+router.get(
+  '/vendor/orders',
+  authMiddleware(['vendor', 'buyer_seller', 'seller']),
+  getVendorOrders
+);
 
 
 export default router;
