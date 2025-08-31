@@ -17,7 +17,7 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
     email: string;
-    role: UserRole | UserRole[]; // Allow array for dual roles
+    role: UserRole | UserRole[];
     vendorId?: string;
   };
 }
@@ -144,5 +144,28 @@ export const rejectVendor = async (req: Request, res: Response) => {
   } catch (err) {
     logger.error('Reject Vendor Error:', err);
     res.status(400).json({ success: false, error: 'Failed to reject vendor' });
+  }
+};
+
+// ---------------- VENDOR PROFILE IMAGE UPLOAD ----------------
+export const uploadVendorProfileImage = async (req: Request, res: Response) => {
+  const { vendorId } = req.params;
+  const file = req.file;
+
+  if (!vendorId) return res.status(400).json({ error: 'Vendor ID is required' });
+  if (!file) return res.status(400).json({ error: 'Profile image is required' });
+
+  try {
+    const updatedVendor = await vendorService.uploadVendorProfileImage(
+      vendorId,
+      file.buffer,
+      file.originalname,
+      file.mimetype
+    );
+
+    res.status(200).json({ vendor: updatedVendor });
+  } catch (err) {
+    logger.error('Error uploading vendor profile image', err);
+    res.status(500).json({ error: 'Failed to upload vendor profile image' });
   }
 };

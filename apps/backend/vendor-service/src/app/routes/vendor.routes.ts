@@ -8,6 +8,7 @@ import {
   updateVendorProfile,
   approveVendor,
   rejectVendor,
+  uploadVendorProfileImage, // ✅ Add the new controller
 } from '../controllers/vendor-controller';
 import { requireAuth, ROLES } from '@shared/auth'; // use ROLES object
 
@@ -42,6 +43,14 @@ router.put(
   '/profile/:vendorId',
   requireAuth(SELLER_OR_ADMIN),
   updateVendorProfile
+);
+
+// Upload vendor profile image
+router.post(
+  '/profile/:vendorId/upload-image',
+  requireAuth(SELLER_OR_ADMIN),
+  upload.single('profileImage'), // single file under "profileImage" field
+  uploadVendorProfileImage
 );
 
 // ---------------- ADMIN ONLY ---------------- //
