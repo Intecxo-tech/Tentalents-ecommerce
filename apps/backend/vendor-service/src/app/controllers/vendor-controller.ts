@@ -210,49 +210,43 @@ export const updateVendorProfile = async (req: Request, res: Response) => {
  * Step 4: Complete vendor profile registration
  */
 export const completeVendorProfileRegistration = async (req: Request, res: Response) => {
-  try {
-    logger.info('Starting completeVendorProfileRegistration');
-    const { userId, bankDetails, vendorDetails } = req.body;
-    const files = req.files as Express.Multer.File[] | undefined; // KYC files (optional)
-
-    logger.info(`Received userId: ${userId}`);
-    logger.info(`Received bankDetails: ${bankDetails ? 'present' : 'missing'}`);
-    logger.info(`Received vendorDetails: ${vendorDetails ? 'present' : 'missing'}`);
-    logger.info(`Number of files received: ${files ? files.length : 0}`);
-
-    if (!userId || !bankDetails || !vendorDetails) {
-      logger.warn('Missing required fields userId, bankDetails or vendorDetails');
-      return res.status(400).json({ error: 'User ID, bankDetails, and vendorDetails are required' });
+    try {
+      logger.info('Starting completeVendorProfileRegistration controller');
+      const { userId, bankDetails, vendorDetails, kycFiles, kycFilenames } = req.body;
+  
+      if (!userId || !bankDetails || !vendorDetails) {
+        return res.status(400).json({ error: 'User ID, bankDetails, and vendorDetails are required' });
+      }
+      
+      let kycBuffers: Buffer[] | undefined = undefined;
+      if (kycFiles && Array.isArray(kycFiles) && kycFiles.length > 0) {
+          kycBuffers = kycFiles.map(base64String => Buffer.from(base64String.split(',')[1], 'base64'));
+      }
+  
+      // 1. Call the service. It will return an object: { vendor, token }
+      const result = await vendorService.completeVendorProfileRegistration(
+        userId,
+        vendorDetails,
+        bankDetails,
+        kycBuffers,
+        kycFilenames
+      );
+  
+      logger.info(`[Controller] Service call successful. Result contains token: ${!!result.token}`);
+  
+      // 2. Send the ENTIRE result object back to the frontend.
+      return res.status(201).json(result);
+  
+    } catch (err: any) {
+      logger.error('Error completing vendor profile registration', err);
+      // Check for specific Prisma unique constraint error
+      if (err.code === 'P2002') {
+          return res.status(409).json({ error: 'A vendor with this email or user ID already exists.' });
+      }
+      return res.status(500).json({ error: err.message || 'Failed to complete vendor profile' });
     }
-
-    // Optional KYC documents
-    let kycBuffers: Buffer[] = [];
-    let kycFilenames: string[] = [];
-
-    if (files && files.length > 0) {
-      kycBuffers = files.map(file => file.buffer);
-      kycFilenames = files.map(file => file.originalname);
-      logger.info(`Processing ${files.length} KYC documents`);
-    } else {
-      logger.info('No KYC documents uploaded, proceeding without KYC');
-    }
-
-    const vendor = await vendorService.completeVendorProfileRegistration(
-      userId,
-      vendorDetails,    // vendorData
-      bankDetails,      // bankData
-      kycBuffers,       // KYC file buffers, empty array if none
-      kycFilenames      // optional
-    );
-
-    logger.info(`Vendor profile registration completed successfully for userId: ${userId}`);
-
-    return res.status(201).json({ vendor });
-  } catch (err) {
-    logger.error('Error completing vendor profile registration', err);
-    return res.status(500).json({ error: 'Failed to complete vendor profile' });
-  }
 };
+
 
 export const updateBankDetailsController = async (req: Request, res: Response) => {
   try {

@@ -18,8 +18,7 @@ const router = Router();
 // 🛒 Create product (seller/admin/super_admin)
 router.post(
   '/',
-  authMiddleware(),
-  requireRole('seller', 'admin', 'super_admin'),
+  authMiddleware(['seller', 'admin', 'super_admin']), 
   createProduct
 );
 
@@ -35,14 +34,21 @@ router.get('/slug/:slug', getProductBySlug);
 router.get('/:id', getProductById);
 
 // 📝 Update product (seller/admin/super_admin)
-router.put('/:id', authMiddleware(), updateProduct);
-router.delete('/:id', authMiddleware(), deleteProduct);
+router.put(
+  '/:id', 
+  authMiddleware(['seller', 'admin', 'super_admin']), 
+  updateProduct
+);
+router.delete(
+  '/:id', 
+  authMiddleware(['seller', 'admin', 'super_admin']), 
+  deleteProduct
+);
 
 // 🖼️ Upload product image to Cloudinary
 router.post(
   '/:id/image',
-  authMiddleware(),
-  requireRole('seller', 'admin', 'super_admin'),
+  authMiddleware(['seller', 'admin', 'super_admin']), 
   uploadProductImage
 );
 

@@ -153,3 +153,8 @@
 
  font-weight: 400;
  }
+ .first-column{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+ }

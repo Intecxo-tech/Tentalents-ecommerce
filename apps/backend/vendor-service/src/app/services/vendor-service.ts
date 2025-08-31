@@ -145,9 +145,22 @@ await prisma.bankDetail.create({
 
 
   logger.info(`[VendorService] Vendor profile created for user: ${userId}`);
+   const tokenPayload = {
+    userId: user.id,
+    vendorId: vendor.id, // Include the new vendorId
+    email: user.email,
+    role: user.role,
+  };
 
-  return vendor;
+  // ✅ 2. Generate the new token
+  const token = generateJWT(tokenPayload);
+
+  // ✅ 3. Return both the vendor object AND the new token
+  return { vendor, token };
+
+  // return vendor;
 },
+
 
 
 
@@ -265,56 +278,52 @@ updateOrAddVendorBankDetails: async (
 
     logger.info(`[${SERVICE_NAMES.VENDOR}] 🏪 Vendor created for user: ${userId}`);
   },
+// In vendorService.ts
+
 loginVendorUser: async (email: string, password: string) => {
   try {
-    logger.info('[VendorService] 🔑 Login attempt for vendor email:', email);
+    logger.info(`[VendorService] 🔑 Login attempt for user email: ${email}`);
 
-    // 1. Find vendor by email
-   const vendor = await prisma.vendor.findUnique({ where: { email } });
-if (!vendor) {
-  throw new Error('Invalid credentials');
-}
+    // ✅ 1. Find the USER by email first. The User is the source of truth for credentials.
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !user.password) {
+      throw new Error('Invalid credentials'); // User not found or has no password
+    }
 
-if (!vendor.password) {
-  throw new Error('This vendor account does not have a password set.');
-}
+    // ✅ 2. Verify the provided password against the USER's stored password hash.
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (!isPasswordValid) {
+      throw new Error('Invalid credentials');
+    }
 
-const isValid = await comparePassword(password, vendor.password);
-if (!isValid) {
-  throw new Error('Invalid credentials');
-}
+    // ✅ 3. After confirming credentials, find the linked VENDOR profile.
+    const vendor = await prisma.vendor.findFirst({ where: { userId: user.id } });
+    if (!vendor) {
+      // This means the user exists but is not a vendor.
+      throw new Error('This user does not have an associated vendor profile.');
+    }
 
-// Check userId is not null before query
-if (!vendor.userId) {
-  throw new Error('Vendor has no linked userId');
-}
-
-const user = await prisma.user.findUnique({ where: { id: vendor.userId } });
-if (!user) {
-  throw new Error('Linked user not found');
-}
-
-    // 5. Generate a JWT token with vendor info and user info
-    // Include vendorId so token can be used for vendor-specific auth
+    // ✅ 4. Generate a JWT with all necessary info, including the vendorId.
     const tokenPayload = {
       userId: user.id,
       vendorId: vendor.id,
       email: user.email,
-      role: user.role,   // Could be UserRole.vendor if you want
+      role: user.role,
     };
     const token = generateJWT(tokenPayload);
 
-    logger.info(`[VendorService] Vendor user logged in: ${email}`);
+    logger.info(`[VendorService] Vendor user logged in successfully: ${email}`);
 
-    // 6. Return token and user/vendor info
+    // ✅ 5. Return the complete token and user/vendor info.
     return {
       token,
       userId: user.id,
-        email: user.email ?? undefined,
+      email: user.email ?? undefined,
       role: user.role,
       vendorId: vendor.id,
       vendorStatus: vendor.status,
     };
+    
   } catch (err) {
     logger.error('[VendorService] loginVendorUser error:', err);
     throw err;

@@ -1,5 +1,5 @@
 'use client';
-import CreateProduct from '../../createproduct/createproduct';
+import CreateProduct from '../../createproduct/page';
 import { useParams } from 'next/navigation';
 
 const Page = () => {
