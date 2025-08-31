@@ -1,148 +1,93 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { PDFGenerator } from '@shared/utils';
-import { uploadToCloudinary } from '@shared/auth';
+import { generateInvoiceAndUpload } from '@shared/utils';
 import { uploadFileToMinIO } from '@shared/minio';
-import { sendEmail, EmailPayload } from '@shared/email';
-import axios from 'axios';
+import { uploadToCloudinary } from '@shared/auth';
+import fs from 'fs/promises';
 
 const prisma = new PrismaClient();
 
-// ---------------- Generate invoices for all vendors ----------------
+/**
+ * Automatically generate an invoice for an order and upload to Cloudinary + MinIO.
+ */
 export async function generateInvoiceAutomatically(req: Request, res: Response) {
   const { orderId } = req.params;
 
   try {
-    // Fetch order with items
+    // Fetch order with items and existing invoice
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true },
+      include: {
+        items: { include: { vendor: true } },
+        invoice: true,
+      },
     });
 
     if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.invoice) return res.status(409).json({ error: 'Invoice already exists' });
 
-    // Fetch buyer details
-    const userResponse = await axios.get(`http://user-service:3000/users/${order.buyerId}`);
-    const user = userResponse.data;
+    const vendorId = order.items[0]?.vendor?.id;
+    if (!vendorId) return res.status(400).json({ error: 'No vendor associated with order items' });
 
-    // Group items by vendorId
-    const vendorGroups: Record<string, typeof order.items> = {};
-    order.items.forEach(item => {
-      const vendorId = item.vendorId;
-      if (!vendorGroups[vendorId]) vendorGroups[vendorId] = [];
-      vendorGroups[vendorId].push(item);
+    // Generate invoice PDF file path
+    const filePath = await generateInvoiceAndUpload(orderId);
+
+    // Read file as Buffer
+    const fileBuffer = await fs.readFile(filePath);
+
+    // Upload to Cloudinary
+    const cloudinaryUrl = await uploadToCloudinary(
+      fileBuffer,
+      'vendor_invoices',
+      `invoice-${orderId}`,
+      'application/pdf'
+    );
+
+    // Upload to MinIO
+    const minioUrl = await uploadFileToMinIO({
+      content: fileBuffer,
+      objectName: `invoices/invoice-${orderId}.pdf`,
+      bucketName: 'invoices',
+      contentType: 'application/pdf',
     });
 
-    const attachments: { filename: string; content: Buffer }[] = [];
-
-    for (const vendorId of Object.keys(vendorGroups)) {
-      // Fetch vendor details
-      const vendorResponse = await axios.get(`http://vendor-service:3000/vendors/${vendorId}`);
-      const vendor = vendorResponse.data;
-
-      // Fetch product details for invoice
-      const items = await Promise.all(
-        vendorGroups[vendorId].map(async item => {
-          const productResp = await axios.get(`http://product-service:3000/products/${item.productId}`);
-          const product = productResp.data;
-          return {
-            productId: item.productId,
-            name: product.name || 'N/A',
-            sku: product.sku || 'N/A',
-            quantity: item.quantity,
-            price: Number(item.unitPrice),
-          };
-        })
-      );
-
-      const shippingCost = vendorGroups[vendorId].reduce(
-        (sum, item) => sum + Number(item.shippingCost || 0),
-        0
-      );
-
-      const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0) + shippingCost;
-
-      const pdfOrder = {
-        id: order.id,
-        userId: order.buyerId,
-        userName: user.name || 'Not Available',
-        userEmail: user.email,
-        userAddress: user.address || 'Not Available',
-        vendorName: vendor.name,
-        vendorEmail: vendor.email,
-        vendorAddress: vendor.address || 'Not Available',
-        paymentMethod: order.paymentMode,
-        items,
-        shippingCost,
-        totalAmount,
-        status: order.status,
-        createdAt: order.placedAt,
-      };
-
-      // Generate PDF buffer
-      const pdfBuffer = await PDFGenerator.generate(pdfOrder, 'vendor');
-
-      // Upload PDF to Cloudinary
-      const cloudinaryUrl = await uploadToCloudinary(
-        pdfBuffer,
-        'vendor_invoices',
-        `invoice-${orderId}-${vendorId}`,
-        'application/pdf'
-      );
-
-      // Upload PDF to MinIO
-      const minioUrl = await uploadFileToMinIO({
-        content: pdfBuffer,
-        objectName: `invoices/invoice-${orderId}-${vendorId}.pdf`,
-        bucketName: 'invoices',
-        contentType: 'application/pdf',
-      });
-
-      // Save invoice record in DB
-      await prisma.invoice.create({
-        data: {
-          orderId,
-          vendorId,
-          pdfUrl: cloudinaryUrl,
-        },
-      });
-
-      // Prepare attachments for email
-      attachments.push({
-        filename: `invoice-${orderId}-${vendor.name}.pdf`,
-        content: pdfBuffer,
-      });
-    }
-
-    // Send email to buyer
-    const emailPayload: EmailPayload = {
-      to: user.email,
-      subject: `Invoices for Order #${order.id}`,
-      html: `<p>Dear ${user.name || 'Customer'},</p>
-             <p>Your invoices for order ${order.id} are attached.</p>`,
-      attachments,
-    };
-    await sendEmail(emailPayload);
+    // Save invoice record in DB (only include fields in your Prisma schema)
+    const invoice = await prisma.invoice.create({
+      data: {
+        orderId,
+        vendorId,
+        pdfUrl: cloudinaryUrl,
+      },
+    });
 
     return res.status(201).json({
-      message: 'Invoices generated, uploaded to Cloudinary & MinIO, and emailed to buyer',
+      message: 'Invoice generated and uploaded automatically to Cloudinary & MinIO',
+      cloudinaryUrl,
+      minioUrl,
+      invoice,
     });
   } catch (err) {
-    console.error('Error generating invoices:', err);
-    return res.status(500).json({ error: 'Failed to generate invoices' });
+    console.error('Error generating invoice:', err);
+    return res.status(500).json({ error: 'Failed to generate invoice automatically' });
   }
 }
 
-// ---------------- Download invoice URL ----------------
+/**
+ * Get the invoice download URL by invoice ID.
+ */
 export async function getInvoiceDownloadUrl(req: Request, res: Response) {
   const { invoiceId } = req.params;
 
   try {
-    const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+    });
 
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
 
-    return res.json({ downloadUrl: invoice.pdfUrl });
+    return res.status(200).json({
+      pdfUrl: invoice.pdfUrl,
+    });
   } catch (err) {
     console.error('Error fetching invoice:', err);
     return res.status(500).json({ error: 'Failed to fetch invoice' });

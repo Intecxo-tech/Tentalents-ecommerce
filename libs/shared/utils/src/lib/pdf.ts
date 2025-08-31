@@ -2,7 +2,8 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
 
-interface OrderItem {
+// PDF-friendly order item type
+export interface OrderItem {
   productId: string;
   name: string;
   sku: string;
@@ -11,25 +12,27 @@ interface OrderItem {
   discount?: number;
 }
 
-interface Order {
+// PDF-friendly order type
+export interface PdfOrder {
   id: string;
   userId: string;
   userName: string;
   userEmail: string;
-  userAddress: string;
+  userAddress?: string;
   vendorName: string;
-  vendorEmail: string;
-  vendorAddress: string;
-  paymentMethod: string;
+  vendorEmail?: string;
+  vendorAddress?: string;
+  paymentMethod?: string;
   items: OrderItem[];
-  shippingCost: number;
+  shippingCost?: number;
   totalAmount: number;
   status: string;
   createdAt: Date;
+  invoiceNumber?: string;
 }
 
 export class PDFGenerator {
-  static async generate(order: Order, type: 'user' | 'vendor' = 'user'): Promise<Buffer> {
+  static async generate(order: PdfOrder, type: 'user' | 'vendor' = 'user'): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
         const doc = new PDFDocument({ size: 'A4', margin: 50 });
@@ -37,10 +40,9 @@ export class PDFGenerator {
         doc.on('data', buffers.push.bind(buffers));
         doc.on('end', () => resolve(Buffer.concat(buffers)));
 
+        // Logo
         const logoPath = path.join(__dirname, 'tentalents-logo.png');
-        if (fs.existsSync(logoPath)) {
-          doc.image(logoPath, 50, 15, { width: 50 });
-        }
+        if (fs.existsSync(logoPath)) doc.image(logoPath, 50, 15, { width: 50 });
 
         // Header
         doc.fillColor('#1a73e8')
@@ -57,13 +59,13 @@ export class PDFGenerator {
         doc.font('Helvetica')
           .text(order.userName)
           .text(order.userEmail)
-          .text(order.userAddress);
+          .text(order.userAddress ?? '');
 
         doc.font('Helvetica-Bold').text('Vendor:', 300, 110);
         doc.font('Helvetica')
           .text(order.vendorName, 300, 125)
-          .text(order.vendorEmail)
-          .text(order.vendorAddress);
+          .text(order.vendorEmail ?? '')
+          .text(order.vendorAddress ?? '');
 
         doc.moveDown(2);
 
@@ -72,7 +74,7 @@ export class PDFGenerator {
         doc.font('Helvetica')
           .text(`Order ID: ${order.id}`)
           .text(`Order Date: ${order.createdAt.toDateString()}`)
-          .text(`Payment Method: ${order.paymentMethod}`)
+          .text(`Payment Method: ${order.paymentMethod ?? 'N/A'}`)
           .text(`Status: ${order.status}`);
 
         doc.moveDown(1);
@@ -93,7 +95,7 @@ export class PDFGenerator {
         // Table Rows
         let y = tableTop + 25;
         for (const item of order.items) {
-          if (y % 2 === 0) doc.rect(45, y - 5, 500, 25).fill('#f9f9f9').stroke();
+          if ((y - tableTop) % 50 === 0) doc.rect(45, y - 5, 500, 25).fill('#f9f9f9').stroke();
           doc.fillColor('#000').font('Helvetica');
 
           doc.text(item.name, xPositions.name, y);
@@ -110,13 +112,14 @@ export class PDFGenerator {
         // Totals
         const subtotal = order.items.reduce((acc, i) => acc + (i.price - (i.discount || 0)) * i.quantity, 0);
         const gst = +(subtotal * 0.18).toFixed(2);
-        const grandTotal = subtotal + gst + order.shippingCost;
+        const shipping = order.shippingCost ?? 0;
+        const grandTotal = subtotal + gst + shipping;
 
         doc.moveDown(order.items.length * 0.7 + 2);
         doc.font('Helvetica-Bold');
         doc.text(`Subtotal: ₹${subtotal}`, { align: 'right' });
         doc.text(`GST (18%): ₹${gst}`, { align: 'right' });
-        doc.text(`Shipping: ₹${order.shippingCost}`, { align: 'right' });
+        doc.text(`Shipping: ₹${shipping}`, { align: 'right' });
         doc.text(`Grand Total: ₹${grandTotal}`, { align: 'right' });
 
         // Footer

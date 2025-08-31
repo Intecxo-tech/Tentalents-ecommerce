@@ -1,40 +1,46 @@
 import nodemailer from 'nodemailer';
 import { env } from '@shared/config';
-import { PDFGenerator } from '@shared/utils';
+import { PDFGenerator, PdfOrder } from '@shared/utils';
 import { PrismaClient } from '../../../generated/invoice-service';
 import { uploadToCloudinary } from '@shared/auth';
 import { produceKafkaEvent } from '@shared/kafka';
 import { KAFKA_TOPICS } from '@shared/constants';
-import fs from 'fs/promises';
 
 const prisma = new PrismaClient();
 
 export const invoiceService = {
   generateInvoice: async (orderId: string) => {
+    // Fetch order including items and vendor info
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { items: { include: { vendor: true } } },
     });
 
     if (!order) throw new Error('Order not found');
-    const vendorId = order.items[0]?.vendor?.id;
-    if (!vendorId) throw new Error('Vendor not found for order items');
+    const vendor = order.items[0]?.vendor;
+    if (!vendor) throw new Error('Vendor not found for order items');
 
-    // Generate PDFs
-    const pdfOrder = {
+    // Build PDF-friendly order object with fallbacks
+    const pdfOrder: PdfOrder = {
       id: order.id,
       userId: order.buyerId,
+      userName: 'Customer', // placeholder
+      userEmail: 'customer@example.com', // placeholder
+      vendorName: vendor.name,
+      vendorEmail: vendor.email ?? '',
       items: order.items.map(i => ({
         productId: i.productId,
+        name: 'Product', // placeholder
+        sku: 'SKU',      // placeholder
         quantity: i.quantity,
         price: Number(i.unitPrice),
       })),
       totalAmount: Number(order.totalAmount),
-      status: order.status as any,
+      status: order.status as string,
       createdAt: order.placedAt,
-      updatedAt: order.updatedAt,
     };
 
+    // Generate PDFs
     const customerPdf = await PDFGenerator.generate(pdfOrder, 'user');
     const vendorPdf = await PDFGenerator.generate(pdfOrder, 'vendor');
 
@@ -46,18 +52,17 @@ export const invoiceService = {
       'application/pdf'
     );
 
-    // Save invoice record
+    // Save invoice record in DB
     await prisma.invoice.create({
       data: {
         orderId: order.id,
-        vendorId,
+        vendorId: vendor.id,
         pdfUrl: cloudinaryUrl,
-        filePath: `invoice-${order.id}.pdf`,
         bucket: 'cloudinary',
       },
     });
 
-    // Send email directly using nodemailer
+    // Send email to customer
     const transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
@@ -67,7 +72,7 @@ export const invoiceService = {
 
     await transporter.sendMail({
       from: env.EMAIL_FROM,
-      to: 'buyer@example.com', // fetch real email if possible
+      to: 'customer@example.com', // placeholder
       subject: `Invoice for Order ${order.id}`,
       html: `<p>Dear Customer,</p><p>Please find your invoice attached.</p>`,
       attachments: [
