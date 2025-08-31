@@ -7,29 +7,48 @@ import {
   getVendorProfileByVendorId,
   updateVendorProfile,
   approveVendor,
-  rejectVendor
-} from '../controllers/vendor-controller'; // Correct import path
-import { requireAuth } from '@shared/auth'; // Correct import for the authenticate middleware
-import { UserRole } from '@shared/types';
-import type { RequestHandler } from 'express';
+  rejectVendor,
+} from '../controllers/vendor-controller';
+import { requireAuth, ROLES } from '@shared/auth'; // use ROLES object
 
 const router = Router();
 
-// Multer setup for file uploads (5MB max size)
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+// Multer setup for file uploads (5MB max)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
-// Public routes (no authentication required)
-router.post('/register/initiate-otp', initiateVendorRegistrationOtp);  // Initiate OTP
-router.post('/register/verify-otp', verifyVendorEmailOtp);  // Verify OTP
-router.post('/register/user', completeVendorUserRegistration);  // Complete registration
-router.post('/login', () => {});  // Placeholder for vendor login logic
+// ---------------- PUBLIC ROUTES ---------------- //
+router.post('/register/initiate-otp', initiateVendorRegistrationOtp);
+router.post('/register/verify-otp', verifyVendorEmailOtp);
+router.post('/register/user', completeVendorUserRegistration);
+router.post('/login', () => {}); // Placeholder
 
-// Protected routes (authentication required)
-router.get('/profile/:vendorId', requireAuth([UserRole.SELLER, UserRole.ADMIN]) as RequestHandler, getVendorProfileByVendorId);  // Get vendor profile
-router.put('/profile/:vendorId', requireAuth([UserRole.SELLER, UserRole.ADMIN]) as RequestHandler, updateVendorProfile);  // Update vendor profile
+// ---------------- PROTECTED ROUTES ---------------- //
+// RBAC arrays
+const SELLER_OR_ADMIN = [ROLES.VENDOR, ROLES.ADMIN]; // Vendor = Seller
+const ADMIN_ONLY = [ROLES.ADMIN];
 
-// Vendor status updates (admin only)
-router.patch('/:id/approve', requireAuth([UserRole.ADMIN]) as RequestHandler, approveVendor);  // Admin: approve vendor
-router.patch('/:id/reject', requireAuth([UserRole.ADMIN]) as RequestHandler, rejectVendor);  // Admin: reject vendor
+// Get vendor profile
+router.get(
+  '/profile/:vendorId',
+  requireAuth(SELLER_OR_ADMIN),
+  getVendorProfileByVendorId
+);
+
+// Update vendor profile
+router.put(
+  '/profile/:vendorId',
+  requireAuth(SELLER_OR_ADMIN),
+  updateVendorProfile
+);
+
+// ---------------- ADMIN ONLY ---------------- //
+// Approve vendor
+router.patch('/:id/approve', requireAuth(ADMIN_ONLY), approveVendor);
+
+// Reject vendor
+router.patch('/:id/reject', requireAuth(ADMIN_ONLY), rejectVendor);
 
 export default router;

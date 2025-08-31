@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserRole } from './types';
-import { AuthPayload } from './types'; // ✅ Use the shared type
+import { AuthPayload, UserRole } from './types';
 
 declare global {
   namespace Express {
@@ -10,46 +9,28 @@ declare global {
   }
 }
 
-/**
- * Middleware to ensure the user is authenticated
- */
-export const requireAuth = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
-    return res.status(401).json({
-      message: 'Unauthorized',
-      detail: 'Authentication token missing or invalid',
-    });
+    return res.status(401).json({ message: 'Unauthorized', detail: 'Authentication token missing or invalid' });
   }
-
   next();
 };
 
-/**
- * Middleware to ensure the user has one of the allowed roles
- */
 export const requireRole = (roles: UserRole | UserRole[]) => {
   const allowedRoles = Array.isArray(roles) ? roles : [roles];
 
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user?.role) {
-      return res.status(403).json({
-        message: 'Forbidden',
-        detail: 'User role missing',
-      });
+      return res.status(403).json({ message: 'Forbidden', detail: 'User role missing' });
     }
 
-    // If user.role is an array, check if any role matches
     const userRoles = Array.isArray(req.user.role) ? req.user.role : [req.user.role];
+    const hasAccess = userRoles.some(r => allowedRoles.includes(r));
 
-    // Check if any of the user's roles are included in the allowed roles
-    if (!userRoles.some(role => allowedRoles.includes(role))) {
+    if (!hasAccess) {
       return res.status(403).json({
         message: 'Forbidden',
-        detail: `User does not have the required role(s): ${allowedRoles.join(', ')}`,
+        detail: `Required role(s): [${allowedRoles.join(', ')}], found: [${userRoles.join(', ')}]`,
       });
     }
 
