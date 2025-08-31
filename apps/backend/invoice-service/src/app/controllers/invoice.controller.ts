@@ -8,6 +8,7 @@ import axios from 'axios';
 
 const prisma = new PrismaClient();
 
+// ---------------- Generate invoices for all vendors ----------------
 export async function generateInvoiceAutomatically(req: Request, res: Response) {
   const { orderId } = req.params;
 
@@ -27,7 +28,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
     // Group items by vendorId
     const vendorGroups: Record<string, typeof order.items> = {};
     order.items.forEach(item => {
-      const vendorId = item.vendorId; // Prisma field in your schema
+      const vendorId = item.vendorId;
       if (!vendorGroups[vendorId]) vendorGroups[vendorId] = [];
       vendorGroups[vendorId].push(item);
     });
@@ -39,13 +40,27 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       const vendorResponse = await axios.get(`http://vendor-service:3000/vendors/${vendorId}`);
       const vendor = vendorResponse.data;
 
-      const items = vendorGroups[vendorId].map(item => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: Number(item.unitPrice),
-      }));
+      // Fetch product details for invoice
+      const items = await Promise.all(
+        vendorGroups[vendorId].map(async item => {
+          const productResp = await axios.get(`http://product-service:3000/products/${item.productId}`);
+          const product = productResp.data;
+          return {
+            productId: item.productId,
+            name: product.name || 'N/A',
+            sku: product.sku || 'N/A',
+            quantity: item.quantity,
+            price: Number(item.unitPrice),
+          };
+        })
+      );
 
-      const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+      const shippingCost = vendorGroups[vendorId].reduce(
+        (sum, item) => sum + Number(item.shippingCost || 0),
+        0
+      );
+
+      const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0) + shippingCost;
 
       const pdfOrder = {
         id: order.id,
@@ -58,6 +73,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
         vendorAddress: vendor.address || 'Not Available',
         paymentMethod: order.paymentMode,
         items,
+        shippingCost,
         totalAmount,
         status: order.status,
         createdAt: order.placedAt,
@@ -82,7 +98,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
         contentType: 'application/pdf',
       });
 
-      // Save invoice record in DB (Prisma schema only has orderId, vendorId, pdfUrl)
+      // Save invoice record in DB
       await prisma.invoice.create({
         data: {
           orderId,
@@ -98,7 +114,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       });
     }
 
-    // Send email to buyer with all vendor invoices attached
+    // Send email to buyer
     const emailPayload: EmailPayload = {
       to: user.email,
       subject: `Invoices for Order #${order.id}`,
@@ -111,9 +127,24 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
     return res.status(201).json({
       message: 'Invoices generated, uploaded to Cloudinary & MinIO, and emailed to buyer',
     });
-
   } catch (err) {
     console.error('Error generating invoices:', err);
     return res.status(500).json({ error: 'Failed to generate invoices' });
+  }
+}
+
+// ---------------- Download invoice URL ----------------
+export async function getInvoiceDownloadUrl(req: Request, res: Response) {
+  const { invoiceId } = req.params;
+
+  try {
+    const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+
+    if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+
+    return res.json({ downloadUrl: invoice.pdfUrl });
+  } catch (err) {
+    console.error('Error fetching invoice:', err);
+    return res.status(500).json({ error: 'Failed to fetch invoice' });
   }
 }
