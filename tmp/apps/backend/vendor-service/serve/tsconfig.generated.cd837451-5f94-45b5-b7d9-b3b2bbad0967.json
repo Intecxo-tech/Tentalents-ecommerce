@@ -49,9 +49,6 @@
         "libs/shared/config/build",
         "libs/shared/config/public"
       ],
-      "shared-email": [
-        "dist/libs/shared/email"
-      ],
       "shared-error": [
         "dist/libs/shared/error",
         "libs/shared/error/dist",
@@ -87,14 +84,8 @@
         "libs/shared/types/dist",
         "libs/shared/types/build",
         "libs/shared/types/public"
-      ],
-      "shared-utils": [
-        "dist/libs/shared/utils",
-        "libs/shared/utils/dist",
-        "libs/shared/utils/build",
-        "libs/shared/utils/public"
       ]
     }
   },
-  "extends": "../../../../../apps/backend/order-service/tsconfig.app.json"
+  "extends": "../../../../../apps/backend/vendor-service/tsconfig.app.json"
 }

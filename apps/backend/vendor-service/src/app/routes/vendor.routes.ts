@@ -8,26 +8,26 @@ import {
   updateVendorProfile,
   approveVendor,
   rejectVendor,
-  uploadVendorProfileImage, // ✅ Add the new controller
+  uploadVendorProfileImage,
 } from '../controllers/vendor-controller';
-import { requireAuth, ROLES } from '@shared/auth'; // use ROLES object
+import { requireAuth, ROLES } from '@shared/auth';
 
 const router = Router();
 
-// Multer setup for file uploads (5MB max)
+// ---------------- MULTER SETUP ---------------- //
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
 });
 
 // ---------------- PUBLIC ROUTES ---------------- //
 router.post('/register/initiate-otp', initiateVendorRegistrationOtp);
 router.post('/register/verify-otp', verifyVendorEmailOtp);
 router.post('/register/user', completeVendorUserRegistration);
-router.post('/login', () => {}); // Placeholder
+router.post('/login', () => {}); // Placeholder login route
 
 // ---------------- PROTECTED ROUTES ---------------- //
-// RBAC arrays
+// RBAC role arrays
 const SELLER_OR_ADMIN = [ROLES.VENDOR, ROLES.ADMIN]; // Vendor = Seller
 const ADMIN_ONLY = [ROLES.ADMIN];
 
@@ -49,7 +49,7 @@ router.put(
 router.post(
   '/profile/:vendorId/upload-image',
   requireAuth(SELLER_OR_ADMIN),
-  upload.single('profileImage'), // single file under "profileImage" field
+  upload.single('profileImage'), // expects file under "profileImage" field
   uploadVendorProfileImage
 );
 

@@ -1,39 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '@shared/logger';
-import { UserRole } from '@shared/auth';
+import { AuthPayload, UserRole } from '@shared/auth';
 import { VendorStatus } from '@shared/types';
 import { vendorService } from '../services/vendor-service';
 import { UpdateVendorStatusSchema, UpdateVendorSchema } from '../schemas/vendor.schema';
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'super_secret';
-const upload = multer({ storage: multer.memoryStorage() });
-
 // ---------------- AUTHENTICATED REQUEST ----------------
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    role: UserRole | UserRole[];
-    vendorId?: string;
-  };
+  user?: AuthPayload;
 }
+
+// ---------------- CONFIG ----------------
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret';
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
 
 // ---------------- AUTH ----------------
 export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Missing or malformed Authorization header' });
   }
 
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedRequest['user'];
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    if (!decoded.userId || !decoded.role) {
+      return res.status(401).json({ error: 'Invalid token payload' });
+    }
     req.user = decoded;
     next();
   } catch (err) {
@@ -96,12 +93,10 @@ export const getVendorProfileByVendorId = async (req: Request, res: Response) =>
   }
 };
 
-export const updateVendorProfile = async (req: Request, res: Response) => {
-  const authReq = req as AuthenticatedRequest;
-  const vendorId = req.params.vendorId;
-
-  if (!vendorId) return res.status(400).json({ error: 'Vendor ID is required in the route' });
-  if (!authReq.user?.userId) return res.status(401).json({ error: 'Unauthorized' });
+export const updateVendorProfile = async (req: AuthenticatedRequest, res: Response) => {
+  const { vendorId } = req.params;
+  if (!vendorId) return res.status(400).json({ error: 'Vendor ID is required' });
+  if (!req.user?.userId) return res.status(401).json({ error: 'Unauthorized' });
 
   const result = UpdateVendorSchema.safeParse(req.body);
   if (!result.success) return res.status(400).json({ error: result.error.format() });
@@ -117,35 +112,23 @@ export const updateVendorProfile = async (req: Request, res: Response) => {
 };
 
 // ---------------- VENDOR STATUS ----------------
-export const approveVendor = async (req: Request, res: Response) => {
-  const data = UpdateVendorStatusSchema.parse({
-    id: req.params.id,
-    status: VendorStatus.APPROVED.toLowerCase(),
-  });
+const handleVendorStatusUpdate = async (req: Request, res: Response, status: VendorStatus) => {
+  const data = UpdateVendorStatusSchema.parse({ id: req.params.id, status });
 
   try {
     const vendor = await vendorService.updateStatus(data.id, data.status);
     res.json({ success: true, data: vendor });
   } catch (err) {
-    logger.error('Approve Vendor Error:', err);
-    res.status(400).json({ success: false, error: 'Failed to approve vendor' });
+    logger.error(`Vendor ${status} Error:`, err);
+    res.status(400).json({ success: false, error: `Failed to ${status.toLowerCase()} vendor` });
   }
 };
 
-export const rejectVendor = async (req: Request, res: Response) => {
-  const data = UpdateVendorStatusSchema.parse({
-    id: req.params.id,
-    status: VendorStatus.REJECTED.toLowerCase(),
-  });
+export const approveVendor = (req: Request, res: Response) =>
+  handleVendorStatusUpdate(req, res, VendorStatus.APPROVED);
 
-  try {
-    const vendor = await vendorService.updateStatus(data.id, data.status);
-    res.json({ success: true, data: vendor });
-  } catch (err) {
-    logger.error('Reject Vendor Error:', err);
-    res.status(400).json({ success: false, error: 'Failed to reject vendor' });
-  }
-};
+export const rejectVendor = (req: Request, res: Response) =>
+  handleVendorStatusUpdate(req, res, VendorStatus.REJECTED);
 
 // ---------------- VENDOR PROFILE IMAGE UPLOAD ----------------
 export const uploadVendorProfileImage = async (req: Request, res: Response) => {
@@ -169,3 +152,5 @@ export const uploadVendorProfileImage = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to upload vendor profile image' });
   }
 };
+
+export { upload }; // Export multer instance for route usage
