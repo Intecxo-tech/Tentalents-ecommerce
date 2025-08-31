@@ -8,5 +8,8 @@ export * from './lib/generate-path.util';
 export * from './lib/get-presigned-url.util';
 export * from './lib/minio-utils';
 export * from './lib/bucket';
-export * from './lib/minio'; // contains uploadFileToMinIO etc.
+
+// Re-export the correct members from minio.ts
+export { uploadFileToMinIO, UploadFileOptions } from './lib/minio';
+
 export * from './lib/minio-connection';

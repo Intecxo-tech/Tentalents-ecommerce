@@ -1,70 +1,88 @@
-import PDFDocument from 'pdfkit';
-import { minioClient } from '@shared/minio';
-import { PrismaClient } from '../../../generated/invoice-service'; // Adjust path if you're not using @shared/prisma
-import { Readable } from 'stream';
+import nodemailer from 'nodemailer';
+import { env } from '@shared/config';
+import { PDFGenerator } from '@shared/utils';
+import { PrismaClient } from '../../../generated/invoice-service';
+import { uploadToCloudinary } from '@shared/auth';
+import { produceKafkaEvent } from '@shared/kafka';
+import { KAFKA_TOPICS } from '@shared/constants';
+import fs from 'fs/promises';
 
-const bucket = process.env.MINIO_BUCKET || 'invoices';
 const prisma = new PrismaClient();
+
 export const invoiceService = {
-  generateInvoicePDF: async (orderData: {
-    orderId: string;
-    userId: string;
-    buyerEmail: string;
-    items: { name: string; price: number; quantity: number }[];
-    total: number;
-  }): Promise<void> => {
-    const doc = new PDFDocument();
-    const chunks: Buffer[] = [];
-
-    return new Promise<void>((resolve, reject) => {
-      doc.text('🧾 MVP Shop Invoice', { align: 'center' });
-      doc.text(`Order ID: ${orderData.orderId}`);
-      doc.text(`Buyer: ${orderData.buyerEmail}`);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`);
-      doc.moveDown();
-
-      orderData.items.forEach((item) => {
-        doc.text(`${item.name} - ₹${item.price} x ${item.quantity}`);
-      });
-
-      doc.text(`\nTotal: ₹${orderData.total}`, { align: 'right' });
-
-      doc.on('data', (chunk) => chunks.push(chunk));
-      doc.on('end', async () => {
-        try {
-          const buffer = Buffer.concat(chunks);
-          const objectName = `invoices/${orderData.userId}/${orderData.orderId}.pdf`;
-
-          await minioClient.putObject(bucket, objectName, buffer);
-
-        await prisma.invoice.create({
-  data: {
-    orderId: orderData.orderId,
-    vendorId: 'someVendorId',  // <-- you need to supply the correct vendorId here
-    pdfUrl: objectName,        // use 'pdfUrl', NOT 'fileUrl'
-    // optionally:
-    filePath: objectName,
-    bucket: bucket,
-  },
-});
-
-
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      });
-
-      doc.end();
+  generateInvoice: async (orderId: string) => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: { include: { vendor: true } } },
     });
-  },
 
-  getInvoiceFile: async (
-    userId: string,
-    orderId: string
-  ): Promise<Readable> => {
-    const objectName = `invoices/${userId}/${orderId}.pdf`;
-    const stream = await minioClient.getObject(bucket, objectName);
-    return stream as Readable;
+    if (!order) throw new Error('Order not found');
+    const vendorId = order.items[0]?.vendor?.id;
+    if (!vendorId) throw new Error('Vendor not found for order items');
+
+    // Generate PDFs
+    const pdfOrder = {
+      id: order.id,
+      userId: order.buyerId,
+      items: order.items.map(i => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        price: Number(i.unitPrice),
+      })),
+      totalAmount: Number(order.totalAmount),
+      status: order.status as any,
+      createdAt: order.placedAt,
+      updatedAt: order.updatedAt,
+    };
+
+    const customerPdf = await PDFGenerator.generate(pdfOrder, 'user');
+    const vendorPdf = await PDFGenerator.generate(pdfOrder, 'vendor');
+
+    // Upload vendor PDF to Cloudinary
+    const cloudinaryUrl = await uploadToCloudinary(
+      vendorPdf,
+      'vendor_invoices',
+      `invoice-${order.id}`,
+      'application/pdf'
+    );
+
+    // Save invoice record
+    await prisma.invoice.create({
+      data: {
+        orderId: order.id,
+        vendorId,
+        pdfUrl: cloudinaryUrl,
+        filePath: `invoice-${order.id}.pdf`,
+        bucket: 'cloudinary',
+      },
+    });
+
+    // Send email directly using nodemailer
+    const transporter = nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_PORT === 465,
+      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    });
+
+    await transporter.sendMail({
+      from: env.EMAIL_FROM,
+      to: 'buyer@example.com', // fetch real email if possible
+      subject: `Invoice for Order ${order.id}`,
+      html: `<p>Dear Customer,</p><p>Please find your invoice attached.</p>`,
+      attachments: [
+        { filename: `invoice-${order.id}.pdf`, content: customerPdf, contentType: 'application/pdf' },
+      ],
+    });
+
+    // Emit Kafka event
+    await produceKafkaEvent({
+      topic: KAFKA_TOPICS.INVOICE_GENERATE,
+      messages: [
+        { value: JSON.stringify({ orderId: order.id, userId: order.buyerId, pdfUrl: cloudinaryUrl }) },
+      ],
+    });
+
+    return { cloudinaryUrl };
   },
 };
