@@ -1,7 +1,6 @@
 // libs/shared/utils/src/lib/pdf.ts
 import PDFDocument from 'pdfkit';
 
-// Inline types (no external import needed)
 interface OrderItem {
   productId: string;
   quantity: number;
@@ -11,11 +10,17 @@ interface OrderItem {
 interface Order {
   id: string;
   userId: string;
+  userName: string;
+  userEmail: string;
+  userAddress: string;
+  vendorName: string;
+  vendorEmail: string;
+  vendorAddress: string;
+  paymentMethod: string;
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+  status: string;
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export class PDFGenerator {
@@ -27,29 +32,41 @@ export class PDFGenerator {
         doc.on('data', buffers.push.bind(buffers));
         doc.on('end', () => resolve(Buffer.concat(buffers)));
 
-        // ---------------- Header ----------------
-        const headerHeight = 80;
-        doc.rect(0, 0, 595, headerHeight).fill('#1a73e8');
-        doc.fillColor('#ffffff').fontSize(24).text('Tentalents', 50, 25, { align: 'left' });
-        doc.fontSize(14).text(type === 'user' ? 'Customer Invoice' : 'Vendor Invoice', 50, 50, { align: 'left' });
+        // ---------------- HEADER ----------------
+        doc.rect(0, 0, 595, 80).fill('#1a73e8');
+        doc.fillColor('#ffffff')
+          .fontSize(26)
+          .text('Tentalents', 50, 25, { align: 'left' });
+        doc.fontSize(14)
+          .text(type === 'user' ? 'Customer Invoice' : 'Vendor Invoice', 50, 50, { align: 'left' });
 
-        doc.fillColor('#000').moveDown(3);
+        doc.moveDown(2).fillColor('#000');
 
-        // ---------------- Order Info ----------------
-        doc.fontSize(10);
-        doc.text(`Order ID: ${order.id}`);
-        doc.text(`User ID: ${order.userId}`);
+        // ---------------- CUSTOMER & VENDOR INFO ----------------
+        doc.fontSize(10).font('Helvetica-Bold').text('Bill To:', 50);
+        doc.font('Helvetica')
+          .text(order.userName)
+          .text(order.userEmail)
+          .text(order.userAddress);
+
+        doc.font('Helvetica-Bold').text('Vendor:', 300, 110);
+        doc.font('Helvetica')
+          .text(order.vendorName, 300, 125)
+          .text(order.vendorEmail)
+          .text(order.vendorAddress);
+
+        doc.moveDown(2);
+
+        // ---------------- ORDER INFO ----------------
+        doc.text(`Order ID: ${order.id}`, 50);
+        doc.text(`Order Date: ${order.createdAt.toDateString()}`);
+        doc.text(`Payment Method: ${order.paymentMethod}`);
         doc.text(`Status: ${order.status}`);
-        doc.text(`Total Amount: ₹${order.totalAmount}`);
-        doc.text(`Created At: ${order.createdAt.toDateString()}`);
         doc.moveDown(1);
 
-        // ---------------- Items Table ----------------
+        // ---------------- ITEMS TABLE ----------------
         const tableTop = doc.y + 20;
-        const itemX = 50;
-        const qtyX = 300;
-        const priceX = 370;
-        const totalX = 450;
+        const itemX = 50, qtyX = 300, priceX = 370, totalX = 450;
 
         // Table Header
         doc.rect(itemX - 5, tableTop - 5, 500, 20).fill('#f2f2f2').stroke();
@@ -62,9 +79,7 @@ export class PDFGenerator {
         doc.font('Helvetica');
         order.items.forEach((item: OrderItem, i: number) => {
           const y = tableTop + 25 + i * 25;
-          if (i % 2 === 0) {
-            doc.rect(itemX - 5, y - 5, 500, 25).fill('#f9f9f9').stroke();
-          }
+          if (i % 2 === 0) doc.rect(itemX - 5, y - 5, 500, 25).fill('#f9f9f9').stroke();
           doc.fillColor('#000');
           doc.text(item.productId, itemX, y);
           doc.text(item.quantity.toString(), qtyX, y);
@@ -72,20 +87,25 @@ export class PDFGenerator {
           doc.text(`₹${item.price * item.quantity}`, totalX, y);
         });
 
-        // ---------------- Totals ----------------
-        const subtotal = order.items.reduce((acc: number, item: OrderItem) => acc + item.price * item.quantity, 0);
-        const tax = +(subtotal * 0.18).toFixed(2);
-        const grandTotal = subtotal + tax;
+        // ---------------- TOTALS ----------------
+        const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        const gst = +(subtotal * 0.18).toFixed(2);
+        const grandTotal = subtotal + gst;
 
         doc.moveDown(order.items.length * 0.7 + 2);
         doc.font('Helvetica-Bold');
         doc.text(`Subtotal: ₹${subtotal}`, { align: 'right' });
-        doc.text(`GST (18%): ₹${tax}`, { align: 'right' });
+        doc.text(`GST (18%): ₹${gst}`, { align: 'right' });
         doc.text(`Grand Total: ₹${grandTotal}`, { align: 'right' });
 
-        // ---------------- Footer ----------------
+        // ---------------- FOOTER ----------------
         doc.rect(0, 750, 595, 50).fill('#1a73e8');
-        doc.fillColor('#fff').fontSize(10).text('Thank you for shopping with Tentalents!', 50, 765, { align: 'center' });
+        doc.fillColor('#fff').fontSize(10).text(
+          'Thank you for shopping with Tentalents!',
+          50,
+          765,
+          { align: 'center' }
+        );
         doc.text('This is a system-generated invoice.', { align: 'center' });
 
         doc.end();
