@@ -226,15 +226,20 @@ const onSubmit = async (data: FormData) => {
     }
 
     // ✅ Upload images AFTER getting the productId
-    if (selectedFiles.length > 0 && productIdToUse) {
-      for (const file of selectedFiles) {
-        const base64 = await fileToBase64(file);
-        await axios.post(`https://product-service-23pc.onrender.com/api/products/${productIdToUse}/image`, 
-          { imageBase64: base64 },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
-    }
+const imageUploadPromises = selectedFiles.map(async (file, index) => {
+  if (!file) return null; // skip empty slot
+
+  const base64 = await fileToBase64(file);
+  return axios.post(
+    `https://product-service-23pc.onrender.com/api/products/${productIdToUse}/image`,
+    { imageBase64: base64, index },  // <-- pass index if backend needs order
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+});
+
+// remove nulls
+await Promise.all(imageUploadPromises.filter(Boolean));
+
 
   if (productId) {
   toast.success('Product updated successfully!');
