@@ -5,6 +5,7 @@ import './product.css';
 import { useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import Link from 'next/link';
+import Products from 'apps/frontend/seller-ui/src/shared/components/noproducts/products';
 interface Variant {
   id: string;
   name: string;
@@ -85,6 +86,7 @@ const Page: React.FC = () => {
 
   return (
     <div className="product-grid columns-4">
+     
       {products.map((product) => {
         const listing = product.listings[0];
         if (!listing) return null;

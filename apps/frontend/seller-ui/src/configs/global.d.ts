@@ -33,8 +33,30 @@ export type Product = {
   image: StaticImageData;
   inventory: InventoryItem;
    sold?: number;
+   
 };
-
+interface RawVendorOrder {
+  id: string;
+  orderId: string;
+  quantity: number;
+  unitPrice: string;
+  totalPrice: string;
+  status: string;
+  dispatchStatus: string;
+  product: {
+    id: string;
+    title: string;
+    imageUrls: string[];
+  };
+  order: {
+    shippingAddress: {
+      city: string;
+      // other address fields if needed
+    };
+    paymentStatus: string;
+    status: string;
+  };
+}
 /* ────────────────────────────────
    📦  Orders
 ──────────────────────────────── */
@@ -49,7 +71,18 @@ export type OrderStatus =
   | 'paid, in process'
   | 'paid, fulfilled'
   | 'unpaid, in process';
-
+export interface VendorOrder {
+  id: string;
+  orderId: string;
+  quantity: number;
+  unitPrice: string;
+  totalPrice: string;
+  dispatchStatus: string;
+  product: {
+    title: string;
+    imageUrls: string[];
+  };
+}
 export type ProductOrder = {
   id: number;
   product: Product;
@@ -57,6 +90,8 @@ export type ProductOrder = {
   price: number;
   city: string;
   status: OrderStatus;
+    paymentStatus?: string;     // e.g., "Paid", "Pending", "Cash on Delivery"
+  dispatchStatus?: string; 
 };
 
 export {};

@@ -92,15 +92,15 @@ export const updateOrderStatus = async (
     }
 
     const updated = await orderService.updateOrderStatus(orderId, status);
-   await produceKafkaEvent({
-  topic: 'order.updated',
-  messages: [{ value: JSON.stringify(updated) }],
-});
+
+    // Removed Kafka event production here
+
     sendSuccess(res, '✅ Order status updated', updated);
   } catch (err) {
     next(err);
   }
 };
+
 export const addAddress = async (
   req: AuthedRequest,
   res: Response,
@@ -195,10 +195,16 @@ export const updateDispatchStatus = async (
 
     const updated = await orderService.updateDispatchStatus(orderId, dispatchStatus);
 
-    await produceKafkaEvent({
-      topic: 'dispatch.status.updated',
-      messages: [{ value: JSON.stringify(updated) }],
-    });
+    // Optional Kafka event production wrapped in try-catch
+    try {
+      await produceKafkaEvent({
+        topic: 'dispatch.status.updated',
+        messages: [{ value: JSON.stringify(updated) }],
+      });
+    } catch (kafkaErr) {
+      console.error('Kafka produce error (ignored):', kafkaErr);
+      // Continue without failing the request
+    }
 
     sendSuccess(res, '🚚 Dispatch status updated', updated);
   } catch (err) {

@@ -3,136 +3,122 @@
 import React from 'react';
 import './productaccept.css';
 import Image from 'next/image';
-import type { ProductOrder } from '../../../configs/global'; // Adjust path as needed
+
+// --- Interfaces for props ---
+
+interface Product {
+  id: string;
+  title: string;
+  imageUrls?: string[];
+}
+interface ShippingAddress {
+  city: string;
+}
+interface Order {
+  id: string;
+  status: string;
+  paymentStatus?: string;
+  dispatchStatus?: string;
+  shippingAddress?: ShippingAddress;
+}
+interface VendorOrder {
+  id: string;
+  quantity: number;
+  totalPrice: string;
+  dispatchStatus: string;
+  product?: Product;
+  order?: Order;
+}
 
 interface ProductAcceptProps {
-  orders?: ProductOrder[];
+  orders: VendorOrder[];
   limit?: number;
 }
 
 const ProductAccept = ({ orders, limit }: ProductAcceptProps) => {
-  const handleConfirm = (id: number) => console.log('Confirmed product ID:', id);
-  const handleDeny = (id: number) => console.log('Denied product ID:', id);
-  const handleViewStatus = (id: number) => console.log('Viewing status for product ID:', id);
-  const handleTrackOrder = (id: number) => console.log('Tracking order for product ID:', id);
-  const handleViewOrder = (id: number) => console.log('Viewing order for product ID:', id);
+  // Event handlers
+  const handleConfirm = (id: string) => console.log('Confirmed product ID:', id);
+  const handleDeny = (id: string) => console.log('Denied product ID:', id);
+  const handleViewStatus = (id: string) => console.log('Viewing status for ID:', id);
+  const handleTrackOrder = (id: string) => console.log('Tracking order for ID:', id);
+  const handleViewOrder = (id: string) => console.log('Viewing order for ID:', id);
 
-  const getStatusClass = (status: string) => {
+  const getStatusClass = (status: string = '') => {
     const lowerStatus = status.toLowerCase();
-    if (lowerStatus.includes('failed') || lowerStatus.includes('unfulfilled')) return 'failed';
-    if (lowerStatus.includes('unpaid')) return 'unpaid';
-    if (lowerStatus.includes('in process')) return 'process';
-    if (
-      lowerStatus.includes('paid') ||
-      lowerStatus.includes('fulfilled') ||
-      lowerStatus.includes('refunded')
-    ) {
-      return 'paid';
-    }
+    if (['failed', 'not_started', 'cancelled', 'denied'].includes(lowerStatus)) return 'failed';
+    if (['pending', 'unpaid'].includes(lowerStatus)) return 'unpaid';
+    if (['preparing', 'shipped', 'confirmed', 'dispatched'].includes(lowerStatus)) return 'process';
+     if (['paid', 'delivered', 'success'].includes(lowerStatus)) return 'paid';
     return '';
   };
 
-  if (!orders || orders.length === 0) {
-    return <div>No orders to display.</div>;
-  }
-
   const limitedOrders = limit ? orders.slice(0, limit) : orders;
+  if (limitedOrders.length === 0) return <div>No orders to display for this tab.</div>;
 
   return (
     <div className="productsection">
-      {limitedOrders.map((order) => {
-        const normalizedStatuses = order.status.toLowerCase().split(',').map((s) => s.trim());
+      {limitedOrders.map((orderItem) => {
+         const orderStatus = orderItem.order?.status?.toLowerCase() || 'pending';
+        const dispatchStatus = orderItem.order?.dispatchStatus?.toLowerCase() || 'not_started';
 
-        const isPaidOnly = normalizedStatuses.length === 1 && normalizedStatuses.includes('paid');
-        const isUnpaidOnly =
-          normalizedStatuses.length === 1 && normalizedStatuses.includes('unpaid');
-        const isPaidInProcess =
-          normalizedStatuses.includes('paid') && normalizedStatuses.includes('in process');
-        const isUnpaidInProcess =
-          normalizedStatuses.includes('unpaid') && normalizedStatuses.includes('in process');
-        const isPaidFulfilled =
-          normalizedStatuses.includes('paid') && normalizedStatuses.includes('fulfilled');
-        const isRefunded = normalizedStatuses.includes('refunded');
-        const isFailedOrUnfulfilled =
-          normalizedStatuses.includes('failed') || normalizedStatuses.includes('unfulfilled');
+        // Rule 1: For "Confirm/Deny" buttons
+        const isPending = orderStatus === 'pending';
+        
+        // Rule 2: For "View Status" button
+        const isConfirmed = orderStatus === 'confirmed';
+        
+        // Rule 3: For "Track Order" button
+        const isPreparing = dispatchStatus === 'preparing';
+        
+        // Rule 4: For "View Order" button (for dispatched)
+        const isDispatched = orderStatus === 'shipped';
+
+        // Rule 5: For other finished orders
+        const isFinished = ['delivered', 'cancelled', 'refunded', 'returned'].includes(orderStatus);
 
         return (
-         
-          <div key={order.id} className="product-item">
+          <div key={orderItem.id} className="product-item">
             <div className="product-section">
-              <Image
-                src={order.product.image}
-                alt={order.product.name}
-                width={100}
-                height={100}
-              />
-              <h3 className="product-title">{order.product.name}</h3>
+              <Image src={orderItem.product?.imageUrls?.[0] || '/placeholder.png'} alt={orderItem.product?.title || 'Product'} width={100} height={100} />
+              <h3 className="product-title">{orderItem.product?.title || "No Title"}</h3>
             </div>
-
             <div className="produtdetails">
-              <p className="orderprice">{order.quantity}</p>
-              <p className="orderprice">₹{order.price}</p>
-              <p>{order.city}</p>
+              <p className="orderprice">{orderItem.quantity}</p>
+              <p className="orderprice">₹{orderItem.totalPrice}</p>
+              <p>{orderItem.order?.shippingAddress?.city || "N/A"}</p>
               <div className="status-tags">
-                {normalizedStatuses.map((status) => (
-                  <span key={status} className={getStatusClass(status)}>
-                    {status}
-                  </span>
-                ))}
+                <span className={getStatusClass(orderItem.order?.paymentStatus)}>{orderItem.order?.paymentStatus || 'Pending'}</span>
+                <span className={getStatusClass(dispatchStatus)}>{dispatchStatus}</span>
               </div>
             </div>
-
             <div className="productstatus">
-              {isPaidInProcess || isUnpaidInProcess ? (
+           {isPending ? (
                 <div className="product-buttons">
-                  <button
-                    className="center-borderedbutton bg-var(--lightblue2)"
-                    onClick={() => handleTrackOrder(order.id)}
-                  >
-                    Track Order
-                  </button>
+                  <button className="center-borderedbutton" onClick={() => handleDeny(orderItem.id)}>Deny</button>
+                  <button className="background-buttonver" onClick={() => handleConfirm(orderItem.id)}>Confirm</button>
                 </div>
-              ) : isPaidFulfilled || isRefunded ? (
+              ) : isPreparing ? ( // Check 'preparing' before 'confirmed'
                 <div className="product-buttons">
-                  <button
-                    className="center-borderedbutton"
-                    onClick={() => handleViewOrder(order.id)}
-                  >
-                    View Order
-                  </button>
+                  <button className="center-borderedbutton" onClick={() => handleTrackOrder(orderItem.id)}>Track Order</button>
                 </div>
-              ) : isPaidOnly || isUnpaidOnly ? (
+              ) : isConfirmed ? (
                 <div className="product-buttons">
-                  <button
-                    className="center-borderedbutton"
-                    onClick={() => handleDeny(order.id)}
-                  >
-                    Deny
-                  </button>
-                  <button
-                    className="background-buttonver"
-                    onClick={() => handleConfirm(order.id)}
-                  >
-                    Confirm
-                  </button>
+                  <button className="center-borderedbutton" onClick={() => handleViewStatus(orderItem.id)}>View Status</button>
                 </div>
-              ) : isFailedOrUnfulfilled ? (
+              ) : isDispatched ? (
                 <div className="product-buttons">
-                  <button
-                    className="center-borderedbutton"
-                    onClick={() => handleViewStatus(order.id)}
-                  >
-                    View Status
-                  </button>
+                  <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem.id)}>View Order</button>
+                </div>
+              ) : isFinished ? (
+                <div className="product-buttons">
+                  <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem.id)}>View Order</button>
                 </div>
               ) : null}
             </div>
           </div>
-          
         );
       })}
     </div>
-    
   );
 };
 

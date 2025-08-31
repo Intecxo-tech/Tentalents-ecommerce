@@ -149,35 +149,46 @@ const defaultProfileImage = `https://gravatar.com/avatar/${crypto.createHash('md
       await prisma.pendingUserOtp.delete({ where: { email } });
 
       const kafkaPayload = { userId: user.id, email: user.email, role: user.role };
-      await publishEvent({
-        topic: KAFKA_TOPICS.USER.CREATED,
-        messages: [{ value: JSON.stringify(kafkaPayload) }],
-      });
+    try {
+  await publishEvent({
+    topic: KAFKA_TOPICS.USER.CREATED,
+    messages: [{ value: JSON.stringify(kafkaPayload) }],
+  });
+} catch (kafkaErr) {
+  logger.warn('[Kafka] Failed to publish USER.CREATED event:', kafkaErr);
+}
 
-      await publishEvent({
-        topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
-        messages: [{ value: JSON.stringify({ email: user.email }) }],
-      });
+// Send EMAIL.USER_CREATED event
+try {
+  await publishEvent({
+    topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
+    messages: [{ value: JSON.stringify({ email: user.email }) }],
+  });
+} catch (kafkaErr) {
+  logger.warn('[Kafka] Failed to publish EMAIL.USER_CREATED event:', kafkaErr);
+}
 
-      if (user.role === UserRole.seller) {
-        await publishEvent({
-          topic: KAFKA_TOPICS.USER.VENDOR_REGISTERED,
-          messages: [
-            {
-              value: JSON.stringify({
-                userId: user.id,
-                email: user.email,
-                phone: user.phone,
-                altphone:user.altPhone,
-                status: 'pending',
-              }),
-            },
-          ],
-        });
-      }
-
-      logger.info(`[UserService] ✅ OTP-based registration complete for ${email}`);
-      return { id: user.id, email: user.email, role: user.role };
+// Only for sellers
+if (user.role === UserRole.seller) {
+  try {
+    await publishEvent({
+      topic: KAFKA_TOPICS.USER.VENDOR_REGISTERED,
+      messages: [
+        {
+          value: JSON.stringify({
+            userId: user.id,
+            email: user.email,
+            phone: user.phone,
+            altphone: user.altPhone,
+            status: 'pending',
+          }),
+        },
+      ],
+    });
+  } catch (kafkaErr) {
+    logger.warn('[Kafka] Failed to publish USER.VENDOR_REGISTERED event:', kafkaErr);
+  }
+}
     } catch (err) {
       logger.error('[UserService] completeRegistration error:', err);
       throw err;
@@ -303,15 +314,27 @@ let user = await prisma.user.findFirst({ where: { firebaseUid: uid } });
       logger.info(`[UserService] 🆕 New Google user created: ${email}`);
 
       // Optionally publish Kafka events on user creation here
-      await publishEvent({
-        topic: KAFKA_TOPICS.USER.CREATED,
-        messages: [{ value: JSON.stringify({ userId: user.id, email: user.email, role: user.role }) }],
-      });
+      // If new user, publish events
+if (user && !user.firebaseUid) {
+  try {
+    await publishEvent({
+      topic: KAFKA_TOPICS.USER.CREATED,
+      messages: [{ value: JSON.stringify({ userId: user.id, email: user.email, role: user.role }) }],
+    });
+  } catch (kafkaErr) {
+    logger.warn('[Kafka] Failed to publish USER.CREATED event (OAuth):', kafkaErr);
+  }
 
-      await publishEvent({
-        topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
-        messages: [{ value: JSON.stringify({ email: user.email }) }],
-      });
+  try {
+    await publishEvent({
+      topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
+      messages: [{ value: JSON.stringify({ email: user.email }) }],
+    });
+  } catch (kafkaErr) {
+    logger.warn('[Kafka] Failed to publish EMAIL.USER_CREATED event (OAuth):', kafkaErr);
+  }
+}
+
     } else {
       logger.info(`[UserService] 🔑 Existing user logged in: ${email}`);
 

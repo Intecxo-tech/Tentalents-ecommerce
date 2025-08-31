@@ -352,7 +352,7 @@ getOrdersByUser: async (buyerId: string) => {
     });
   },
 
-  getVendorOrders: async (vendorId: string) => {
+    getVendorOrders: async (vendorId: string) => {
   return prisma.orderItem.findMany({
     where: { vendorId },
     include: {
@@ -365,7 +365,7 @@ getOrdersByUser: async (buyerId: string) => {
       }
     }
   });
-},
+}
   
 };
 
@@ -443,20 +443,7 @@ editAddress: async (userId: string, addressId: string, data: Partial<AddressInpu
 
     // Delete the address
     return prisma.address.delete({ where: { id: addressId } });
-  },
-  getVendorOrders: async (vendorId: string) => {
-  return prisma.orderItem.findMany({
-    where: { vendorId },
-    include: {
-      product: true,
-      order: {
-        include: {
-          shippingAddress: true,
-          buyer: { select: { name: true, email: true } }
-        }
-      }
-    }
-  });
-}
+  }
+
 
 };

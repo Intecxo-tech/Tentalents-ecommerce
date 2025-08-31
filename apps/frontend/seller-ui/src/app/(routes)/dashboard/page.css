@@ -28,7 +28,7 @@
 
 }
 .inventory-sectionw {
-  flex: 1.5; 
+  flex: 1; 
 
 }
 .layout-content{
@@ -40,7 +40,7 @@
 }
 .inventory-sectionback{
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap:20px
 }

@@ -58,8 +58,13 @@ async function start() {
     await prisma.$connect();
     logger.info('✅ PostgreSQL connected');
 
-    await connectKafkaConsumer(kafkaConfig, kafkaMessageHandler);
-    logger.info('✅ Kafka consumer connected');
+    try {
+      await connectKafkaConsumer(kafkaConfig, kafkaMessageHandler);
+      logger.info('✅ Kafka consumer connected');
+    } catch (kafkaErr) {
+      logger.warn('⚠️ Kafka connection failed. Continuing without Kafka.');
+      logger.warn(kafkaErr);
+    }
 
     server = app.listen(PORT, () => {
       logger.info(`🛒 Order Service running at http://localhost:${PORT}`);
@@ -69,6 +74,7 @@ async function start() {
     await shutdown(1);
   }
 }
+
 
 // 🧹 Graceful Shutdown
 async function shutdown(exitCode = 0) {

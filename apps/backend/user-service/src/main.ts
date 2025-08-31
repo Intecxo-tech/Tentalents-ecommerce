@@ -52,15 +52,29 @@ async function start() {
     await connectRedis();
     logger.info('✅ Redis connected');
 
-    // <<< Add topic creation here before producer/consumer connects
-    await createTopicsIfNotExists(kafkaConfig.topics);
-    logger.info('✅ Kafka topics created or verified');
+    // ✅ Try to create Kafka topics (optional)
+    try {
+      await createTopicsIfNotExists(kafkaConfig.topics);
+      logger.info('✅ Kafka topics created or verified');
+    } catch (err) {
+      logger.error('⚠️ Failed to create Kafka topics:', err);
+    }
 
-    await connectKafkaProducer();
-    logger.info('✅ Kafka producer connected');
+    // ✅ Connect Kafka Producer (optional)
+    try {
+      await connectKafkaProducer();
+      logger.info('✅ Kafka producer connected');
+    } catch (err) {
+      logger.error('⚠️ Kafka producer failed to connect:', err);
+    }
 
-    await connectKafkaConsumer(kafkaConfig, kafkaMessageHandler);
-    logger.info('✅ Kafka consumer connected');
+    // ✅ Connect Kafka Consumer (optional)
+    try {
+      await connectKafkaConsumer(kafkaConfig, kafkaMessageHandler);
+      logger.info('✅ Kafka consumer connected');
+    } catch (err) {
+      logger.error('⚠️ Kafka consumer failed to connect:', err);
+    }
 
     // PostgreSQL
     await prisma.$connect();
@@ -77,6 +91,7 @@ async function start() {
     process.exit(1);
   }
 }
+
 
 // 🛑 Graceful Shutdown
 async function shutdown() {
