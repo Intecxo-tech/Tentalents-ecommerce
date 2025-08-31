@@ -11,88 +11,41 @@ import {
   getVendorOrders,
   updateDispatchStatus
 } from '../controllers/order.controller';
-import { processOrder } from '../process-order'; // <-- Import the new function
-import { authMiddleware, requireRole } from '@shared/auth';
+import { requireAuth, ROLES } from '@shared/auth'; // ✅ Use ROLES constants
 
 const router = Router();
 
-// Address routes
+// ---------------- ROLE GROUPS ----------------
+const BUYER_ONLY = [ROLES.BUYER, ROLES.BUYER_SELLER];
+const SELLER_OR_ADMIN = [ROLES.SELLER, ROLES.ADMIN];
+const ADMIN_ONLY = [ROLES.ADMIN, ROLES.SUPER_ADMIN];
+
+// ---------------- ROUTES ----------------
+
+// Place a new order
+router.post('/', requireAuth(BUYER_ONLY), placeOrder);
+
+// Get all orders for a user
+router.get('/my-orders', requireAuth(BUYER_ONLY), getUserOrders);
+
+// Get order by ID (any role with access)
 router.get(
-  '/addresses',
-  authMiddleware(['buyer', 'buyer_seller']),
-  getUserAddresses
-);
-
-router.post(
-  '/addresses',
-  authMiddleware(['buyer', 'buyer_seller']),
-  addAddress
-);
-
-router.patch(
-  '/addresses/:id',
-  authMiddleware(['buyer', 'buyer_seller']),
-  editAddress
-);
-
-router.delete(
-  '/addresses/:id',
-  authMiddleware(['buyer', 'buyer_seller']),
-  deleteAddress
-);
-
-// Orders routes
-router.post(
-  '/',
-  authMiddleware(['buyer', 'buyer_seller']),
-  placeOrder
-);
-
-router.get(
-  '/',
-  authMiddleware(),
-  requireRole('buyer', 'buyer_seller'),
-  getUserOrders
-);
-
-router.get(
-  '/:id',
-  authMiddleware(),
+  '/:orderId',
+  requireAuth([...BUYER_ONLY, ...SELLER_OR_ADMIN, ...ADMIN_ONLY]),
   getOrderById
 );
 
-router.patch(
-  '/:id',
-  authMiddleware(),
-  requireRole('admin', 'super_admin'),
-  updateOrderStatus
-);
+// Update order status (seller/admin)
+router.patch('/:orderId/status', requireAuth(SELLER_OR_ADMIN), updateOrderStatus);
 
-// Vendor routes
-router.patch(
-  '/vendor/orders/:id/dispatch',
-  authMiddleware(['vendor', 'buyer_seller', 'seller']),
-  updateDispatchStatus
-);
+// ---------------- ADDRESS MANAGEMENT ----------------
+router.post('/address', requireAuth(BUYER_ONLY), addAddress);
+router.put('/address/:addressId', requireAuth(BUYER_ONLY), editAddress);
+router.delete('/address/:addressId', requireAuth(BUYER_ONLY), deleteAddress);
+router.get('/addresses', requireAuth(BUYER_ONLY), getUserAddresses);
 
-router.get(
-  '/vendor/orders',
-  authMiddleware(['vendor', 'buyer_seller', 'seller']),
-  getVendorOrders
-);
-
-// NEW: Process order endpoint (generate PDF, email, Kafka event)
-router.post(
-  '/:id/process',
-  authMiddleware(['buyer', 'buyer_seller']),
-  async (req, res) => {
-    try {
-      const result = await processOrder(req.params.id);
-      res.json(result);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
+// ---------------- VENDOR ORDERS ----------------
+router.get('/vendor/orders', requireAuth(SELLER_OR_ADMIN), getVendorOrders);
+router.patch('/:orderId/dispatch', requireAuth(SELLER_OR_ADMIN), updateDispatchStatus);
 
 export default router;
