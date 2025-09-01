@@ -10,6 +10,7 @@ import {
   UpdateVendorStatusSchema,
 } from '../dto/vendor.dto';
 
+// ---------------- MULTER CONFIG ----------------
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -28,12 +29,11 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = vendorService.verifyJwtToken(token);
-    req.user = decoded;
+    req.user = vendorService.verifyJwtToken(token);
     next();
   } catch (err) {
     logger.error('Authentication failed', err);
-    return res.status(401).json({ error: 'Invalid or expired token' });
+    res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 

@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { env } from '@shared/config';
 import { logger } from '@shared/logger';
+import { uploadToCloudinary } from '@shared/auth';
 
 const prisma = new PrismaClient();
 
@@ -20,14 +21,14 @@ export const vendorService = {
 
   // ---------------- OTP ----------------
   async initiateVendorRegistrationOtp(email: string) {
-    // implement OTP generation & email sending
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     logger.info(`OTP for ${email}: ${otp}`);
+    // TODO: send OTP via email using your email service
     return { success: true, otp };
   },
 
   async verifyVendorEmailOtp(email: string, otp: string) {
-    // implement OTP verification
+    // TODO: verify OTP
     return { success: true, message: 'OTP verified' };
   },
 
@@ -41,14 +42,10 @@ export const vendorService = {
         password: hashedPassword,
         status: vendorDto.status || VendorStatus.PENDING,
         bankDetail: vendorDto.bankDetail
-          ? {
-              create: vendorDto.bankDetail,
-            }
+          ? { create: vendorDto.bankDetail }
           : undefined,
       },
-      include: {
-        bankDetail: true,
-      },
+      include: { bankDetail: true },
     });
 
     return createdVendor;
@@ -56,7 +53,11 @@ export const vendorService = {
 
   // ---------------- LOGIN ----------------
   async loginVendorUser(email: string, password: string) {
-    const vendor = await prisma.vendor.findUnique({ where: { email }, include: { bankDetail: true } });
+    const vendor = await prisma.vendor.findUnique({
+      where: { email },
+      include: { bankDetail: true },
+    });
+
     if (!vendor || !vendor.password) throw new Error('Invalid credentials');
 
     const isValid = await bcrypt.compare(password, vendor.password);
@@ -75,7 +76,6 @@ export const vendorService = {
   },
 
   async updateVendorProfile(vendorId: string, updateData: UpdateVendorDto) {
-    // Extract bankDetail if present
     const { bankDetail, ...vendorFields } = updateData as any;
 
     const updatedVendor = await prisma.vendor.update({
@@ -107,9 +107,15 @@ export const vendorService = {
   },
 
   // ---------------- PROFILE IMAGE ----------------
-  async uploadVendorProfileImage(vendorId: string, buffer: Buffer, filename: string, mimetype: string) {
-    // Replace with your storage logic (S3/MinIO/Cloudinary)
-    const uploadedUrl = `https://cdn.example.com/vendors/${vendorId}/${filename}`;
+  async uploadVendorProfileImage(
+    vendorId: string,
+    buffer: Buffer,
+    filename: string,
+    mimetype: string
+  ) {
+    // Upload to Cloudinary
+    const uploadedUrl = await uploadToCloudinary(buffer, `vendors/${vendorId}`, filename, mimetype);
+
     return prisma.vendor.update({
       where: { id: vendorId },
       data: { profileImage: uploadedUrl },

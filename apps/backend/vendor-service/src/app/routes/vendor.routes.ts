@@ -4,6 +4,7 @@ import {
   initiateVendorRegistrationOtp,
   verifyVendorEmailOtp,
   completeVendorUserRegistration,
+  loginVendorUser, // <-- add this import
   getVendorProfileByVendorId,
   updateVendorProfile,
   approveVendor,
@@ -21,6 +22,9 @@ router.post('/otp/verify', verifyVendorEmailOtp);
 
 // ---------------- COMPLETE REGISTRATION ----------------
 router.post('/register', completeVendorUserRegistration);
+
+// ---------------- LOGIN ----------------
+router.post('/login', loginVendorUser); // <-- added login route
 
 // ---------------- VENDOR PROFILE ----------------
 router.get(
@@ -57,7 +61,7 @@ router.post(
   '/:vendorId/profile-image',
   authenticate,
   requireRole(ROLES.VENDOR, ROLES.ADMIN, ROLES.SUPER_ADMIN),
-  upload.single('file'), // multer middleware for single file
+  upload.single('file'), // multer middleware for single file upload
   uploadVendorProfileImage
 );
 
