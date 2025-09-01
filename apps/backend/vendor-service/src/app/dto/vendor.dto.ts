@@ -1,6 +1,16 @@
 import { z } from 'zod';
 import { VendorStatus as SharedVendorStatus } from '@shared/types';
 
+// ---------------- Nested Bank Detail Schema ----------------
+export const BankDetailSchema = z.object({
+  accountHolder: z.string(),
+  accountNumber: z.string(),
+  ifscCode: z.string(),
+  bankName: z.string(),
+  branchName: z.string().optional(),
+  upiId: z.string().optional(),
+});
+
 // ---------------- Zod Schemas ----------------
 export const CreateVendorSchema = z.object({
   businessName: z.string(),
@@ -10,10 +20,14 @@ export const CreateVendorSchema = z.object({
   phone: z.string().optional(),
   userId: z.string().optional(),
   status: z.nativeEnum(SharedVendorStatus).optional(),
-  documents: z.array(z.string()).optional(),
+  kycDocsUrl: z.array(z.string()).optional(),
   address: z.string().optional(),
   gstNumber: z.string().optional(),
   profileImage: z.string().url().optional(),
+  firebaseUid: z.string().optional(),
+  panNumber: z.string().optional(),
+  aadharNumber: z.string().optional(),
+  bankDetail: BankDetailSchema.optional(),
 });
 
 export const UpdateVendorSchema = CreateVendorSchema.partial();

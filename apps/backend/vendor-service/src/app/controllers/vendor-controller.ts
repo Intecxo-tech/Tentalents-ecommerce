@@ -24,8 +24,9 @@ export interface AuthenticatedRequest extends Request {
 // ---------------- AUTH MIDDLEWARE ----------------
 export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer '))
+  if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Missing or malformed Authorization header' });
+  }
 
   const token = authHeader.split(' ')[1];
   try {
@@ -70,9 +71,8 @@ export const completeVendorUserRegistration = async (req: Request, res: Response
   if (!parseResult.success) return res.status(400).json({ error: parseResult.error.format() });
 
   try {
-    const vendorDto = parseResult.data;
-    const result = await vendorService.completeVendorUserRegistration(vendorDto);
-    res.status(201).json(result);
+    const vendor = await vendorService.completeVendorUserRegistration(parseResult.data);
+    res.status(201).json({ vendor });
   } catch (err) {
     logger.error('Error completing vendor registration', err);
     res.status(500).json({ error: 'Failed to register vendor user' });
@@ -100,6 +100,7 @@ export const getVendorProfileByVendorId = async (req: Request, res: Response) =>
 
   try {
     const vendor = await vendorService.getByVendorId(vendorId);
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
     res.status(200).json({ vendor });
   } catch (err) {
     logger.error('Error fetching vendor profile', err);
@@ -115,8 +116,8 @@ export const updateVendorProfile = async (req: AuthenticatedRequest, res: Respon
   if (!parseResult.success) return res.status(400).json({ error: parseResult.error.format() });
 
   try {
-    const updatedVendor = await vendorService.updateVendorProfile(vendorId, parseResult.data);
-    res.status(200).json({ vendor: updatedVendor });
+    const vendor = await vendorService.updateVendorProfile(vendorId, parseResult.data);
+    res.status(200).json({ vendor });
   } catch (err) {
     logger.error('Error updating vendor profile', err);
     res.status(500).json({ error: 'Failed to update vendor profile' });
@@ -130,7 +131,7 @@ const handleVendorStatusUpdate = async (req: Request, res: Response, status: Ven
 
   try {
     const vendor = await vendorService.updateStatus(req.params.id, parseResult.data.status);
-    res.json({ success: true, data: vendor });
+    res.status(200).json({ success: true, vendor });
   } catch (err) {
     logger.error(`Vendor ${status} Error:`, err);
     res.status(400).json({ success: false, error: `Failed to ${status.toLowerCase()} vendor` });
@@ -151,13 +152,13 @@ export const uploadVendorProfileImage = async (req: Request, res: Response) => {
   if (!vendorId || !file) return res.status(400).json({ error: 'Vendor ID and file are required' });
 
   try {
-    const updatedVendor = await vendorService.uploadVendorProfileImage(
+    const vendor = await vendorService.uploadVendorProfileImage(
       vendorId,
       file.buffer,
       file.originalname,
       file.mimetype
     );
-    res.status(200).json({ vendor: updatedVendor });
+    res.status(200).json({ vendor });
   } catch (err) {
     logger.error('Error uploading vendor profile image', err);
     res.status(500).json({ error: 'Failed to upload vendor profile image' });

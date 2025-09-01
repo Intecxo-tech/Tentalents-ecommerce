@@ -1,11 +1,11 @@
-import { CreateVendorDto, UpdateVendorDto, UpdateVendorStatusDto } from '../dto/vendor.dto';
-import { VendorStatus } from '@shared/types';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { env } from '@shared/config';
 import { logger } from '@shared/logger';
 import { uploadToCloudinary } from '@shared/auth';
+import { CreateVendorDto, UpdateVendorDto } from '../dto/vendor.dto';
+import { VendorStatus } from '@shared/types';
 
 const prisma = new PrismaClient();
 
@@ -23,7 +23,7 @@ export const vendorService = {
   async initiateVendorRegistrationOtp(email: string) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     logger.info(`OTP for ${email}: ${otp}`);
-    // TODO: send OTP via email using your email service
+    // TODO: integrate email sending
     return { success: true, otp };
   },
 
@@ -33,7 +33,7 @@ export const vendorService = {
   },
 
   // ---------------- REGISTRATION ----------------
-  async completeVendorUserRegistration(vendorDto: CreateVendorDto & { bankDetail?: any }) {
+  async completeVendorUserRegistration(vendorDto: CreateVendorDto) {
     const hashedPassword = await bcrypt.hash(vendorDto.password, 10);
 
     const createdVendor = await prisma.vendor.create({
@@ -113,7 +113,6 @@ export const vendorService = {
     filename: string,
     mimetype: string
   ) {
-    // Upload to Cloudinary
     const uploadedUrl = await uploadToCloudinary(buffer, `vendors/${vendorId}`, filename, mimetype);
 
     return prisma.vendor.update({

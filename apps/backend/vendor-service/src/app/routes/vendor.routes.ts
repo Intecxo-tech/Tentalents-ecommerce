@@ -4,7 +4,7 @@ import {
   initiateVendorRegistrationOtp,
   verifyVendorEmailOtp,
   completeVendorUserRegistration,
-  loginVendorUser, // <-- add this import
+  loginVendorUser,
   getVendorProfileByVendorId,
   updateVendorProfile,
   approveVendor,
@@ -24,7 +24,7 @@ router.post('/otp/verify', verifyVendorEmailOtp);
 router.post('/register', completeVendorUserRegistration);
 
 // ---------------- LOGIN ----------------
-router.post('/login', loginVendorUser); // <-- added login route
+router.post('/login', loginVendorUser);
 
 // ---------------- VENDOR PROFILE ----------------
 router.get(
