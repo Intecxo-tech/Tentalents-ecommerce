@@ -4,9 +4,16 @@ import { logger } from '@shared/logger';
 import { AuthPayload } from '@shared/auth';
 import { VendorStatus } from '@shared/types';
 import { vendorService } from '../services/vendor-service';
-import { UpdateVendorStatusSchema, UpdateVendorSchema } from '../schemas/vendor.schema';
+import {
+  CreateVendorSchema,
+  UpdateVendorSchema,
+  UpdateVendorStatusSchema,
+} from '../dto/vendor.dto';
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
 
 // ---------------- AUTHENTICATED REQUEST ----------------
 export interface AuthenticatedRequest extends Request {
@@ -21,7 +28,7 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = vendorService.verifyJwtToken(token); // ✅ Use service JWT verification
+    const decoded = vendorService.verifyJwtToken(token);
     req.user = decoded;
     next();
   } catch (err) {
@@ -59,13 +66,11 @@ export const verifyVendorEmailOtp = async (req: Request, res: Response) => {
 
 // ---------------- COMPLETE REGISTRATION ----------------
 export const completeVendorUserRegistration = async (req: Request, res: Response) => {
-  const { email, password, name, businessName, phone, address } = req.body;
-  if (!email || !password || !name || !businessName) {
-    return res.status(400).json({ error: 'Email, password, name, and businessName are required' });
-  }
+  const parseResult = CreateVendorSchema.safeParse(req.body);
+  if (!parseResult.success) return res.status(400).json({ error: parseResult.error.format() });
 
   try {
-    const vendorDto = { email, password, name, businessName, phone, address };
+    const vendorDto = parseResult.data;
     const result = await vendorService.completeVendorUserRegistration(vendorDto);
     res.status(201).json(result);
   } catch (err) {
@@ -106,12 +111,11 @@ export const updateVendorProfile = async (req: AuthenticatedRequest, res: Respon
   const { vendorId } = req.params;
   if (!vendorId || !req.user?.userId) return res.status(401).json({ error: 'Unauthorized' });
 
-  const result = UpdateVendorSchema.safeParse(req.body);
-  if (!result.success) return res.status(400).json({ error: result.error.format() });
+  const parseResult = UpdateVendorSchema.safeParse(req.body);
+  if (!parseResult.success) return res.status(400).json({ error: parseResult.error.format() });
 
   try {
-    const { status, ...profileFields } = result.data;
-    const updatedVendor = await vendorService.updateVendorProfile(vendorId, profileFields);
+    const updatedVendor = await vendorService.updateVendorProfile(vendorId, parseResult.data);
     res.status(200).json({ vendor: updatedVendor });
   } catch (err) {
     logger.error('Error updating vendor profile', err);
@@ -121,10 +125,11 @@ export const updateVendorProfile = async (req: AuthenticatedRequest, res: Respon
 
 // ---------------- VENDOR STATUS ----------------
 const handleVendorStatusUpdate = async (req: Request, res: Response, status: VendorStatus) => {
-  const data = UpdateVendorStatusSchema.parse({ id: req.params.id, status });
+  const parseResult = UpdateVendorStatusSchema.safeParse({ status });
+  if (!parseResult.success) return res.status(400).json({ error: parseResult.error.format() });
 
   try {
-    const vendor = await vendorService.updateStatus(data.id, data.status);
+    const vendor = await vendorService.updateStatus(req.params.id, parseResult.data.status);
     res.json({ success: true, data: vendor });
   } catch (err) {
     logger.error(`Vendor ${status} Error:`, err);
@@ -159,4 +164,4 @@ export const uploadVendorProfileImage = async (req: Request, res: Response) => {
   }
 };
 
-export { upload }; // Export multer instance for route usage
+export { upload };

@@ -9,14 +9,15 @@ import axios from 'axios';
 
 const prisma = new PrismaClient();
 
-// Generate invoice and email automatically
+// Generate invoice and email automatically (supports regeneration)
 export async function generateInvoiceAutomatically(req: Request, res: Response) {
   const { orderId } = req.params;
+  const regenerate = req.query.regenerate === 'true'; // ?regenerate=true
 
   try {
     // Check if invoice already exists
-    const existingInvoice = await prisma.invoice.findUnique({ where: { orderId } });
-    if (existingInvoice) {
+    let existingInvoice = await prisma.invoice.findUnique({ where: { orderId } });
+    if (existingInvoice && !regenerate) {
       return res.status(200).json({
         message: 'Invoice already generated',
         cloudinaryUrl: existingInvoice.pdfUrl,
@@ -55,8 +56,8 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       paymentMethod: order.paymentMode || 'N/A',
       items: order.items.map<OrderItem>(i => ({
         productId: i.productId,
-        name: i.product?.title || 'Product',  // title field for product name
-        sku: i.product?.slug || 'SKU',       // slug field as SKU
+        name: i.product?.title || 'Product',
+        sku: i.product?.slug || 'SKU',
         quantity: i.quantity,
         price: Number(i.unitPrice),
       })),
@@ -68,32 +69,38 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
     // Generate PDF
     const pdfBuffer = await PDFGenerator.generate(pdfOrder, 'user');
 
+    // Create a unique filename using timestamp
+    const uniqueFilename = `invoice-${orderId}-${Date.now()}`;
+
     // Upload to Cloudinary
     const cloudinaryUrl = await uploadToCloudinary(
       pdfBuffer,
       'vendor_invoices',
-      `invoice-${orderId}`,
+      uniqueFilename,
       'application/pdf'
     );
 
     // Optional: Upload to MinIO
     const minioUrl = await uploadFileToMinIO({
       content: pdfBuffer,
-      objectName: `invoices/invoice-${orderId}.pdf`,
+      objectName: `invoices/${uniqueFilename}.pdf`,
       bucketName: 'invoices',
       contentType: 'application/pdf',
     });
 
-    // Save invoice record
-    const invoice = await prisma.invoice.create({
-      data: {
-        orderId,
-        vendorId: vendor.id,
-        pdfUrl: cloudinaryUrl,
-      },
-    });
+    // Save or update invoice record
+    if (existingInvoice && regenerate) {
+      existingInvoice = await prisma.invoice.update({
+        where: { id: existingInvoice.id },
+        data: { pdfUrl: cloudinaryUrl },
+      });
+    } else {
+      existingInvoice = await prisma.invoice.create({
+        data: { orderId, vendorId: vendor.id, pdfUrl: cloudinaryUrl },
+      });
+    }
 
-    // Send email with PDF attachment
+    // Send email with PDF attachment (optional)
     const transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
@@ -106,27 +113,19 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       to: user.email,
       subject: `Invoice for Order ${order.id}`,
       html: `<p>Dear ${user.name || 'Customer'},</p><p>Please find your invoice attached.</p>`,
-      attachments: [
-        {
-          filename: `invoice-${order.id}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf',
-        },
-      ],
+      attachments: [{ filename: `${uniqueFilename}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }],
     });
 
     return res.status(201).json({
       message: 'Invoice generated and emailed successfully',
       cloudinaryUrl,
       minioUrl,
-      invoice,
+      invoice: existingInvoice,
     });
+
   } catch (err: any) {
     console.error('Error generating invoice:', err);
-    return res.status(500).json({
-      error: 'Failed to generate invoice automatically',
-      details: err.message,
-    });
+    return res.status(500).json({ error: 'Failed to generate invoice', details: err.message });
   }
 }
 
@@ -147,9 +146,6 @@ export async function getInvoiceDownloadUrl(req: Request, res: Response) {
     response.data.pipe(res);
   } catch (err: any) {
     console.error('Error downloading invoice:', err);
-    return res.status(500).json({
-      error: 'Failed to download invoice',
-      details: err.message,
-    });
+    return res.status(500).json({ error: 'Failed to download invoice', details: err.message });
   }
 }

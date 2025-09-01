@@ -22,3 +22,4 @@ export { EmailPayload } from './lib/email';
 export { Invoice } from './lib/invoice';
 export { SearchQuery, SearchResult } from './lib/search';
 export { AnalyticsEvent } from './lib/analytics';
+export * from './lib/bank-detail.interface';

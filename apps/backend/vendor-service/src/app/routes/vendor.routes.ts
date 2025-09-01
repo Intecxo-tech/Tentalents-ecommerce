@@ -11,14 +11,15 @@ import {
   uploadVendorProfileImage,
   upload,
 } from '../controllers/vendor-controller';
-import { ROLES } from '@shared/auth';
-import { requireRole } from '@shared/auth';
+import { ROLES, requireRole } from '@shared/auth';
 
 const router = Router();
 
 // ---------------- OTP REGISTRATION ----------------
 router.post('/otp/initiate', initiateVendorRegistrationOtp);
 router.post('/otp/verify', verifyVendorEmailOtp);
+
+// ---------------- COMPLETE REGISTRATION ----------------
 router.post('/register', completeVendorUserRegistration);
 
 // ---------------- VENDOR PROFILE ----------------
@@ -51,12 +52,12 @@ router.post(
   rejectVendor
 );
 
-// ---------------- PROFILE IMAGE UPLOAD ----------------
+// ---------------- VENDOR PROFILE IMAGE UPLOAD ----------------
 router.post(
   '/:vendorId/profile-image',
   authenticate,
   requireRole(ROLES.VENDOR, ROLES.ADMIN, ROLES.SUPER_ADMIN),
-  upload.single('file'),
+  upload.single('file'), // multer middleware for single file
   uploadVendorProfileImage
 );
 
