@@ -1,3 +1,6 @@
+// libs/shared/config/src/index.ts
+
+// Export all shared helpers / configs
 export * from './lib/env';
 export * from './lib/postgres';
 export * from './lib/redis';
@@ -9,12 +12,18 @@ export * from './lib/imagekit';
 export * from './lib/types';
 export * from './lib/config';
 
+// Optional: centralized config object using validated env
+import { env } from './lib/env';
+
 export const config = {
-  JWT_SECRET: process.env.JWT_SECRET || 'supersecret',
-
+  JWT_SECRET: env.JWT_SECRET || 'supersecret', // comes from validated env
   service: {
-    port: Number(process.env.PORT) || 3000,
+    port: env.PORT,
   },
-
-  // other config properties here
+  SMTP: {
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS,
+  },
 };

@@ -5,8 +5,8 @@ import path from 'path';
 // PDF-friendly order item type
 export interface OrderItem {
   productId: string;
-  name: string;
-  sku: string;
+  name?: string;  // optional now
+  sku?: string;   // optional now
   quantity: number;
   price: number;
   discount?: number;
@@ -16,10 +16,10 @@ export interface OrderItem {
 export interface PdfOrder {
   id: string;
   userId: string;
-  userName: string;
-  userEmail: string;
+  userName?: string;
+  userEmail?: string;
   userAddress?: string;
-  vendorName: string;
+  vendorName?: string;
   vendorEmail?: string;
   vendorAddress?: string;
   paymentMethod?: string;
@@ -57,13 +57,13 @@ export class PDFGenerator {
         // Bill To & Vendor
         doc.fontSize(10).font('Helvetica-Bold').text('Bill To:', 50);
         doc.font('Helvetica')
-          .text(order.userName)
-          .text(order.userEmail)
+          .text(order.userName ?? 'Customer')
+          .text(order.userEmail ?? 'customer@example.com')
           .text(order.userAddress ?? '');
 
         doc.font('Helvetica-Bold').text('Vendor:', 300, 110);
         doc.font('Helvetica')
-          .text(order.vendorName, 300, 125)
+          .text(order.vendorName ?? 'Vendor', 300, 125)
           .text(order.vendorEmail ?? '')
           .text(order.vendorAddress ?? '');
 
@@ -98,8 +98,8 @@ export class PDFGenerator {
           if ((y - tableTop) % 50 === 0) doc.rect(45, y - 5, 500, 25).fill('#f9f9f9').stroke();
           doc.fillColor('#000').font('Helvetica');
 
-          doc.text(item.name, xPositions.name, y);
-          doc.text(item.sku, xPositions.sku, y);
+          doc.text(item.name ?? 'Product', xPositions.name, y);
+          doc.text(item.sku ?? 'SKU', xPositions.sku, y);
           doc.text(item.quantity.toString(), xPositions.qty, y);
           doc.text(`₹${item.price}`, xPositions.price, y);
 

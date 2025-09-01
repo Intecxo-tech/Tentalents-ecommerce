@@ -38,7 +38,7 @@ app.get('/healthz', (_req, res) => {
 // app.use(authMiddleware());
 
 // 🛣️ Service Routes
-app.use('/api/vendor', vendorRoutes);
+app.use('/api/vendors', vendorRoutes);
 
 // 🚫 404 Handler
 app.use(notFoundHandler);

@@ -1,11 +1,25 @@
+// {
+//   "extends": "./tsconfig.json",
+//   "compilerOptions": {
+//     "baseUrl": ".",
+//     "rootDir": "src/lib",
+//     "outDir": "../../../dist/out-tsc/libs/shared/email",
+//     "composite": true,
+//     "declaration": true,
+//     "declarationMap": true
+//   }
+// }
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "rootDir": "src/lib",
-    "outDir": "../../../dist/out-tsc/libs/shared/email",
+    "rootDir": "src",
+    "outDir": "../../../dist/out-tsc/libs/shared/config",
     "composite": true,
     "declaration": true,
-    "declarationMap": true
-  }
+    "declarationMap": true,
+    "strict": true,
+    "esModuleInterop": true
+  },
+  "exclude": ["node_modules", "dist", "test"]
 }
+

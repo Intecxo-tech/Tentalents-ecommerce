@@ -1,36 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-import jwt from 'jsonwebtoken';
 import { logger } from '@shared/logger';
-import { AuthPayload, UserRole } from '@shared/auth';
+import { AuthPayload } from '@shared/auth';
 import { VendorStatus } from '@shared/types';
 import { vendorService } from '../services/vendor-service';
 import { UpdateVendorStatusSchema, UpdateVendorSchema } from '../schemas/vendor.schema';
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
 
 // ---------------- AUTHENTICATED REQUEST ----------------
 export interface AuthenticatedRequest extends Request {
   user?: AuthPayload;
 }
 
-// ---------------- CONFIG ----------------
-const JWT_SECRET = process.env.JWT_SECRET || 'super_secret';
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
-
-// ---------------- AUTH ----------------
+// ---------------- AUTH MIDDLEWARE ----------------
 export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer '))
     return res.status(401).json({ error: 'Missing or malformed Authorization header' });
-  }
 
   const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
-    if (!decoded.userId || !decoded.role) {
-      return res.status(401).json({ error: 'Invalid token payload' });
-    }
+    const decoded = vendorService.verifyJwtToken(token); // ✅ Use service JWT verification
     req.user = decoded;
     next();
   } catch (err) {
@@ -66,16 +57,34 @@ export const verifyVendorEmailOtp = async (req: Request, res: Response) => {
   }
 };
 
+// ---------------- COMPLETE REGISTRATION ----------------
 export const completeVendorUserRegistration = async (req: Request, res: Response) => {
+  const { email, password, name, businessName, phone, address } = req.body;
+  if (!email || !password || !name || !businessName) {
+    return res.status(400).json({ error: 'Email, password, name, and businessName are required' });
+  }
+
+  try {
+    const vendorDto = { email, password, name, businessName, phone, address };
+    const result = await vendorService.completeVendorUserRegistration(vendorDto);
+    res.status(201).json(result);
+  } catch (err) {
+    logger.error('Error completing vendor registration', err);
+    res.status(500).json({ error: 'Failed to register vendor user' });
+  }
+};
+
+// ---------------- LOGIN ----------------
+export const loginVendorUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
   try {
-    const result = await vendorService.completeVendorUserRegistration(email, password);
-    res.status(201).json(result);
+    const result = await vendorService.loginVendorUser(email, password);
+    res.status(200).json(result);
   } catch (err) {
-    logger.error('Error completing vendor user registration', err);
-    res.status(500).json({ error: 'Failed to register vendor user' });
+    logger.error('Vendor login failed', err);
+    res.status(401).json({ error: 'Invalid credentials' });
   }
 };
 
@@ -95,8 +104,7 @@ export const getVendorProfileByVendorId = async (req: Request, res: Response) =>
 
 export const updateVendorProfile = async (req: AuthenticatedRequest, res: Response) => {
   const { vendorId } = req.params;
-  if (!vendorId) return res.status(400).json({ error: 'Vendor ID is required' });
-  if (!req.user?.userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!vendorId || !req.user?.userId) return res.status(401).json({ error: 'Unauthorized' });
 
   const result = UpdateVendorSchema.safeParse(req.body);
   if (!result.success) return res.status(400).json({ error: result.error.format() });
@@ -135,8 +143,7 @@ export const uploadVendorProfileImage = async (req: Request, res: Response) => {
   const { vendorId } = req.params;
   const file = req.file;
 
-  if (!vendorId) return res.status(400).json({ error: 'Vendor ID is required' });
-  if (!file) return res.status(400).json({ error: 'Profile image is required' });
+  if (!vendorId || !file) return res.status(400).json({ error: 'Vendor ID and file are required' });
 
   try {
     const updatedVendor = await vendorService.uploadVendorProfileImage(
@@ -145,7 +152,6 @@ export const uploadVendorProfileImage = async (req: Request, res: Response) => {
       file.originalname,
       file.mimetype
     );
-
     res.status(200).json({ vendor: updatedVendor });
   } catch (err) {
     logger.error('Error uploading vendor profile image', err);

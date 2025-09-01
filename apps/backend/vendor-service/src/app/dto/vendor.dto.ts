@@ -2,14 +2,15 @@ import { VendorStatus as SharedVendorStatus } from '@shared/types';
 import { Prisma, VendorStatus as PrismaVendorStatus } from '@prisma/client';
 
 export interface CreateVendorDto {
-  businessName: string;  // rename from storeName
+  businessName: string;    // vendor/store name
   name: string;
   email: string;
+  password: string;        // ✅ required for registration
   phone?: string;
   userId?: string;
   status?: SharedVendorStatus;
   documents?: string[];
-   address?: string;
+  address?: string;
   gstNumber?: string;
   profileImage?: string;
 }
@@ -20,6 +21,9 @@ export interface UpdateVendorStatusDto {
   status: SharedVendorStatus;
 }
 
+/**
+ * Convert CreateVendorDto to Prisma.VendorCreateInput
+ */
 export const createVendorDtoToPrisma = (
   dto: CreateVendorDto
 ): Prisma.VendorCreateInput => {
@@ -27,6 +31,7 @@ export const createVendorDtoToPrisma = (
     businessName: dto.businessName,
     name: dto.name,
     email: dto.email,
+    password: dto.password, // ✅ hashed in service before saving
     phone: dto.phone ?? null,
     kycDocsUrl: dto.documents ?? [],
     status: (dto.status ?? SharedVendorStatus.PENDING) as unknown as PrismaVendorStatus,
@@ -45,5 +50,3 @@ export const createVendorDtoToPrisma = (
 
   return data;
 };
-
-

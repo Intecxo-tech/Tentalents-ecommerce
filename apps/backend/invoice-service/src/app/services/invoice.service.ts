@@ -3,7 +3,7 @@ import { env } from '@shared/config';
 import { PDFGenerator, PdfOrder } from '@shared/utils';
 import { PrismaClient } from '../../../generated/invoice-service';
 import { uploadToCloudinary } from '@shared/auth';
-import { produceKafkaEvent } from '@shared/kafka';
+import { produceKafkaEvent } from '@shared/kafka'; 
 import { KAFKA_TOPICS } from '@shared/constants';
 
 const prisma = new PrismaClient();
@@ -13,7 +13,7 @@ export const invoiceService = {
     // Fetch order including items and vendor info
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: { include: { vendor: true } } },
+      include: { items: { include: { vendor: true } } }, 
     });
 
     if (!order) throw new Error('Order not found');
@@ -24,11 +24,11 @@ export const invoiceService = {
     const pdfOrder: PdfOrder = {
       id: order.id,
       userId: order.buyerId,
-      userName: 'Customer', // placeholder
-      userEmail: 'customer@example.com', // placeholder
+      userName: 'Swapna A', // placeholder
+      userEmail: 'swapnaadhav123@gmail.com', // placeholder
       vendorName: vendor.name,
       vendorEmail: vendor.email ?? '',
-      items: order.items.map(i => ({
+      items: order.items.map((i: any) => ({ // added 'any' to fix implicit type
         productId: i.productId,
         name: 'Product', // placeholder
         sku: 'SKU',      // placeholder
@@ -40,29 +40,18 @@ export const invoiceService = {
       createdAt: order.placedAt,
     };
 
-    // Generate PDFs
+    // Generate PDF
     const customerPdf = await PDFGenerator.generate(pdfOrder, 'user');
-    const vendorPdf = await PDFGenerator.generate(pdfOrder, 'vendor');
 
-    // Upload vendor PDF to Cloudinary
+    // Upload PDF
     const cloudinaryUrl = await uploadToCloudinary(
-      vendorPdf,
-      'vendor_invoices',
+      customerPdf,
+      'customer_invoices',
       `invoice-${order.id}`,
       'application/pdf'
     );
 
-    // Save invoice record in DB
-    await prisma.invoice.create({
-      data: {
-        orderId: order.id,
-        vendorId: vendor.id,
-        pdfUrl: cloudinaryUrl,
-        bucket: 'cloudinary',
-      },
-    });
-
-    // Send email to customer
+    // Send email
     const transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
@@ -80,7 +69,7 @@ export const invoiceService = {
       ],
     });
 
-    // Emit Kafka event
+    // Emit Kafka event (use existing INVOICE_GENERATE topic)
     await produceKafkaEvent({
       topic: KAFKA_TOPICS.INVOICE_GENERATE,
       messages: [
