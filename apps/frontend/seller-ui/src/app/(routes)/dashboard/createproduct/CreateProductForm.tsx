@@ -11,6 +11,9 @@ type Variant = {
   name: string;
   value: string;
 };
+type CreateProductProps = {
+  productId?: string;
+};
 
 type FormData = {
   title: string;
@@ -59,7 +62,7 @@ productFeatures?: string[];
 };
 
 
-const CreateProduct: React.FC<{ productId?: string }> = ({ productId }) => {
+const CreateProduct: React.FC<CreateProductProps> = ({ productId }) => {
    const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const router = useRouter();
   const {
@@ -199,7 +202,7 @@ const onSubmit = async (data: FormData) => {
         includedComponents: toArray(data.includedComponents),
         productFeatures: toArray(data.productFeatures),
         variants: data.variants?.filter(v => v.name && v.value) || [],
-        images: base64Images, // <-- include base64 images in PUT
+       images: base64Images.length > 0 ? base64Images : undefined, // <-- include base64 images in PUT
         listings: [{
           id: data.listings?.[0]?.id,
           price: data.price,
@@ -365,7 +368,7 @@ const onSubmit = async (data: FormData) => {
   onClick={() => {
     reset(); // reset form fields
     setSelectedFiles([]);
-    handleDiscard; // reset selected images
+    handleDiscard(); // reset selected images
     // or '/dashboard'
   }}
 >

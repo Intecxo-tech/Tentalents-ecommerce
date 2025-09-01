@@ -153,8 +153,12 @@
 
  font-weight: 400;
  }
- .first-column{
+ .login-page .first-column{
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap:5px;
+ }
+ .login-page .form-group input{
+  width: 100%;
  }

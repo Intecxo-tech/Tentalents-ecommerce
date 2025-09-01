@@ -768,6 +768,7 @@ const handleProfileSubmit = async (data: FormData) => {
     </div>
 </div>
     {/* Bank Name */}
+     <div className="first-column">
     <div className="form-group">
       <input
         type="text"
@@ -785,8 +786,10 @@ const handleProfileSubmit = async (data: FormData) => {
         {...register('branchName')}
       />
     </div>
+    </div>
 
     {/* UPI ID (Optional) */}
+     <div className="first-column">
     <div className="form-group">
       <input
         type="text"
@@ -798,16 +801,8 @@ const handleProfileSubmit = async (data: FormData) => {
     {/* Password (Optional) */}
  
 
-    {/* Profile Image (Optional) */}
-    <div className="form-group">
-      <label>Profile Image</label>
-      <input
-        type="file"
-        accept="image/*"
-        {...register('profileImage')}
-      />
-    </div>
-
+   
+</div>
     {/* KYC Document */}
     <div className="form-group">
       <label>KYC Document</label>
