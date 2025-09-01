@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { PDFGenerator, PdfOrder, OrderItem } from '@shared/utils';
 import { uploadFileToMinIO } from '@shared/minio';
 import { uploadToCloudinary } from '@shared/auth';
+import nodemailer from 'nodemailer';
+import { env } from '@shared/config';
 
 const prisma = new PrismaClient();
 
@@ -12,27 +14,29 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
   try {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: { include: { vendor: true } } },
+      include: { items: { include: { vendor: true } }, buyer: true },
     });
 
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (order.items.length === 0) return res.status(400).json({ error: 'Order has no items' });
 
-    const vendorId = order.items[0].vendor?.id;
-    if (!vendorId) return res.status(400).json({ error: 'No vendor associated with order items' });
+    const vendor = order.items[0].vendor;
+    if (!vendor) return res.status(400).json({ error: 'No vendor associated with order items' });
 
-    // Map Prisma order to PdfOrder (use only existing fields)
+    const user = order.buyer;
+    if (!user || !user.email) return res.status(400).json({ error: 'Buyer email not found' });
+
     const pdfOrder: PdfOrder = {
       id: order.id,
-      userId: order.buyerId,
-      userName: 'Customer',           // placeholder
-      userEmail: 'customer@example.com', // placeholder
-      vendorName: order.items[0].vendor?.name || 'Vendor',
-      vendorEmail: order.items[0].vendor?.email,
+      userId: user.id,
+      userName: user.name || 'Customer',
+      userEmail: user.email,
+      vendorName: vendor.name,
+      vendorEmail: vendor.email,
       items: order.items.map<OrderItem>(i => ({
         productId: i.productId,
-        name: 'Product',  // placeholder
-        sku: 'SKU',       // placeholder
+        name: 'Product',
+        sku: 'SKU',
         quantity: i.quantity,
         price: Number(i.unitPrice),
       })),
@@ -52,19 +56,33 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       contentType: 'application/pdf',
     });
 
-    const invoice = await prisma.invoice.create({
+    await prisma.invoice.create({
       data: {
         orderId,
-        vendorId,
+        vendorId: vendor.id,
         pdfUrl: cloudinaryUrl,
       },
     });
 
+    const transporter = nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_PORT === 465,
+      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    });
+
+    await transporter.sendMail({
+      from: env.EMAIL_FROM,
+      to: user.email,
+      subject: `Invoice for Order ${order.id}`,
+      html: `<p>Dear ${user.name || 'Customer'},</p><p>Please find your invoice attached.</p>`,
+      attachments: [{ filename: `invoice-${order.id}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }],
+    });
+
     return res.status(201).json({
-      message: 'Invoice generated successfully',
+      message: 'Invoice generated and emailed successfully',
       cloudinaryUrl,
       minioUrl,
-      invoice,
     });
   } catch (err: any) {
     console.error('Error generating invoice:', err);
