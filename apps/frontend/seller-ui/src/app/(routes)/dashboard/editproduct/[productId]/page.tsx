@@ -1,12 +1,6 @@
-'use client';
-import CreateProduct from '../../createproduct/page';
-import { useParams } from 'next/navigation';
+import CreateProductForm from "../../createproduct/CreateProductForm"; // Adjust path to your component
 
-const Page = () => {
-  const params = useParams();
-  const productId = Array.isArray(params?.productId) ? params.productId[0] : params?.productId;
-
-  return <CreateProduct productId={productId} />;
-};
-
-export default Page;
+export default function EditProductPage({ params }: { params: { productId: string } }) {
+  const { productId } = params;
+  return <CreateProductForm productId={productId} />;
+}

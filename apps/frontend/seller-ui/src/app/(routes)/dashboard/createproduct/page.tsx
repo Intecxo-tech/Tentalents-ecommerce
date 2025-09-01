@@ -1,18 +1,12 @@
-// ./src/app/(routes)/dashboard/editproduct/[productId]/page.tsx
+// page.tsx
+'use client';
 
-import CreateProduct from './CreateProductForm'; // Your form component
+import { useSearchParams } from 'next/navigation';
+import CreateProduct from './CreateProductForm'; // importing your form
 
-// This is a Server Component, which is simpler and more efficient here.
-// It receives `params` as a prop directly from Next.js.
-type PageProps = {
-   params: Promise<{ productId: string }>;
-  // params: { slug: string }; 
-};
-export default function EditProductPage({ params }: { params: { productId: string } }) {
-  
-  // Destructure productId directly from the params object
-  const { productId } = params;
+export default function Page() {
+  const searchParams = useSearchParams();
+  const productId = searchParams.get('productId') ?? undefined;
 
-  // Pass the productId to your client component
   return <CreateProduct productId={productId} />;
 }
