@@ -11,7 +11,6 @@ import {
   KafkaConsumerConfig,
 } from '@shared/kafka';
 import { minioClient, MinioBuckets } from '@shared/minio';
-import { invoiceService } from './app/services/invoice.service'; // <-- Import invoice service
 
 // 🛠️ Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -23,21 +22,18 @@ const prisma = new PrismaClient();
 // 📨 Kafka Config
 const kafkaConfig: KafkaConsumerConfig = {
   groupId: 'invoice-service',
-  topics: ['order.created'], // listen to order creation
+  topics: ['order.created'],
 };
 
 // 💼 Kafka Message Handler
 async function kafkaMessageHandler(message: string): Promise<void> {
   try {
-    const orderEvent = JSON.parse(message);
+    const order = JSON.parse(message);
 
-    logger.info(`🧾 Received order.created event for orderId: ${orderEvent.id}`);
+    // TODO: Replace this with real invoice logic
+    // await generateInvoiceFromOrder(order);
 
-    // Automatically generate invoice for the order
-    const result = await invoiceService.generateInvoice(orderEvent.id);
-
-    logger.info(`✅ Invoice generated for orderId: ${orderEvent.id}`);
-    logger.info(`📄 PDF URL: ${result.cloudinaryUrl}`);
+    logger.info(`🧾 Processed order.created event for orderId: ${order.id}`);
   } catch (err) {
     logger.error('❌ Failed to process Kafka message:', err);
   }
@@ -84,13 +80,16 @@ async function start() {
 // 🧼 Graceful Shutdown
 async function shutdown(exitCode = 0) {
   logger.info('🛑 Shutting down Invoice Service...');
+
   try {
     await prisma.$disconnect();
-    if (redisClient.isReady) {
-      await redisClient.quit();
-      logger.info('✅ Redis disconnected');
-    }
+  if (redisClient.isReady) {
+  await redisClient.quit();
+  logger.info('✅ Redis disconnected');
+}
+
     await disconnectKafkaConsumer();
+
     if (server) {
       server.close(() => {
         logger.info('✅ HTTP server closed');

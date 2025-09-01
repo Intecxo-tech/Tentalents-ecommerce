@@ -12,6 +12,16 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
   const { orderId } = req.params;
 
   try {
+    // Check if invoice already exists
+    const existingInvoice = await prisma.invoice.findUnique({ where: { orderId } });
+    if (existingInvoice) {
+      return res.status(200).json({
+        message: 'Invoice already generated',
+        cloudinaryUrl: existingInvoice.pdfUrl,
+        invoice: existingInvoice,
+      });
+    }
+
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { items: { include: { vendor: true } }, buyer: true },
@@ -56,7 +66,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       contentType: 'application/pdf',
     });
 
-    await prisma.invoice.create({
+    const invoice = await prisma.invoice.create({
       data: {
         orderId,
         vendorId: vendor.id,
@@ -83,6 +93,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       message: 'Invoice generated and emailed successfully',
       cloudinaryUrl,
       minioUrl,
+      invoice,
     });
   } catch (err: any) {
     console.error('Error generating invoice:', err);
