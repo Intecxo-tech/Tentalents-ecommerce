@@ -3,7 +3,10 @@ import { generateInvoiceAutomatically, getInvoiceDownloadUrl } from '../controll
 
 const router = Router();
 
+// Route to manually generate an invoice (can also be triggered programmatically)
 router.post('/generate/:orderId', generateInvoiceAutomatically);
+
+// Route to download an invoice PDF
 router.get('/download/:invoiceId', getInvoiceDownloadUrl);
 
 export default router;

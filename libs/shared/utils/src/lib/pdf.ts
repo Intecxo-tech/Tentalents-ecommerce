@@ -5,8 +5,8 @@ import path from 'path';
 // PDF-friendly order item type
 export interface OrderItem {
   productId: string;
-  name?: string;  // optional now
-  sku?: string;   // optional now
+  name?: string;
+  sku?: string;
   quantity: number;
   price: number;
   discount?: number;
@@ -45,7 +45,7 @@ export class PDFGenerator {
         if (fs.existsSync(logoPath)) doc.image(logoPath, 50, 15, { width: 50 });
 
         // Header
-        doc.fillColor('#1a73e8')
+        doc.fillColor('#000000') // black text
           .fontSize(22)
           .font('Helvetica-Bold')
           .text('Tentalents', 110, 25)
@@ -59,13 +59,13 @@ export class PDFGenerator {
         doc.font('Helvetica')
           .text(order.userName ?? 'Customer')
           .text(order.userEmail ?? 'customer@example.com')
-          .text(order.userAddress ?? '');
+          .text(order.userAddress ?? 'Address not provided');
 
         doc.font('Helvetica-Bold').text('Vendor:', 300, 110);
         doc.font('Helvetica')
           .text(order.vendorName ?? 'Vendor', 300, 125)
-          .text(order.vendorEmail ?? '')
-          .text(order.vendorAddress ?? '');
+          .text(order.vendorEmail ?? 'vendor@example.com')
+          .text(order.vendorAddress ?? 'Address not provided');
 
         doc.moveDown(2);
 
@@ -83,9 +83,9 @@ export class PDFGenerator {
         const tableTop = doc.y + 20;
         const xPositions = { name: 100, sku: 250, qty: 320, price: 370, total: 450 };
 
-        // Table Header
-        doc.rect(45, tableTop - 5, 500, 20).fill('#f2f2f2').stroke();
-        doc.fillColor('#000').font('Helvetica-Bold')
+        // Table Header (all black text)
+        doc.rect(45, tableTop - 5, 500, 20).fill('#FFFFFF').stroke(); // white background
+        doc.fillColor('#000000').font('Helvetica-Bold')
           .text('Product', xPositions.name, tableTop)
           .text('SKU', xPositions.sku, tableTop)
           .text('Qty', xPositions.qty, tableTop)
@@ -95,9 +95,7 @@ export class PDFGenerator {
         // Table Rows
         let y = tableTop + 25;
         for (const item of order.items) {
-          if ((y - tableTop) % 50 === 0) doc.rect(45, y - 5, 500, 25).fill('#f9f9f9').stroke();
-          doc.fillColor('#000').font('Helvetica');
-
+          doc.fillColor('#000000').font('Helvetica');
           doc.text(item.name ?? 'Product', xPositions.name, y);
           doc.text(item.sku ?? 'SKU', xPositions.sku, y);
           doc.text(item.quantity.toString(), xPositions.qty, y);
@@ -123,8 +121,8 @@ export class PDFGenerator {
         doc.text(`Grand Total: ₹${grandTotal}`, { align: 'right' });
 
         // Footer
-        doc.rect(0, 750, 595, 50).fill('#1a73e8');
-        doc.fillColor('#fff').fontSize(10)
+        doc.rect(0, 750, 595, 50).fill('#FFFFFF').stroke(); // white background
+        doc.fillColor('#000000').fontSize(10)
           .text('Thank you for shopping with Tentalents!', 50, 765, { align: 'center' })
           .text('www.tentalents.com | Invoice is system-generated', { align: 'center' });
 

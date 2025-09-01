@@ -9,7 +9,7 @@ import axios from 'axios';
 
 const prisma = new PrismaClient();
 
-// Generate invoice and email
+// Generate invoice and email automatically
 export async function generateInvoiceAutomatically(req: Request, res: Response) {
   const { orderId } = req.params;
 
@@ -24,10 +24,13 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       });
     }
 
-    // Fetch order details
+    // Fetch order details with product info
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: { include: { vendor: true } }, buyer: true },
+      include: { 
+        items: { include: { vendor: true, product: true } }, 
+        buyer: true 
+      },
     });
 
     if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -39,18 +42,21 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
     const user = order.buyer;
     if (!user || !user.email) return res.status(400).json({ error: 'Buyer email not found' });
 
-    // Prepare PDF data
+    // Prepare PDF data dynamically
     const pdfOrder: PdfOrder = {
       id: order.id,
       userId: user.id,
       userName: user.name || 'Customer',
       userEmail: user.email,
+      userAddress: user.address || 'Address not provided',
       vendorName: vendor.name,
       vendorEmail: vendor.email,
+      vendorAddress: vendor.address || 'Address not provided',
+      paymentMethod: order.paymentMode || 'N/A',
       items: order.items.map<OrderItem>(i => ({
         productId: i.productId,
-        name: 'Product',
-        sku: 'SKU',
+        name: i.product?.title || 'Product',  // title field for product name
+        sku: i.product?.slug || 'SKU',       // slug field as SKU
         quantity: i.quantity,
         price: Number(i.unitPrice),
       })),
@@ -70,7 +76,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       'application/pdf'
     );
 
-    // Upload to MinIO (optional)
+    // Optional: Upload to MinIO
     const minioUrl = await uploadFileToMinIO({
       content: pdfBuffer,
       objectName: `invoices/invoice-${orderId}.pdf`,
@@ -87,7 +93,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       },
     });
 
-    // Send email with attachment
+    // Send email with PDF attachment
     const transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
