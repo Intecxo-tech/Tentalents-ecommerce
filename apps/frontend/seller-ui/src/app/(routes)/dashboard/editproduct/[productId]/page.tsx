@@ -1,11 +1,9 @@
-import CreateProductForm from "../../createproduct/CreateProductForm";
+import CreateProductForm from "../../createproduct/[productId]/CreateProductForm";
 
 type PageProps = {
-  params: {
-    productId: string;
-  };
+  params: Promise<{ productId: string }>;
 };
-
-export default function EditProductPage({ params }: PageProps) {
-  return <CreateProductForm productId={params.productId} />;
+export default async function EditProductPage({ params }: PageProps) {
+  const { productId } = await params;
+  return <CreateProductForm productId={productId} />;
 }

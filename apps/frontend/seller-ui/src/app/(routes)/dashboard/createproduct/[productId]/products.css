@@ -1,0 +1,356 @@
+.producst-main{
+    display: flex;
+    align-items:center;
+    justify-content: space-between;
+    padding:5px 0px;
+}
+.mainproductpage{
+      padding:10px 15px;
+}
+.product-headerright{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:20px;
+}
+.discard-b{
+     font-family: 'Radhika Trial', sans-serif;
+    font-weight: 400;
+    background-color: #EBEBEB;
+    padding:10px 10px;
+    border-radius: 10px;
+    font-size: 15px;
+
+    ;
+}
+.image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* or use object-fit: cover; depending on fit you want */
+  display: block;
+}
+.product-headerleft{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:20px;
+}
+.title-sect{
+    display: flex;
+    flex-direction: column;
+
+}
+.title-sect p{
+    font-size: 15px;
+    color:#CCCCCC;
+      padding:5px 5px;
+
+}
+.title-sect .product-input {
+    font-size: 20px;
+    color: black;
+    font-family: 'Radhika Trial', sans-serif;
+    font-weight: 400;
+    padding:5px 5px;
+}
+
+.desc-container, .image-conatainers{
+    background-color: white;
+    padding:15px ;
+    border-radius: 10px;
+}
+.desc-heading{
+    font-size: 18px;
+    color: black;
+    font-family: 'Radhika Trial', sans-serif;
+    font-weight: 400;
+    padding:5px 5px;
+}
+.main-coteinr{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    gap:20px;
+}
+.left-side,.right-side{
+  
+    width: 100%;
+}
+.desc-container{
+     margin-bottom: 20px;
+}
+.desc-container input, .desc-container textarea, .section-desc input{
+    border: 1px solid #EBEBEB;
+    border-radius: 10px;
+    margin:8px 0px;
+    padding:15px 10px;
+
+    
+}
+.desc-container input[type="text"]::placeholder 
+.input-with-unit input::placeholder,.section-desc input::placeholder, .price-con input::placeholder{
+    color: #CCCCCC;/* Light gray placeholder */
+
+        font-family: 'Radhika Trial', sans-serif;
+    font-weight: 400;
+     font-size: 16px;
+}
+.desc-container textarea::placeholder{
+    color: #CCCCCC; /* Light gray placeholder */
+    font-size: 16px;;
+        font-family: 'Radhika Trial', sans-serif;
+    font-weight: 400;
+
+    
+}
+.desc-container textarea{
+    height: 150px;
+}
+.container1 {
+  border: 1px solid #EBEBEB;
+  border-radius: 10px;
+  /* padding: 20px 10px; */
+  width: 100%;
+  height: 240px;
+  max-width: 220px;
+  margin: auto;
+  text-align: center;
+
+  /* Flexbox centering */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.image-preview{
+      width: 100%;
+      border-radius: 10px;
+  height: 240px;
+  max-width: 220px;
+    object-fit: cover;
+}
+.container2{
+     border:1px solid #EBEBEB;
+    border-radius: 10px;
+    /* padding:20px 10px; */
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    width: 180px;
+    justify-content: center;
+    height:113px;
+    text-align: center;
+}
+.container1 p, .container2 p{
+    
+    color:var(--primary);
+    text-decoration: underline;
+     font-size: 16px;;
+}
+.container1 span,.container2 span{
+    color: #CCCCCC;
+    font-size: 16px;;
+}
+.container-space{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap:15px;
+}
+.image-conatainers{
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap:10px;
+}
+.select-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.select-options {
+  padding: 15px 40px 15px 10px; /* leave space for custom arrow */
+  font-size: 16px;
+  border: 1px solid #EBEBEB;
+  border-radius: 10px;
+  background-color: white;
+  color: #CCCCCC;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  outline: none;
+  transition: border-color 0.3s;
+
+  /* Custom SVG arrow with orange color */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'><path fill='%23FF5722' d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 24px;
+}
+
+.select-options:focus {
+  border: 1px solid var(--primary);
+  color: black;
+}
+
+.select-options option {
+  padding: 10px;
+  color: black;
+}
+.packaging{
+    display: flex;;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.input-with-unit{
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+  border: 1px solid #EBEBEB;
+    border-radius: 10px;
+    padding: 10px 10px;
+    /* margin:8px 0px; */
+    /* padding:15px 10px; */
+}
+.input-with-unit span{
+    color:var(--primary);
+}
+.input-with-unit input, .price-con input{
+      border:none;
+    /* border-radius: 10px; */
+    margin:8px 0px;
+    padding: 0px;
+    /* padding:15px 10px; */
+}
+
+.price-container{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:10px;
+}
+.price-container div{
+    width: 100%;
+}
+.price-container p{
+    padding:13px 20px;
+    background-color: #EBEBEB;
+    color: var(--primary);
+    text-align: center;
+    border-radius: 10px;
+}
+.price-con{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  border: 1px solid #EBEBEB;
+    border-radius: 10px;
+    padding: 0px;
+
+}
+.price-con input{
+    padding-left:10px;
+}
+
+.paer1{
+    display: flex;
+    align-items:center;
+    justify-content: space-between;
+    width: 100%;
+    gap:10px;
+}
+.paer1 div{
+    width: 100%;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+  margin-left: 10px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 5px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #f26522;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+.variant-row {
+  /* display: flex; */
+  gap: 10px;
+  margin: 10px 0;
+}
+.varinat-input{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap:10px;
+}
+.variant-section {
+  /* border: 1px solid #ddd; */
+  padding: 15px;
+  border-radius: 10px;
+  background: white;
+  /* margin-top: 10px; */
+}
+.variant-toggle-label{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.varinatbuttons{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap:10px
+}
+.varinatbuttons button{
+    text-align: center  !important;
+    justify-content: center !important;
+    padding:15px 10px;
+    width: 100%;
+}
+.varinat .desc-container{
+    margin-bottom: 10px;
+}
