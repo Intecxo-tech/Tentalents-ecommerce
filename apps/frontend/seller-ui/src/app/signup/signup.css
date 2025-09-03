@@ -143,7 +143,25 @@
   /* Used to balance layout if needed */
   visibility: hidden;
 }
-
+.kyc-upload-input{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #EBEBEB;
+  border-radius: 10px;
+  
+}
+.upload-field h2{
+  color:#919191;
+  padding:10px 10px;
+  font-size: 15px;;
+}
+.signup-cion{
+  border:1px solid var(--primary);
+  border-radius: 10px;
+  padding: 5px;
+  color:black;
+}
 /* .options{
     display: flex;
     align-items: center;
@@ -154,7 +172,7 @@
 
  font-weight: 400;
  }
- .login-page .first-column{
+ /* .login-page .first-column{
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -162,4 +180,4 @@
  }
  .login-page .form-group input{
   width: 100%;
- }
+ } */
