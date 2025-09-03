@@ -185,24 +185,21 @@ const onSubmit = async (data: FormData) => {
         ? value.map(s => s.trim()).filter(Boolean)
         : (value ?? '').split(',').map(s => s.trim()).filter(Boolean);
 
-    // Prepare image base64 uploads FIRST
-    const base64Images: string[] = [];
+    // ✅ Step 1: Prepare ALL image Base64 uploads BEFORE the API call
+    const base64Images: string[] = await Promise.all(
+      selectedFiles.map(file => fileToBase64(file))
+    );
 
-    for (const file of selectedFiles) {
-      if (file) {
-        const base64 = await fileToBase64(file);
-        base64Images.push(base64);
-      }
-    }
-
-    // ✅ If product exists, update (images are sent inline)
+    // ✅ Step 2: Create or Update based on productId
     if (productId) {
+      // Update existing product
       const payload = {
         ...data,
         includedComponents: toArray(data.includedComponents),
         productFeatures: toArray(data.productFeatures),
         variants: data.variants?.filter(v => v.name && v.value) || [],
-       images: base64Images.length > 0 ? base64Images : undefined, // <-- include base64 images in PUT
+        // ✅ Include the base64Images in the update payload
+        images: base64Images.length > 0 ? base64Images : undefined,
         listings: [{
           id: data.listings?.[0]?.id,
           price: data.price,
@@ -228,58 +225,42 @@ const onSubmit = async (data: FormData) => {
 
       toast.success('Product updated successfully!');
       router.push(`/dashboard/store/${productId}`);
-      return;
-    }
+    } else {
+      // Create new product
+      const createPayload = {
+        ...data,
+        includedComponents: toArray(data.includedComponents),
+        productFeatures: toArray(data.productFeatures),
+        variants: data.variants?.filter(v => v.name && v.value) || [],
+        // ✅ The crucial change: send all images in the initial create payload
+        images: base64Images,
+        listings: [{
+          price: data.price,
+          originalPrice: data.originalPrice,
+          stock: data.stock,
+          unit: data.unit,
+          itemWeight: data.itemWeight,
+          packageLength: data.packageLength,
+          packageWidth: data.packageWidth,
+          packageHeight: data.packageHeight,
+          deliveryEta: data.deliveryEta,
+          dispatchTimeInDays: data.dispatchTimeInDays,
+          shippingCost: data.shippingCost,
+          sku: data.sku,
+        }],
+      };
 
-    // ✅ Otherwise, create the product first (without images)
-    const createPayload = {
-      ...data,
-      includedComponents: toArray(data.includedComponents),
-      productFeatures: toArray(data.productFeatures),
-      variants: data.variants?.filter(v => v.name && v.value) || [],
-      images: [], // placeholder
-      listings: [{
-        price: data.price,
-        originalPrice: data.originalPrice,
-        stock: data.stock,
-        unit: data.unit,
-        itemWeight: data.itemWeight,
-        packageLength: data.packageLength,
-        packageWidth: data.packageWidth,
-        packageHeight: data.packageHeight,
-        deliveryEta: data.deliveryEta,
-        dispatchTimeInDays: data.dispatchTimeInDays,
-        shippingCost: data.shippingCost,
-        sku: data.sku,
-      }],
-    };
-
-    const res = await axios.post(
-      `https://product-service-23pc.onrender.com/api/products`,
-      createPayload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    const createdProductId = res.data?.data?.product?.id;
-
-    if (!createdProductId) {
-      throw new Error('Product creation failed: No product ID returned');
-    }
-
-    // ✅ Upload images after product creation
-    for (let index = 0; index < base64Images.length; index++) {
-      const imageBase64 = base64Images[index];
       await axios.post(
-        `https://product-service-23pc.onrender.com/api/products/${createdProductId}/image`,
-        { imageBase64, index },
+        `https://product-service-23pc.onrender.com/api/products`,
+        createPayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-    }
 
-    toast.success('Product created with images!');
-    reset();
-    setSelectedFiles([]);
-    router.push('/dashboard/store');
+      toast.success('Product created with images!');
+      reset();
+      setSelectedFiles([]);
+      router.push('/dashboard/store');
+    }
 
   } catch (err: any) {
     console.error(err);
@@ -376,7 +357,7 @@ const onSubmit = async (data: FormData) => {
 </button>
 
       <button
-  type="button"
+  type="submit"
   className='background-button'
   disabled={isSubmitting}
   onClick={handleSubmit(onSubmit)}

@@ -1,4 +1,6 @@
 {
-  "/page": "app/page.js",
-  "/login/page": "app/login/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(routes)/dashboard/createproduct/page": "app/(routes)/dashboard/createproduct/page.js",
+  "/(routes)/dashboard/store/page": "app/(routes)/dashboard/store/page.js",
+  "/(routes)/dashboard/store/[slug]/page": "app/(routes)/dashboard/store/[slug]/page.js"
 }
