@@ -1,4 +1,4 @@
-import CreateProductForm from "../../[productId]/CreateProductForm";
+import CreateProductForm from "../../createproduct/CreateProductForm";
 
 type PageProps = {
   params: Promise<{ productId: string }>;
