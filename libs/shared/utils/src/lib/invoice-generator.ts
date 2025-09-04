@@ -6,11 +6,10 @@ import {
   MinioFolderPaths,
   MinioBuckets,
   generateFilename,
+  getPresignedUrl
 } from '@shared/minio';
 
-export async function generateInvoiceAndUpload(
-  orderId: string
-): Promise<string> {
+export async function generateInvoiceAndUpload(orderId: string): Promise<string> {
   const fileName = generateFilename(`invoice-${orderId}`, '.pdf');
   const objectName = `${MinioFolderPaths.INVOICE_PDFS}${fileName}`;
   const bucket = MinioBuckets.INVOICE;
@@ -31,6 +30,7 @@ export async function generateInvoiceAndUpload(
       try {
         const finalBuffer = Buffer.concat(chunks);
 
+        // Upload the file to MinIO
         await uploadFileToMinIO({
           bucketName: bucket,
           objectName,
@@ -38,7 +38,15 @@ export async function generateInvoiceAndUpload(
           contentType: 'application/pdf',
         });
 
-        resolve(objectName);
+        // Assuming you have a function that generates a full URL for the uploaded file
+        const fullUrl = await getPresignedUrl({
+          bucketName: bucket,
+          objectName,
+          expirySeconds: 60 * 60, // Expiry time for 1 hour
+        });
+
+        // Return the full URL
+        resolve(fullUrl); // Instead of objectName, return the full URL here
       } catch (err) {
         logger.error(`[invoice-generator] ❌ Failed to upload invoice:`, err);
         reject(err);
