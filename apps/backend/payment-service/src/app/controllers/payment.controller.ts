@@ -26,7 +26,6 @@ export const initiatePayment = async (
       `[paymentController] Payment initiated successfully: paymentId=${payment.paymentId}, status=${payment.status}`
     );
 
-    // Optional: Add extra debug log for the checkout URL
     if (payment.checkoutUrl) {
       logger.info(`[paymentController] Checkout URL: ${payment.checkoutUrl}`);
     }
@@ -77,6 +76,7 @@ export const verifyPayment = async (
     next(err);
   }
 };
+
 export const handleStripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;
 
@@ -87,5 +87,24 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
   } catch (err: any) {
     logger.error(`[paymentController] ❌ Stripe webhook error: ${err.message}`);
     res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+};
+
+// ---------------- Refund Payment ----------------
+export const refundPayment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { paymentId, amount } = req.body;
+
+    if (!paymentId || typeof amount !== 'number') {
+      return res.status(400).json({ message: 'Invalid paymentId or amount' });
+    }
+
+    const refund = await paymentService.refundPayment(paymentId, amount);
+
+    logger.info(`[paymentController] Refund processed for paymentId=${paymentId}, amount=${amount}`);
+    sendSuccess(res, '✅ Refund processed successfully', refund);
+  } catch (err) {
+    logger.error(`[paymentController] refundPayment error: ${(err as Error).message}`);
+    next(err);
   }
 };

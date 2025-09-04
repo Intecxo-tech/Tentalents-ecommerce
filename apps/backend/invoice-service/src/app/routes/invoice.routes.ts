@@ -1,12 +1,22 @@
 import { Router } from 'express';
-import { generateInvoiceAutomatically, getInvoiceDownloadUrl } from '../controllers/invoice.controller';
+import { generateInvoiceAutomatically, downloadInvoice } from '../controllers/invoice.controller';
+import { authMiddleware } from '@shared/auth';
+import { UserRole } from '@shared/types';
 
 const router = Router();
 
-// Route to manually generate an invoice (can also be triggered programmatically)
-router.post('/generate/:orderId', generateInvoiceAutomatically);
+// Admin-only route: generate invoice
+router.post(
+  '/generate/:orderId',
+  authMiddleware([UserRole.ADMIN]), // ✅ Call once with roles
+  generateInvoiceAutomatically
+);
 
-// Route to download an invoice PDF
-router.get('/download/:invoiceId', getInvoiceDownloadUrl);
+// Any authenticated user: download invoice
+router.get(
+  '/download/:invoiceId',
+  authMiddleware(), // ✅ Call once without roles
+  downloadInvoice
+);
 
 export default router;

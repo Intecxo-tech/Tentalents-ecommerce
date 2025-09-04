@@ -1,21 +1,20 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { PDFGenerator, PdfOrder, OrderItem } from '@shared/utils';
-import { uploadFileToMinIO } from '@shared/minio';
+import { minioClient, uploadFileToMinIO } from '@shared/minio';
 import { uploadToCloudinary } from '@shared/auth';
 import nodemailer from 'nodemailer';
 import { env } from '@shared/config';
-import axios from 'axios';
+import stream from 'stream';
 
 const prisma = new PrismaClient();
 
 // Generate invoice and email automatically (supports regeneration)
 export async function generateInvoiceAutomatically(req: Request, res: Response) {
   const { orderId } = req.params;
-  const regenerate = req.query.regenerate === 'true'; // ?regenerate=true
+  const regenerate = req.query.regenerate === 'true';
 
   try {
-    // Check if invoice already exists
     let existingInvoice = await prisma.invoice.findUnique({ where: { orderId } });
     if (existingInvoice && !regenerate) {
       return res.status(200).json({
@@ -25,12 +24,11 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       });
     }
 
-    // Fetch order details with product info
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { 
-        items: { include: { vendor: true, product: true } }, 
-        buyer: true 
+      include: {
+        items: { include: { vendor: true, product: true } },
+        buyer: true,
       },
     });
 
@@ -43,7 +41,6 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
     const user = order.buyer;
     if (!user || !user.email) return res.status(400).json({ error: 'Buyer email not found' });
 
-    // Prepare PDF data dynamically
     const pdfOrder: PdfOrder = {
       id: order.id,
       userId: user.id,
@@ -66,21 +63,19 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       createdAt: order.placedAt,
     };
 
-    // Generate PDF
+    // Generate PDF buffer
     const pdfBuffer = await PDFGenerator.generate(pdfOrder, 'user');
-
-    // Create a unique filename using timestamp
     const uniqueFilename = `invoice-${orderId}-${Date.now()}`;
 
     // Upload to Cloudinary
     const cloudinaryUrl = await uploadToCloudinary(
       pdfBuffer,
-      'vendor_invoices',
+      'invoices',
       uniqueFilename,
       'application/pdf'
     );
 
-    // Optional: Upload to MinIO
+    // Upload to MinIO
     const minioUrl = await uploadFileToMinIO({
       content: pdfBuffer,
       objectName: `invoices/${uniqueFilename}.pdf`,
@@ -100,7 +95,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       });
     }
 
-    // Send email with PDF attachment (optional)
+    // Send email with PDF attachment
     const transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
@@ -129,21 +124,36 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
   }
 }
 
-// Download invoice PDF directly
-export async function getInvoiceDownloadUrl(req: Request, res: Response) {
+// Download invoice PDF (MinIO primary, Cloudinary fallback)
+export async function downloadInvoice(req: Request, res: Response) {
   const { invoiceId } = req.params;
+  const filename = `invoice-${invoiceId}.pdf`;
 
   try {
     const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
     if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
 
-    // Stream PDF from Cloudinary
-    const response = await axios.get(invoice.pdfUrl, { responseType: 'stream' });
+    // Try MinIO first
+    try {
+      // Correct usage: getObject(bucketName, objectName)
+      const minioStream = await minioClient.getObject('invoices', `invoices/${invoiceId}.pdf`);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=invoice-${invoiceId}.pdf`);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
 
-    response.data.pipe(res);
+      minioStream.pipe(res);
+      return;
+
+    } catch (minioErr) {
+      console.warn('MinIO fetch failed, falling back to Cloudinary:', minioErr);
+
+      if (invoice.pdfUrl) {
+        return res.redirect(`${invoice.pdfUrl}?response-content-disposition=attachment;filename=${filename}`);
+      }
+
+      throw new Error('Invoice file not available');
+    }
+
   } catch (err: any) {
     console.error('Error downloading invoice:', err);
     return res.status(500).json({ error: 'Failed to download invoice', details: err.message });

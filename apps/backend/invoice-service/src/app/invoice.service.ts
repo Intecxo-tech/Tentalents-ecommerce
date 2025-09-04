@@ -1,76 +1,134 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { Readable } from 'stream';
-import {
-  uploadFile,
-  minioClient,
-  MinioBuckets,
-  MinioFolderPaths,
-  MimeTypes,
-} from '@shared/minio';
+import { PrismaClient } from '@prisma/client';
+import { PDFGenerator, PdfOrder, OrderItem } from '@shared/utils';
+import { uploadFileToMinIO } from '@shared/minio';
+import { uploadToCloudinary } from '@shared/auth';
+import nodemailer from 'nodemailer';
+import { env } from '@shared/config';
 
-interface SaveInvoiceParams {
-  filePath: string;
-  userId: string;
-  orderId: string;
-}
+const prisma = new PrismaClient();
 
-/**
- * 🧾 Save an invoice PDF to MinIO storage
- */
-export const saveInvoice = async ({
-  filePath,
-  userId,
-  orderId,
-}: SaveInvoiceParams): Promise<void> => {
-  const absolutePath = path.resolve(filePath);
+export class InvoiceService {
+  // Generate invoice for both customer and vendor
+  static async generateInvoices(order: any): Promise<void> {
+    const user = order.buyer;
+    const vendor = order.items?.[0]?.vendor;
+    if (!user || !user.email || !vendor) return;
 
-  if (!fs.existsSync(absolutePath)) {
-    throw new Error(`❌ Invoice file does not exist at: ${absolutePath}`);
-  }
+    const pdfOrder: PdfOrder = {
+      id: order.id,
+      userId: user.id,
+      userName: user.name,
+      userEmail: user.email,
+      userAddress: user.address,
+      vendorName: vendor.name,
+      vendorEmail: vendor.email,
+      vendorAddress: vendor.address,
+      paymentMethod: order.paymentMode,
+      items: (order.items as any[]).map((i: any): OrderItem => ({
+        productId: i.productId,
+        name: i.product?.title,
+        sku: i.product?.slug,
+        quantity: i.quantity,
+        price: Number(i.unitPrice),
+      })),
+      totalAmount: Number(order.totalAmount),
+      status: order.status,
+      createdAt: order.placedAt,
+    };
 
-  const fileStream = fs.createReadStream(absolutePath);
-  const stats = fs.statSync(absolutePath);
-  const objectName = `${MinioFolderPaths.INVOICE_PDFS}${userId}/${orderId}.pdf`;
+    const timestamp = Date.now();
 
-  try {
-    const bucketExists = await minioClient.bucketExists(MinioBuckets.INVOICE);
-    if (!bucketExists) {
-      await minioClient.makeBucket(MinioBuckets.INVOICE);
+    // 1️⃣ Customer Invoice
+    const customerPdfBuffer = await PDFGenerator.generate(pdfOrder, 'user');
+    const customerFilename = `invoice-${order.id}-customer-${timestamp}`;
+
+    const customerCloudUrl = await uploadToCloudinary(
+      customerPdfBuffer,
+      'invoices',
+      customerFilename,
+      'application/pdf'
+    );
+
+    await uploadFileToMinIO({
+      content: customerPdfBuffer,
+      objectName: `invoices/${customerFilename}.pdf`,
+      bucketName: 'invoices',
+      contentType: 'application/pdf',
+    });
+
+    // Save customer invoice record
+    await prisma.invoice.create({
+      data: {
+        orderId: order.id,
+        vendorId: vendor.id,
+        pdfUrl: customerCloudUrl,
+      },
+    });
+
+    // Email customer
+    const transporter = nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_PORT === 465,
+      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    });
+
+    await transporter.sendMail({
+      from: env.EMAIL_FROM,
+      to: user.email,
+      subject: `Invoice for Order ${order.id}`,
+      html: `<p>Dear ${user.name || 'Customer'},</p><p>Thank you for your order! Please find your invoice attached.</p>`,
+      attachments: [
+        {
+          filename: `${customerFilename}.pdf`,
+          content: customerPdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ],
+    });
+
+    // 2️⃣ Vendor Invoice
+    const vendorPdfBuffer = await PDFGenerator.generate(pdfOrder, 'vendor');
+    const vendorFilename = `invoice-${order.id}-vendor-${timestamp}`;
+
+    const vendorCloudUrl = await uploadToCloudinary(
+      vendorPdfBuffer,
+      'vendor_invoices',
+      vendorFilename,
+      'application/pdf'
+    );
+
+    await uploadFileToMinIO({
+      content: vendorPdfBuffer,
+      objectName: `vendor_invoices/${vendorFilename}.pdf`,
+      bucketName: 'vendor_invoices',
+      contentType: 'application/pdf',
+    });
+
+    // Save vendor invoice record
+    await prisma.invoice.create({
+      data: {
+        orderId: order.id,
+        vendorId: vendor.id,
+        pdfUrl: vendorCloudUrl,
+      },
+    });
+
+    // Optionally email vendor
+    if (vendor.email) {
+      await transporter.sendMail({
+        from: env.EMAIL_FROM,
+        to: vendor.email,
+        subject: `Invoice for Order ${order.id}`,
+        html: `<p>Dear ${vendor.name || 'Vendor'},</p><p>An invoice has been generated for your order items.</p>`,
+        attachments: [
+          {
+            filename: `${vendorFilename}.pdf`,
+            content: vendorPdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ],
+      });
     }
-await uploadFile(
-  MinioBuckets.INVOICE,
-  objectName,
-  absolutePath,
-  { 'Content-Type': MimeTypes.PDF }
-);
-
-    console.log(`✅ Uploaded invoice for order ${orderId} to MinIO`);
-  } catch (error) {
-    console.error(
-      `❌ [saveInvoice] Error uploading invoice for order ${orderId}:`,
-      error
-    );
-    throw error;
   }
-};
-
-/**
- * 📥 Retrieve an invoice PDF from MinIO as a readable stream
- */
-export const getInvoiceFile = async (
-  userId: string,
-  orderId: string
-): Promise<Readable> => {
-  const objectName = `${MinioFolderPaths.INVOICE_PDFS}${userId}/${orderId}.pdf`;
-
-  try {
-    return await minioClient.getObject(MinioBuckets.INVOICE, objectName);
-  } catch (error) {
-    console.error(
-      `❌ [getInvoiceFile] Failed to retrieve invoice for order ${orderId}:`,
-      error
-    );
-    throw new Error(`Invoice not found for order ${orderId}`);
-  }
-};
+}

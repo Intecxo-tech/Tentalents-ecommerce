@@ -9,7 +9,10 @@ import {
   deleteAddress,
   getUserAddresses,
   getVendorOrders,
-  updateDispatchStatus
+  updateDispatchStatus,
+  downloadInvoice, 
+  cancelOrder,   // <-- add this
+  returnOrder  // ✅ Import invoice download
 } from '../controllers/order.controller';
 import { requireAuth, ROLES } from '@shared/auth'; // ✅ Use ROLES constants
 
@@ -47,5 +50,18 @@ router.get('/addresses', requireAuth(BUYER_ONLY), getUserAddresses);
 // ---------------- VENDOR ORDERS ----------------
 router.get('/vendor/orders', requireAuth(SELLER_OR_ADMIN), getVendorOrders);
 router.patch('/:orderId/dispatch', requireAuth(SELLER_OR_ADMIN), updateDispatchStatus);
+
+// ---------------- INVOICE DOWNLOAD ----------------
+// Customers can download their invoice anytime
+router.get(
+  '/invoice/:invoiceId/download',
+  requireAuth(BUYER_ONLY), // Only the buyer can download
+  downloadInvoice
+);
+// Cancel order
+router.post('/:orderId/cancel', requireAuth(BUYER_ONLY), cancelOrder);
+
+// Return order
+router.post('/:orderId/return', requireAuth(BUYER_ONLY), returnOrder);
 
 export default router;

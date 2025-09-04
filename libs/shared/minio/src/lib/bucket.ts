@@ -1,5 +1,5 @@
 export enum MinioBucket {
-  INVOICES = 'invoices',
+  INVOICES = 'invoice-files',
   PRODUCT_IMAGES = 'product-images',
   EMAIL_ATTACHMENTS = 'email-attachments',
 }
