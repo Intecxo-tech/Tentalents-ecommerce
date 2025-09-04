@@ -2,6 +2,7 @@ import { PrismaClient,PaymentMethod,PaymentStatus } from '@prisma/client';
 import type { OrderStatus } from '@prisma/client';
 import Stripe from 'stripe';
 import { v4 as uuidv4 } from 'uuid';
+import { invoiceService } from '@invoice-service/services/invoice.service';
 import { buildOrderConfirmationEmail } from '../utils/buildOrderConfirmationEmail';
 import { sendEmail } from '@shared/email';
 interface OrderItemInput {
@@ -54,7 +55,7 @@ const VALID_PAYMENT_MODES = ["credit_card", "paypal", "cash_on_delivery"];
 const vendorShippingDays = 5;
 
 export const orderService = {
-      placeOrder: async (buyerId: string, data: PlaceOrderInput) => {
+    placeOrder: async (buyerId: string, data: PlaceOrderInput) => {
     const { items, totalAmount, shippingAddressId, paymentMode } = data;
 
     try {
@@ -137,7 +138,7 @@ export const orderService = {
     shippingAddressId,
     paymentMode,
     paymentStatus: PaymentStatus.pending,
-    status: 'pending',
+    status: 'confirmed',
     dispatchStatus: 'preparing',
     items: {
       create: items.map(item => ({
@@ -243,6 +244,31 @@ const session = await stripe.checkout.sessions.create({
     paymentMode,
   },
 });
+const buyer = await prisma.user.findUnique({
+  where: { id: buyerId },
+  select: { email: true, name: true },
+});
+
+if (!buyer) {
+  throw new Error('Buyer not found');
+}
+ try {
+    await invoiceService.generateInvoicePDF({
+      orderId: order.id,
+      userId: buyerId,
+      buyerEmail: buyer?.email || '',
+      items: order.items.map(item => ({
+        name: item.product?.title || 'Unknown Product',
+        price: item.unitPrice.toNumber(), // Convert Decimal to number
+        quantity: item.quantity,
+      })),
+      total: order.totalAmount.toNumber(), // Convert Decimal to number
+    });
+
+    console.log(`Invoice generated and saved for order ID: ${order.id}`);
+  } catch (error) {
+    console.error('Failed to generate invoice:', error);
+  }
 
   await prisma.payment.update({
   where: { id: payment.id },
@@ -265,7 +291,7 @@ const session = await stripe.checkout.sessions.create({
           shippingAddressId,
           paymentMode,
           paymentStatus: PaymentStatus.pending,
-          status: 'pending',
+          status: 'confirmed',
           dispatchStatus: 'preparing', // New field for dispatch status
           dispatchTime: new Date(Date.now() + vendorShippingDays * 24 * 60 * 60 * 1000), // Dispatch time calculated
           items: {
@@ -296,8 +322,46 @@ const session = await stripe.checkout.sessions.create({
         },
       });
         
+         try {
+  // Fetch buyer information from the database
+  const buyer = await prisma.user.findUnique({
+    where: { id: buyerId },
+    select: { email: true, name: true },
+  });
 
+  if (!buyer) {
+    throw new Error('Buyer not found');
+  }
+
+  // Fetch order items with related product details
+  const orderItems = await prisma.orderItem.findMany({
+    where: { orderId: order.id },
+    include: {
+      product: true, // Make sure to include the product details
+    },
+  });
+
+  const items = orderItems.map(item => ({
+    name: item.product?.title || 'Unknown Product', // Access product title
+    price: item.unitPrice.toNumber(),  // Convert Decimal to number
+    quantity: item.quantity,
+  }));
+
+  // Call the invoice service to generate the PDF
+  await invoiceService.generateInvoicePDF({
+    orderId: order.id,
+    userId: buyerId,
+    buyerEmail: buyer.email || '',  // Ensure buyer's email is available
+    items: items,
+    total: order.totalAmount.toNumber(),  // Convert Decimal to number
+  });
+
+  console.log(`Invoice generated and saved for order ID: ${order.id}`);
+} catch (error) {
+  console.error('Failed to generate invoice:', error);
+}
       console.log('Order created for COD:', order);
+      
       return order;
     } catch (error) {
       console.error('Error placing order for buyerId:', buyerId, error);
