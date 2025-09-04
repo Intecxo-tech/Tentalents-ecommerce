@@ -55,7 +55,7 @@
     "docker": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker build -t invoice-service -f apps/backend/invoice-service/Dockerfile ."
+        "command": "docker build -t invoice-service -f apps/backend/invoice-service/dockerfile ."
       }
     }
   },
