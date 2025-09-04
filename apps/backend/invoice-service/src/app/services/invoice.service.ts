@@ -1,10 +1,11 @@
 import PDFDocument from 'pdfkit';
-import { minioClient } from '@shared/minio';
-import { PrismaClient } from '../../../generated/invoice-service'; // Adjust path if you're not using @shared/prisma
+import { uploadToCloudinary } from '@shared/auth'; // Adjust path to where you have your cloudinary.ts file
+import { PrismaClient } from '@prisma/client'; // Adjust path if you're not using @shared/prisma
 import { Readable } from 'stream';
 
-const bucket = process.env.MINIO_BUCKET || 'invoices';
 const prisma = new PrismaClient();
+const bucket = process.env.MINIO_BUCKET || 'invoices';
+
 export const invoiceService = {
   generateInvoicePDF: async (orderData: {
     orderId: string;
@@ -33,24 +34,37 @@ export const invoiceService = {
       doc.on('end', async () => {
         try {
           const buffer = Buffer.concat(chunks);
-          const objectName = `invoices/${orderData.userId}/${orderData.orderId}.pdf`;
+          const filename = `invoice-${orderData.orderId}.pdf`;
 
-          await minioClient.putObject(bucket, objectName, buffer);
+          // Upload PDF to Cloudinary
+          const pdfUrl = await uploadToCloudinary(buffer, 'invoices', filename, 'application/pdf');
 
-        await prisma.invoice.create({
-  data: {
-    orderId: orderData.orderId,
-    vendorId: 'someVendorId',  // <-- you need to supply the correct vendorId here
-    pdfUrl: objectName,        // use 'pdfUrl', NOT 'fileUrl'
-    // optionally:
-    filePath: objectName,
-    bucket: bucket,
-  },
-});
+          // Get the vendorId from the database based on the order's items (assuming vendor is stored in orderItem)
+          const orderItems = await prisma.orderItem.findMany({
+            where: { orderId: orderData.orderId },
+            include: { vendor: true }, // Include vendor to get the vendor details
+            take: 1,
+          });
 
+          if (orderItems.length === 0 || !orderItems[0].vendor) {
+            throw new Error('No vendor found for the order');
+          }
+
+          const vendorId = orderItems[0].vendor.id; // Access the vendorId from the vendor relation
+
+          // Store the invoice in the database with Cloudinary URL
+          await prisma.invoice.create({
+            data: {
+              orderId: orderData.orderId,
+              vendorId: vendorId,  // Use vendorId from the related vendor object
+              pdfUrl: pdfUrl,  // Cloudinary URL for the uploaded invoice
+              issuedAt: new Date(),
+            },
+          });
 
           resolve();
         } catch (err) {
+          console.error('Error generating invoice:', err);
           reject(err);
         }
       });
@@ -59,12 +73,19 @@ export const invoiceService = {
     });
   },
 
-  getInvoiceFile: async (
-    userId: string,
-    orderId: string
-  ): Promise<Readable> => {
-    const objectName = `invoices/${userId}/${orderId}.pdf`;
-    const stream = await minioClient.getObject(bucket, objectName);
-    return stream as Readable;
+  // Updated function to return URL as a string instead of Readable stream
+  getInvoiceFile: async (userId: string, orderId: string): Promise<string> => {
+    const invoice = await prisma.invoice.findUnique({
+      where: { orderId },
+    });
+
+    if (!invoice || !invoice.pdfUrl) {
+      throw new Error('Invoice not found or file URL missing');
+    }
+
+    const pdfUrl = invoice.pdfUrl;
+
+    // Return the Cloudinary URL (directly)
+    return pdfUrl;  // Now returns a string (URL)
   },
 };
