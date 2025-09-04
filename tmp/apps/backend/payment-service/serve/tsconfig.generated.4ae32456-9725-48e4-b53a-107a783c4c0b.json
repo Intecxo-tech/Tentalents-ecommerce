@@ -49,9 +49,6 @@
       "@cart-service/*": [
         "apps/backend/cart-service/src/app/*"
       ],
-      "middlewares": [
-        "dist/libs/shared/middlewares"
-      ],
       "shared-auth": [
         "dist/libs/shared/auth"
       ],

@@ -1,3 +1,4 @@
+import 'dotenv/config'; // ✅ Load .env variables at the very top
 import express, { Request, Response } from 'express';
 import { setupSwagger } from '@shared/swagger';
 import { errorHandler } from '@shared/error';
@@ -7,8 +8,14 @@ import cors from 'cors';
 import Stripe from 'stripe';
 
 const app = express();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-07-30.basil', // match the typed literal
+
+// Validate that STRIPE_SECRET_KEY is provided
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2025-07-30.basil', // matches typed literal
 });
 
 // Apply CORS middleware
@@ -38,10 +45,14 @@ app.post('/api/payments/stripe/webhook', (req: Request, res: Response) => {
   req.on('end', async () => {
     try {
       const signature = req.headers['stripe-signature'] as string;
+      if (!process.env.STRIPE_WEBHOOK_SECRET) {
+        throw new Error('STRIPE_WEBHOOK_SECRET is not set in environment variables');
+      }
+
       const event = stripe.webhooks.constructEvent(
         rawBody,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET || ''
+        process.env.STRIPE_WEBHOOK_SECRET
       );
 
       // Handle the event
