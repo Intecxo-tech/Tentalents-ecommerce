@@ -2,7 +2,7 @@ import { connectKafkaConsumer } from '@shared/middlewares/kafka/src/lib/kafka-co
 import { KafkaConsumerConfig } from '@shared/middlewares/kafka/src/lib/kafka-consumer';
 import { EachMessagePayload } from 'kafkajs';
 import { generateInvoiceAndUpload } from '../../../../../libs/shared/utils/src/lib/invoice-generator';
-import { PrismaClient } from '../../generated/invoice-service';
+import { PrismaClient } from '@prisma/client';
 import { MinioBuckets } from '@shared/minio';
 import { logger } from '@shared/logger';
 
@@ -32,18 +32,20 @@ export async function startInvoiceConsumer(): Promise<void> {
         logger.info(`[invoice.generate] 📦 Generating invoice for orderId: ${orderId}`);
 
         // Find vendor(s) for the order - take first vendor for simplicity
-        const orderItems = await prisma.orderItem.findMany({
-          where: { orderId },
-          select: { sellerId: true },
-          take: 1,
-        });
+       const orderItems = await prisma.orderItem.findMany({
+  where: { orderId },
+  select: {
+    vendor: true, // Select the related vendor directly
+  },
+  take: 1,
+});
 
-        if (orderItems.length === 0) {
-          logger.warn(`[invoice.generate] ⚠️ No vendor found for orderId: ${orderId}`);
-          return;
-        }
+if (orderItems.length === 0 || !orderItems[0].vendor) {
+  logger.warn(`[invoice.generate] ⚠️ No vendor found for orderId: ${orderId}`);
+  return;
+}
 
-        const vendorId = orderItems[0].sellerId;
+const vendorId = orderItems[0].vendor.id; 
 
         // generateInvoiceAndUpload returns a string filePath only
         const filePath = await generateInvoiceAndUpload(orderId);
@@ -61,9 +63,9 @@ export async function startInvoiceConsumer(): Promise<void> {
             orderId,
             vendorId,
             pdfUrl,
-            filePath,
-            bucket: MinioBuckets.INVOICE,
-            createdAt: new Date(),
+         
+   
+            issuedAt: new Date(),
           },
         });
 
