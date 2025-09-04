@@ -6,5 +6,5 @@ export * from './lib/helmet.middleware';
 export * from './lib/cors.middleware';
 export * from './lib/role.middleware';
 export * from './lib/validate.middleware';
-
+export * from './lib/rawBodyMiddleware';
 export * from './lib/multer.middleware';

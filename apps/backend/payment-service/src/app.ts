@@ -1,27 +1,71 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { setupSwagger } from '@shared/swagger';
 import { errorHandler } from '@shared/error';
 import { logger } from '@shared/logger';
 import paymentRoutes from './app/routes/payment.routes';
 import cors from 'cors';
-import rawBodyMiddleware from '@shared/middlewares';
-const app = express();
+import Stripe from 'stripe';
 
-// Apply CORS middleware first
+const app = express();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-07-30.basil', // match the typed literal
+});
+
+// Apply CORS middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // your frontend origin
+  origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
 }));
 
-// Then apply JSON body parser
-// ⚠️ Mount only the webhook first with raw body
+// Skip JSON parsing for Stripe webhook
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/payments/stripe/webhook') {
+    next(); // skip JSON parser
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
-app.post('/api/payments/stripe/webhook', rawBodyMiddleware, paymentRoutes);
-app.use(express.json());
+// Stripe webhook route
+app.post('/api/payments/stripe/webhook', (req: Request, res: Response) => {
+  let rawBody = '';
 
-// Now apply your routes
-app.use('/api/payments', paymentRoutes);
+  req.on('data', (chunk) => {
+    rawBody += chunk;
+  });
+
+  req.on('end', async () => {
+    try {
+      const signature = req.headers['stripe-signature'] as string;
+      const event = stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET || ''
+      );
+
+      // Handle the event
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          logger.info('💰 Payment succeeded', event.data.object);
+          break;
+        case 'payment_intent.payment_failed':
+          logger.warn('❌ Payment failed', event.data.object);
+          break;
+        default:
+          logger.info('ℹ️ Unhandled Stripe event', event.type);
+      }
+
+      res.status(200).send({ received: true });
+    } catch (err: any) {
+      logger.error('Webhook signature verification failed.', err.message);
+      res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  });
+});
+
+// Normal payment routes
+app.use('/api/payments', express.json(), paymentRoutes);
 
 // Swagger docs
 setupSwagger(app, {

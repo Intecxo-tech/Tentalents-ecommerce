@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { initiatePayment, verifyPayment } from '../controllers/payment.controller';
 import { authMiddleware, requireRole } from '@shared/auth';
 import { paymentService } from '../services/payment.service';
-import { PrismaClient, PaymentStatus  } from 'generated/prisma';
+import { PrismaClient, PaymentStatus  } from '@prisma/client';
 const stripe = new Stripe(process.env.STRIPE_PAYMENT_SECRET_KEY!, {
   apiVersion: '2025-07-30.basil',
 });
