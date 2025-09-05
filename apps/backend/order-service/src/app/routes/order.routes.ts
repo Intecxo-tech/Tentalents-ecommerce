@@ -10,18 +10,43 @@ import {
   getUserAddresses ,
   getVendorOrders,
   updateDispatchStatus,
+  createReturnRequest,
+  getReturnRequestsByUser,
+  updateReturnRequestStatus,
    cancelOrder
  
 } from '../controllers/order.controller';
 import { authMiddleware, requireRole } from '@shared/auth';
-
+import multer from 'multer';
+const upload = multer({
+  limits: { fileSize: 5 * 1024 * 1024 },  // Limit file size to 5 MB per file
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error('Invalid file type. Only images are allowed.'));
+    }
+    cb(null, true);
+  },
+});
 const router = Router();
 router.get(
   '/addresses',
   authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
   getUserAddresses  // Fetch all addresses for the authenticated user
 );
+router.post(
+  '/return-request',
+  authMiddleware(['buyer', 'buyer_seller']),  // ✅ Add this
+  upload.array('images', 5),                  // Then multer
+  createReturnRequest                         // Then controller
+);
+ // Limit number of files (5 in this example)
 
+// Route to get all return requests for the logged-in user
+router.get('/return-requests', getReturnRequestsByUser);
+
+// Route to update the status of a return request (for admin or vendor)
+router.put('/return-request/status', updateReturnRequestStatus);
 router.post(
   '/addresses',
   authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated

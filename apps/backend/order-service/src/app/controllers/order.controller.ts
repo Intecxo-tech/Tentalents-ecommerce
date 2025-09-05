@@ -3,7 +3,7 @@ import { orderService } from '../services/order.service';
 import { produceKafkaEvent } from '@shared/kafka';
 import { sendSuccess } from '@shared/utils';
 import type { AuthPayload } from '@shared/auth';
-import { addressService } from '../services/order.service';
+import { addressService,returnRequestService } from '../services/order.service';
 interface AuthedRequest extends Request {
   user?: AuthPayload;
 }
@@ -238,6 +238,100 @@ export const updateDispatchStatus = async (
     }
 
     sendSuccess(res, '🚚 Dispatch status updated', updated);
+  } catch (err) {
+    next(err);
+  }
+};
+export const createReturnRequest = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log('📥 Incoming return request...');
+
+    const buyerId = req.user?.userId;
+    const { orderId, reason, replacementProductId, comment } = req.body;
+    const imageFiles = req.files as Express.Multer.File[];
+
+    console.log('🧾 Request body:', req.body);
+    console.log('🧑‍💼 Authenticated user ID:', buyerId);
+    console.log('📸 Uploaded image files:', imageFiles?.map((f) => f.originalname));
+
+    if (!buyerId) {
+      console.warn('❌ No user ID found in token');
+      return res.status(401).json({ message: '❌ Unauthorized: missing user ID' });
+    }
+
+    if (!orderId || !reason) {
+      console.warn('❌ Missing orderId or reason');
+      return res.status(400).json({ message: '❌ Order ID and reason are required' });
+    }
+
+    // Create the return request using the service
+    const returnRequest = await returnRequestService.createReturnRequest(
+      orderId,
+      buyerId,
+      reason,
+      imageFiles,
+      replacementProductId,
+      comment
+    );
+
+    console.log('✅ Return request created:', returnRequest);
+
+    sendSuccess(res, '✅ Return request created successfully', returnRequest);
+  } catch (err) {
+    console.error('❌ Error in createReturnRequest controller:', err);
+    next(err);
+  }
+};
+
+// 2. Get Return Requests for a User (Buyer)
+export const getReturnRequestsByUser = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const buyerId = req.user?.userId;  // Get the buyer's user ID
+
+    if (!buyerId) {
+      return res.status(401).json({ message: '❌ Unauthorized: missing user ID' });
+    }
+
+    const returnRequests = await returnRequestService.getReturnRequestsByUser(buyerId);
+    sendSuccess(res, '📄 Return requests fetched', returnRequests);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 3. Update Return Request Status (Admin/Vendor Approval)
+export const updateReturnRequestStatus = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { returnRequestId, status } = req.body;  // Get the returnRequestId and status (approved/rejected) from request body
+    const userId = req.user?.userId;  // Get the user's ID (Admin/Vendor)
+
+    if (!userId) {
+      return res.status(401).json({ message: '❌ Unauthorized: missing user ID' });
+    }
+
+    if (!returnRequestId || !status) {
+      return res.status(400).json({ message: '❌ Return request ID and status are required' });
+    }
+
+    if (status !== 'approved' && status !== 'rejected') {
+      return res.status(400).json({ message: '❌ Invalid status. Must be "approved" or "rejected"' });
+    }
+
+    const updatedReturnRequest = await returnRequestService.updateReturnRequestStatus(returnRequestId, status);
+
+    sendSuccess(res, `✅ Return request ${status} successfully`, updatedReturnRequest);
   } catch (err) {
     next(err);
   }

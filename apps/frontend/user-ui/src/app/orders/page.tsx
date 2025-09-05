@@ -223,7 +223,7 @@ async function handleDownloadInvoice(orderId: string) {
       return;
     }
 
-    const res = await fetch(`http://localhost:3009/api/invoices/download/${orderId}`, {
+    const res = await fetch(`https://invoice-service-wz65.onrender.com/api/invoices/download/${orderId}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

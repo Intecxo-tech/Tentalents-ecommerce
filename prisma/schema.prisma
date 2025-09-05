@@ -31,6 +31,7 @@ model User {
   mediaUploaded Media[]
    addresses      Address[]   // Relation to User's addresses
 cartItems CartItem[]
+ returnRequests ReturnRequest[]
   @@index([email])
   @@index([role])
   @@map("users")
@@ -214,6 +215,8 @@ model ProductListing {
   productFeatures         String[]             @default([])
 dispatchTimeInDays Int?   // NEW: Estimated dispatch time in days
   shippingCost       Decimal @default(0.0) // NEW: Vendor-defined shipping/handling cost
+
+  returnPolicyType        ReturnPolicyType     @default(REFUND) // Default is refund
   @@index([productId])
   @@index([status])
 }
@@ -289,6 +292,7 @@ model OrderItem {
   dispatchTime     DateTime?
    shippingCost Decimal @default(0.0)          // Optional time when the order was dispatched
    product          Product  @relation(fields: [productId], references: [id])  // Ensure this relation exists
+   returnRequests ReturnRequest[] // Foreign key relationship with ReturnRequest
   @@index([orderId])
   @@index([productId])
   @@index([vendorId])
@@ -313,7 +317,9 @@ model Order {
   stripePaymentIntentId String?
   dispatchStatus   DispatchStatus   @default(not_started)  // Enum is applied here
   dispatchTime     DateTime?     
-  
+   refundRequests    RefundRequest[]  // Added relation to RefundRequest
+  returnRequests    ReturnRequest[]  // Added relation to ReturnRequest
+ 
   @@index([buyerId])
   @@index([status])
 }
@@ -510,21 +516,55 @@ model RefundRequest {
   orderItemId   String
   userId        String       @db.Uuid
   vendorId      String       @db.Uuid
+   orderId       String       @db.Uuid git  // Add this line and make sure it's @db.Uuid
   reason        RefundReason
   status        RefundStatus @default(REQUESTED)
   comment       String?
-  attachmentUrl String?
+  attachmentUrls String[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   resolvedAt    DateTime?
   user          User         @relation(fields: [userId], references: [id])
   vendor        Vendor       @relation(fields: [vendorId], references: [id])
-
+  order         Order        @relation(fields: [orderId], references: [id])  // Cross relation with Order table
   @@index([userId])
   @@index([vendorId])
   @@index([orderItemId])
   @@index([status])
 }
+
+model ReturnRequest {
+  id               String @id @default(uuid()) @db.Uuid
+  orderItemId      String @db.Uuid // Foreign key reference to OrderItem.id
+  userId           String @db.Uuid // Foreign key reference to User.id
+  orderId          String @db.Uuid // Add this line
+  reason           String
+  status           ReturnStatus @default(REQUESTED)
+  returnType       ReturnPolicyType
+  replacementProductId String?
+  comment          String?
+attachmentUrls String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  resolvedAt       DateTime?
+  order            Order     @relation(fields: [orderId], references: [id])  // Cross relation with Order table 
+  user             User      @relation(fields: [userId], references: [id])
+  orderItem        OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@index([userId])
+  @@index([orderItemId])
+  @@index([status])
+}
+
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
 
 enum AdminRole {
   ADMIN
@@ -694,4 +734,7 @@ model Media {
   uploader   User?    @relation(fields: [uploadedBy], references: [id])
   
   @@index([modelType, modelId])
+}enum ReturnPolicyType {
+  REFUND
+  REPLACEMENT
 }

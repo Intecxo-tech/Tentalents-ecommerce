@@ -1,10 +1,11 @@
-import { PrismaClient,PaymentMethod,PaymentStatus } from '@prisma/client';
+import { PrismaClient,PaymentMethod,PaymentStatus,ReturnStatus } from '@prisma/client';
 import type { OrderStatus } from '@prisma/client';
 import Stripe from 'stripe';
 import { v4 as uuidv4 } from 'uuid';
 import { invoiceService } from '@invoice-service/services/invoice.service';
 import { buildOrderConfirmationEmail } from '../utils/buildOrderConfirmationEmail';
 import { sendEmail } from '@shared/email';
+import { uploadToCloudinary } from '@shared/auth';
 interface OrderItemInput {
   productId: string;
   vendorId: string;
@@ -372,14 +373,13 @@ if (!buyer) {
   // ...existing methods
 
 cancelOrder: async (orderId: string, buyerId: string) => {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: {
-      dispatchStatus: true,
-      buyerId: true,
-      status: true,
-    },
-  });
+ const order = await prisma.order.findUnique({
+  where: { id: orderId },
+  include: { 
+    items: true,  // Add orderItems to include
+    shippingAddress: true,  // Assuming you also need the shipping address
+  },
+});
 
   if (!order) {
     throw new Error('Order not found');
@@ -552,4 +552,99 @@ editAddress: async (userId: string, addressId: string, data: Partial<AddressInpu
   }
 
 
+};
+export const returnRequestService = {
+createReturnRequest: async (
+  orderId: string,
+  buyerId: string,
+  reason: string,
+  imageFiles: Express.Multer.File[],
+  replacementProductId?: string,
+  comment?: string
+) => {
+  console.log('—> Service: createReturnRequest called');
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { status: true, buyerId: true, items: { select: { id: true } } },
+  });
+
+  if (!order) {
+    console.warn('  ⚠️ Order not found:', orderId);
+    throw new Error('Order not found');
+  }
+  console.log('  • Retrieved Order Status:', order.status, 'Buyer ID:', order.buyerId);
+
+  if (order.status !== 'delivered') {
+    console.warn('  🚫 Return not allowed before delivery');
+    throw new Error('Return request can only be made for delivered orders');
+  }
+
+  if (order.buyerId !== buyerId) {
+    console.warn('  🔒 Unauthorized: mismatched buyerId:', buyerId);
+    throw new Error('You can only request a return for your own orders');
+  }
+
+  const validReasons = ['defective', 'wrong_item', 'size_mismatch', 'other'];
+  if (!validReasons.includes(reason)) {
+    console.warn('  🆘 Invalid reason:', reason);
+    throw new Error('Invalid reason for return');
+  }
+
+  console.log('  • Valid return reason:', reason);
+  console.log('  • Uploading images to Cloudinary...');
+
+  const imageUrls = await Promise.all(
+    imageFiles.map(async file => {
+      try {
+        const url = await uploadToCloudinary(file.buffer, 'returns', file.originalname, file.mimetype);
+        console.log(`    • Uploaded ${file.originalname} → ${url}`);
+        return url;
+      } catch (uploadErr) {
+        console.error(`    ⚠️ Upload failed for ${file.originalname}:`, uploadErr);
+        throw new Error('Image upload failed');
+      }
+    })
+  );
+
+  console.log('  • All images uploaded, proceeding to create returnRequest record in DB');
+
+  const returnRequest = await prisma.returnRequest.create({
+    data: {
+      orderId,
+      orderItemId: order.items[0].id,
+      userId: buyerId,
+      reason,
+      attachmentUrls: imageUrls,
+      status: 'REQUESTED',
+      returnType: 'REFUND',
+      replacementProductId,
+      comment,
+    },
+  });
+
+  console.log('  ✅ Successfully created returnRequest with ID:', returnRequest.id);
+  return returnRequest;
+},
+  getReturnRequestsByUser: async (buyerId: string) => {
+    return prisma.returnRequest.findMany({
+      where: {
+        order: {
+          buyerId: buyerId,
+        },
+      },
+      include: {
+        order: true,  // Include order details
+      },
+    });
+  },
+
+  updateReturnRequestStatus: async (returnRequestId: string, status: 'approved' | 'rejected') => {
+    const updatedRequest = await prisma.returnRequest.update({
+      where: { id: returnRequestId },
+      data: { status: status.toUpperCase() as ReturnStatus },  // Assert it to ReturnStatus enum
+    });
+
+    return updatedRequest;
+  },
 };
