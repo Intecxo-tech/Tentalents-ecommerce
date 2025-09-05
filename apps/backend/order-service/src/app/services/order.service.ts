@@ -373,13 +373,13 @@ if (!buyer) {
   // ...existing methods
 
 cancelOrder: async (orderId: string, buyerId: string) => {
- const order = await prisma.order.findUnique({
-  where: { id: orderId },
-  include: { 
-    items: true,  // Add orderItems to include
-    shippingAddress: true,  // Assuming you also need the shipping address
-  },
-});
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { 
+      items: true,  // Add orderItems to include
+      shippingAddress: true,  // Assuming you also need the shipping address
+    },
+  });
 
   if (!order) {
     throw new Error('Order not found');
@@ -392,14 +392,19 @@ cancelOrder: async (orderId: string, buyerId: string) => {
   // Prevent cancellation if order is dispatched or delivered
   if (
     order.dispatchStatus === 'dispatched' || 
-    order.dispatchStatus === 'delivered' || 
+    order.dispatchStatus === 'in_transit' || 
     order.status === 'delivered'
   ) {
-    throw new Error('Order cannot be cancelled once it is dispatched or delivered');
+    const reason = `Order cannot be cancelled because it is either dispatched or delivered. Dispatch Status: ${order.dispatchStatus}, Order Status: ${order.status}`;
+    
+    console.log(`🚫 ${reason}`);
+    
+    // Return an informative message to frontend
+    return { success: false, message: reason };
   }
 
   if (order.status === 'canceled') {
-    throw new Error('Order is already cancelled');
+    throw new Error('Order is already canceled');
   }
 
   // Update order status to canceled
@@ -408,7 +413,10 @@ cancelOrder: async (orderId: string, buyerId: string) => {
     data: { status: 'canceled' },
   });
 
-  return canceledOrder;
+  console.log(`✅ Order with ID: ${orderId} has been canceled`);
+
+  // Return the canceled order to the frontend
+  return { success: true, canceledOrder };
 },
 
   updateDispatchStatus: async (orderId: string, dispatchStatus: 'preparing' | 'failed' | 'not_started' | 'dispatched' | 'in_transit'| 'delivered') => {

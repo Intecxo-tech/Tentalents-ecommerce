@@ -92,19 +92,32 @@ export const cancelOrder = async (
       return res.status(400).json({ message: 'Order ID is required' });
     }
 
+    // Cancel the order
     const canceledOrder = await orderService.cancelOrder(orderId, buyerId);
 
-    // Optionally, produce Kafka event here
-    await produceKafkaEvent({
-      topic: 'order.cancelled',
-      messages: [{ value: JSON.stringify(canceledOrder) }],
-    });
+    // Try to send Kafka event, but don't throw error if it fails
+    try {
+      await produceKafkaEvent({
+        topic: 'order.cancelled',
+        messages: [{ value: JSON.stringify(canceledOrder) }],
+      });
+    } catch (kafkaError: unknown) {
+      // Handle the Kafka error quietly (log it)
+      if (kafkaError instanceof Error) {
+        console.error('Kafka Error (ignored):', kafkaError.message);
+      } else {
+        console.error('Kafka Error (ignored): Unknown error');
+      }
+    }
 
+    // Send success response to the frontend
     sendSuccess(res, '✅ Order cancelled successfully', canceledOrder);
+
   } catch (err) {
     next(err);
   }
 };
+
 
 
 export const updateOrderStatus = async (

@@ -19,6 +19,28 @@
    
   width:100%;
 }
+.cancel-button,.invoicebutton{
+  background-color: white;
+  border: 1px solid var(--primary);
+  border-radius:5px;
+  color:var(--primary);
+  padding:10px 15px;
+}
+.cancelled-status{
+  font-size: 15px;
+  font-weight: 500;
+  color: grey !important;
+  border-bottom:0px !important;
+  text-decoration: none;
+}
+/* .invoicebutton{
+  padding:10px 15px;
+  background-color: transparent;
+  color:var(--primary);
+  font-weight: 600;
+  border: none;
+  border-bottom: 1px solid var(--primary);
+} */
 .orderpage-headerleft {
   display: flex;
   /* gap: 20px; */
@@ -30,6 +52,12 @@
   padding-right: 20px;
   border-right: 1px solid var(--black);
   margin-right: 20px; /* Space after the border */
+}
+.orderheader-right{
+  display: flex;
+  align-items:center;
+  justify-content: space-between;
+  gap:10px
 }
 
 .orderheader-right p{

@@ -268,9 +268,10 @@ async function handleDownloadInvoice(orderId: string) {
 
 
 
-async function handleCancelOrder(order: OrderData) {
+const handleCancelOrder = async (order: OrderData) => {
+  // Check if the order is dispatched or in transit
   if (order.dispatchStatus === 'dispatched' || order.dispatchStatus === 'on transit') {
-    toast.error('Order has been delivered or is in transit and cannot be cancelled');
+    toast.error('This order cannot be cancelled as it is already on its way.');
     return;
   }
 
@@ -281,13 +282,17 @@ async function handleCancelOrder(order: OrderData) {
   }
 
   try {
-    const res = await fetch(`http://localhost:3002/api/orders/${order.id}/cancel`, {
+    // --- FIX IS HERE ---
+    // Replace 'localhost:3002' with your deployed order service URL
+    const API_URL = 'https://order-service-faxh.onrender.com'; 
+    const res = await fetch(`${API_URL}/api/orders/${order.id}/cancel`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
+    // --- END OF FIX ---
 
     if (!res.ok) {
       const errData = await res.json();
@@ -297,16 +302,22 @@ async function handleCancelOrder(order: OrderData) {
     const json = await res.json();
 
     if (json.success) {
+      // This code will now be reached successfully!
+      setOrders(prevOrders =>
+        prevOrders.map(o =>
+          o.id === order.id ? { ...o, status: 'cancelled' } : o
+        )
+      );
       toast.success('Order cancelled successfully');
-      // Optionally, refetch orders or update the order state here to reflect cancellation
-      setOrders(prevOrders => prevOrders.map(o => (o.id === order.id ? { ...o, status: 'cancelled' } : o)));
     } else {
       throw new Error(json.message || 'Failed to cancel order');
     }
   } catch (err: any) {
     toast.error(err.message || 'Something went wrong');
+    console.error('Error while canceling order:', err);
   }
-}
+};
+
 
   return (
   <div className="orderapagefull2">
