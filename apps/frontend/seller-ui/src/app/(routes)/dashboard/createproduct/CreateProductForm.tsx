@@ -27,7 +27,7 @@ includedComponents?: string[]; // store as array internally
   enclosureMaterial?: string;
   productCareInstructions?: string;
 productFeatures?: string[];
-
+returnPolicyType: 'REFUND' | 'REPLACEMENT';
   sku: string;
   price: number;            // ✅ add
   originalPrice?: number;   // ✅ add
@@ -57,6 +57,7 @@ productFeatures?: string[];
     deliveryEta?: string;
     dispatchTimeInDays?: number;
     shippingCost?: number;
+    returnPolicyType: 'REFUND' | 'REPLACEMENT';
     sku: string;
   }[];
 };
@@ -837,6 +838,34 @@ const onSubmit = async (data: FormData) => {
        
           <input type="number" step="0.01" {...register('shippingCost', { valueAsNumber: true })} placeholder='Shipping Cost' />
         </div>
+        <div className='section-desc'>
+  <div className="desc-heading">
+    <h2>Return Policy</h2>
+  </div>
+  <div className="desc-container">
+    <div className="radio-group">
+      <label>
+        <input
+          type="radio"
+          value="REFUND"
+          {...register('returnPolicyType', { required: 'Return policy is required' })}
+          className="radio-input"
+        />
+        Refund
+      </label>
+      <label>
+        <input
+          type="radio"
+          value="REPLACEMENT"
+          {...register('returnPolicyType', { required: 'Return policy is required' })}
+          className="radio-input"
+        />
+        Replacement
+      </label>
+    </div>
+    {errors.returnPolicyType && <p style={{ color: 'red' }}>{errors.returnPolicyType.message}</p>}
+  </div>
+</div>
         </div>
          </div>
          </div>

@@ -276,8 +276,8 @@ model SearchLog {
 }
 
 model OrderItem {
-  id               String        @id @default(uuid())
-  orderId          String
+   id                String          @id @default(uuid()) @db.Uuid
+   orderId          String @db.Uuid 
   productId        String
   listingId        String
   vendorId         String        @db.Uuid
@@ -290,9 +290,10 @@ model OrderItem {
   vendor           Vendor        @relation(fields: [vendorId], references: [id])
   dispatchStatus   DispatchStatus   @default(not_started)  // Enum is applied here
   dispatchTime     DateTime?
-   shippingCost Decimal @default(0.0)          // Optional time when the order was dispatched
-   product          Product  @relation(fields: [productId], references: [id])  // Ensure this relation exists
-   returnRequests ReturnRequest[] // Foreign key relationship with ReturnRequest
+  shippingCost Decimal @default(0.0)          // Optional time when the order was dispatched
+  product          Product  @relation(fields: [productId], references: [id])  // Ensure this relation exists
+  returnRequests ReturnRequest[]
+   refundRequests RefundRequest[]
   @@index([orderId])
   @@index([productId])
   @@index([vendorId])
@@ -300,7 +301,7 @@ model OrderItem {
 }
 
 model Order {
-  id                String      @id @default(uuid())
+  id                String      @id @default(uuid()) @db.Uuid
   buyerId           String      @db.Uuid
   totalAmount       Decimal
   status            OrderStatus @default(pending)  // Order status, including confirmed, shipped, etc.
@@ -326,7 +327,7 @@ model Order {
 
 model Invoice {
   id       String   @id @default(uuid())
-  orderId  String   @unique
+ orderId  String   @unique @db.Uuid 
   vendorId String   @db.Uuid
   pdfUrl   String
   issuedAt DateTime @default(now())
@@ -436,7 +437,7 @@ model EmailLog {
 model Payment {
   id            String        @id @default(uuid())
   userId        String        @db.Uuid
-  orderId       String
+orderId          String @db.Uuid
   amount        Decimal
   status        PaymentStatus
   method        PaymentMethod
@@ -510,23 +511,26 @@ model PopularProduct {
   score     Float
   updatedAt DateTime @updatedAt
 }
-
 model RefundRequest {
-  id            String       @id @default(uuid())
-  orderItemId   String
-  userId        String       @db.Uuid
-  vendorId      String       @db.Uuid
-   orderId       String       @db.Uuid git  // Add this line and make sure it's @db.Uuid
-  reason        RefundReason
-  status        RefundStatus @default(REQUESTED)
-  comment       String?
-  attachmentUrls String[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  resolvedAt    DateTime?
-  user          User         @relation(fields: [userId], references: [id])
-  vendor        Vendor       @relation(fields: [vendorId], references: [id])
-  order         Order        @relation(fields: [orderId], references: [id])  // Cross relation with Order table
+  id              String       @id @default(uuid()) @db.Uuid
+  orderItemId     String       @db.Uuid
+  userId          String       @db.Uuid
+  vendorId        String       @db.Uuid
+  orderId         String       @db.Uuid // Corrected: removed 'git', added @db.Uuid
+  reason          RefundReason
+  status          RefundStatus @default(REQUESTED)
+  comment         String?
+  attachmentUrls  String[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  resolvedAt      DateTime?
+
+  // Relations
+  user            User         @relation(fields: [userId], references: [id])
+  vendor          Vendor       @relation(fields: [vendorId], references: [id])
+  order           Order        @relation(fields: [orderId], references: [id])
+  orderItem       OrderItem    @relation(fields: [orderItemId], references: [id])
+
   @@index([userId])
   @@index([vendorId])
   @@index([orderItemId])
@@ -534,22 +538,24 @@ model RefundRequest {
 }
 
 model ReturnRequest {
-  id               String @id @default(uuid()) @db.Uuid
-  orderItemId      String @db.Uuid // Foreign key reference to OrderItem.id
-  userId           String @db.Uuid // Foreign key reference to User.id
-  orderId          String @db.Uuid // Add this line
-  reason           String
-  status           ReturnStatus @default(REQUESTED)
-  returnType       ReturnPolicyType
-  replacementProductId String?
-  comment          String?
-attachmentUrls String[]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  resolvedAt       DateTime?
-  order            Order     @relation(fields: [orderId], references: [id])  // Cross relation with Order table 
-  user             User      @relation(fields: [userId], references: [id])
-  orderItem        OrderItem @relation(fields: [orderItemId], references: [id])
+  id                     String           @id @default(uuid()) @db.Uuid
+  orderItemId            String           @db.Uuid
+  userId                 String           @db.Uuid
+  orderId                String           @db.Uuid
+  reason                 String
+  status                 ReturnStatus     @default(REQUESTED)
+  returnType             ReturnPolicyType
+  replacementProductId   String?
+  comment                String?
+  attachmentUrls         String[]
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  resolvedAt             DateTime?
+
+  // Relations
+  order                  Order            @relation(fields: [orderId], references: [id])
+  user                   User             @relation(fields: [userId], references: [id])
+  orderItem              OrderItem        @relation(fields: [orderItemId], references: [id])
 
   @@index([userId])
   @@index([orderItemId])

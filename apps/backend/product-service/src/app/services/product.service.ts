@@ -63,6 +63,7 @@ async createProduct(data: any) {
       vendorId,
       variants,
       dispatchTimeInDays,
+      returnPolicyType,
     } = data;
 
     console.log('Checking required fields for product creation:', {
@@ -188,6 +189,7 @@ images.forEach((img: string, i: number) => {
         productFeatures: productFeatures || [],
         dispatchTimeInDays,
         shippingCost: shippingCostDecimal,
+        returnPolicyType,
       },
     });
 
@@ -282,6 +284,7 @@ async updateProduct(id: string, data: any) {
     productCareInstructions: productData.productCareInstructions,
     productFeatures: productData.productFeatures || [],
     imageUrls: productData.imageUrls,
+    
   };
 
   // ✅ Step 1: Update product
@@ -321,6 +324,7 @@ async updateProduct(id: string, data: any) {
           enclosureMaterial: listing.enclosureMaterial,
           productCareInstructions: listing.productCareInstructions,
           productFeatures: listing.productFeatures || [],
+           returnPolicyType: listing.returnPolicyType, 
         },
       });
 

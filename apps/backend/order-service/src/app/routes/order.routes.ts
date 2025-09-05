@@ -43,10 +43,16 @@ router.post(
  // Limit number of files (5 in this example)
 
 // Route to get all return requests for the logged-in user
-router.get('/return-requests', getReturnRequestsByUser);
+router.get('/return-requests',
+   authMiddleware(['buyer', 'buyer_seller']), getReturnRequestsByUser);
 
 // Route to update the status of a return request (for admin or vendor)
-router.put('/return-request/status', updateReturnRequestStatus);
+router.put(
+  '/return-request/status',
+  authMiddleware(), // <-- Add this middleware first
+  requireRole('vendor', 'buyer_seller', 'admin', 'super_admin'),
+  updateReturnRequestStatus
+);
 router.post(
   '/addresses',
   authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
