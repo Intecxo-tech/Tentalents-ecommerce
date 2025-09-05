@@ -22,93 +22,68 @@ export async function manualInvoiceGeneration(req: Request, res: Response) {
       include: {
         items: {
           include: {
-            vendor: true, // Include vendor information for each item
+            vendor: true,
           },
         },
-        invoice: true, // Check if invoice already exists
+        invoice: true,
       },
     });
 
     if (!order) {
-      console.log(`❌ [manualInvoiceGeneration] Order with id ${orderId} not found`);
+      console.log(`❌ Order with id ${orderId} not found`);
       return res.status(404).json({ error: 'Order not found' });
     }
 
     if (order.invoice) {
-      console.log(`❌ [manualInvoiceGeneration] Invoice already exists for orderId: ${orderId}`);
+      console.log(`❌ Invoice already exists for orderId: ${orderId}`);
       return res.status(409).json({ error: 'Invoice already exists for this order' });
     }
 
-    // Fetch vendorId from the first item in the order (assuming all items have the same vendor)
     const vendorId = order.items[0]?.vendor.id;
-    console.log(`🔑 [manualInvoiceGeneration] vendorId: ${vendorId}`);
-
     if (!vendorId) {
-      console.log(`❌ [manualInvoiceGeneration] No vendor associated with order items for orderId: ${orderId}`);
       return res.status(400).json({ error: 'No vendor associated with order items' });
     }
 
-    // Generate and upload the invoice PDF to MinIO
-    console.log(`📝 [manualInvoiceGeneration] Generating and uploading invoice for orderId: ${orderId}`);
-    const pdfUrl = await generateInvoiceAndUpload(orderId); // Assuming this function now returns pdfUrl
+    // ✅ Generate invoice and upload
+    const pdfUrl = await generateInvoiceAndUpload(orderId);
 
     if (!pdfUrl) {
-      console.log(`❌ [manualInvoiceGeneration] Failed to generate invoice for orderId: ${orderId}`);
       return res.status(500).json({ error: 'Failed to generate invoice PDF' });
     }
 
-    console.log(`📤 [manualInvoiceGeneration] Invoice uploaded to MinIO for orderId: ${orderId}. PDF URL: ${pdfUrl}`);
+    console.log(`✅ Invoice generated and uploaded. URL: ${pdfUrl}`);
 
-    // Store invoice info in the database
-    console.log(`💾 [manualInvoiceGeneration] Storing invoice data for orderId: ${orderId}`);
-    const invoice = await prisma.invoice.create({
-      data: {
-        orderId,
-        vendorId,
-        pdfUrl,  // Store the URL of the generated PDF
-        issuedAt: new Date(), // Setting the current timestamp for when the invoice is created
-      },
+    return res.status(201).json({
+      message: 'Invoice generated successfully',
+      pdfUrl,
     });
-
-    console.log(`✅ [manualInvoiceGeneration] Invoice created successfully for orderId: ${orderId}`);
-    return res.status(201).json({ message: 'Invoice generated', invoice });
   } catch (err) {
-    console.error('❌ [manualInvoiceGeneration] Error generating invoice:', err);
+    console.error('❌ Error generating invoice:', err);
     return res.status(500).json({ error: 'Failed to generate invoice' });
   }
 }
+
 
 /**
  * Get signed URL from MinIO for invoice PDF download.
  */
 export async function getInvoiceDownloadUrl(req: Request, res: Response) {
-  const { invoiceId } = req.params;
-
-  console.log(`🔎 [getInvoiceDownloadUrl] Received request for invoiceId: ${invoiceId}`);
-
+  const { orderId } = req.params;
   try {
-    // Fetch the invoice from the database
-    console.log(`📦 [getInvoiceDownloadUrl] Fetching invoice details for invoiceId: ${invoiceId}`);
     const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId },
+      where: { orderId },
     });
 
-    if (!invoice || !invoice.pdfUrl) {
-      console.log(`❌ [getInvoiceDownloadUrl] Invoice not found or PDF URL missing for invoiceId: ${invoiceId}`);
-      return res.status(404).json({ error: 'Invoice not found or PDF URL missing' });
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
     }
 
-    console.log(`🔑 [getInvoiceDownloadUrl] Retrieving signed URL for invoiceId: ${invoiceId}`);
-    // Get the signed URL from MinIO for secure file download
-    const signedUrl = await getPresignedUrl({
-      bucketName: 'invoices', // Assuming MinIO bucket name is 'invoices'
-      objectName: invoice.pdfUrl, // Using pdfUrl here instead of filePath
-    });
+    if (!invoice.pdfUrl) {
+      return res.status(404).json({ error: 'Invoice PDF URL missing' });
+    }
 
-    console.log(`📤 [getInvoiceDownloadUrl] Signed URL generated for invoiceId: ${invoiceId}`);
-    return res.json({ signedUrl });
+    return res.json({ signedUrl: invoice.pdfUrl });
   } catch (err) {
-    console.error('❌ [getInvoiceDownloadUrl] Error getting signed URL:', err);
     return res.status(500).json({ error: 'Failed to get download URL' });
   }
 }

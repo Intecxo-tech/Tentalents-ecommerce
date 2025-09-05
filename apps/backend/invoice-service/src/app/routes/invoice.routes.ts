@@ -7,6 +7,6 @@ import {
 const router = Router();
 
 router.post('/generate/:orderId', manualInvoiceGeneration);
-router.get('/download/:invoiceId', getInvoiceDownloadUrl);
+router.get('/download/:orderId', getInvoiceDownloadUrl);
 
 export default router;

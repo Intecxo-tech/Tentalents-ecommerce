@@ -9,7 +9,8 @@ import {
   deleteAddress,
   getUserAddresses ,
   getVendorOrders,
-  updateDispatchStatus
+  updateDispatchStatus,
+   cancelOrder
  
 } from '../controllers/order.controller';
 import { authMiddleware, requireRole } from '@shared/auth';
@@ -20,6 +21,7 @@ router.get(
   authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
   getUserAddresses  // Fetch all addresses for the authenticated user
 );
+
 router.post(
   '/addresses',
   authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
@@ -44,7 +46,11 @@ router.post(
   authMiddleware(['buyer', 'buyer_seller']),  // Ensuring the user is authenticated
   placeOrder
 );
-
+router.post(
+  '/:id/cancel',
+  authMiddleware(['buyer', 'buyer_seller']),
+  cancelOrder
+);
 router.get(
   '/', 
   authMiddleware(),  // Ensure user is authenticated

@@ -368,7 +368,49 @@ if (!buyer) {
       throw error;
     }
   },
-  
+
+  // ...existing methods
+
+cancelOrder: async (orderId: string, buyerId: string) => {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      dispatchStatus: true,
+      buyerId: true,
+      status: true,
+    },
+  });
+
+  if (!order) {
+    throw new Error('Order not found');
+  }
+
+  if (order.buyerId !== buyerId) {
+    throw new Error('Unauthorized: You can only cancel your own orders');
+  }
+
+  // Prevent cancellation if order is dispatched or delivered
+  if (
+    order.dispatchStatus === 'dispatched' || 
+    order.dispatchStatus === 'delivered' || 
+    order.status === 'delivered'
+  ) {
+    throw new Error('Order cannot be cancelled once it is dispatched or delivered');
+  }
+
+  if (order.status === 'canceled') {
+    throw new Error('Order is already cancelled');
+  }
+
+  // Update order status to canceled
+  const canceledOrder = await prisma.order.update({
+    where: { id: orderId },
+    data: { status: 'canceled' },
+  });
+
+  return canceledOrder;
+},
+
   updateDispatchStatus: async (orderId: string, dispatchStatus: 'preparing' | 'failed' | 'not_started' | 'dispatched' | 'in_transit'| 'delivered') => {
   // Update the dispatch status of the order
   return prisma.order.update({

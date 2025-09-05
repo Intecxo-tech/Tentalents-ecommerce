@@ -75,6 +75,37 @@ export const getOrderById = async (
     next(err);
   }
 };
+export const cancelOrder = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const buyerId = req.user?.userId;
+    const orderId = req.params.id;
+
+    if (!buyerId) {
+      return res.status(401).json({ message: 'Unauthorized: missing user ID' });
+    }
+
+    if (!orderId) {
+      return res.status(400).json({ message: 'Order ID is required' });
+    }
+
+    const canceledOrder = await orderService.cancelOrder(orderId, buyerId);
+
+    // Optionally, produce Kafka event here
+    await produceKafkaEvent({
+      topic: 'order.cancelled',
+      messages: [{ value: JSON.stringify(canceledOrder) }],
+    });
+
+    sendSuccess(res, '✅ Order cancelled successfully', canceledOrder);
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 export const updateOrderStatus = async (
   req: Request,

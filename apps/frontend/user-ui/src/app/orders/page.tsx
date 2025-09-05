@@ -10,7 +10,7 @@ import Products from '../home-page/products-grid/productsgrid';
 import { ChevronRight, Search } from 'lucide-react';
 import '../home-page/headerbanner.css';
 import type { Product } from '../components/orderplaced/orderplaced';
-
+import toast from 'react-hot-toast';
 interface ShippingAddress {
   name: string;
   phone: string;
@@ -213,6 +213,101 @@ useEffect(() => {
 
     fetchPopularProducts();
   }, []);
+async function handleDownloadInvoice(orderId: string) {
+  try {
+    console.log(`Fetching invoice URL for orderId: ${orderId}`);
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('Please log in to download invoices.');
+      return;
+    }
+
+    const res = await fetch(`http://localhost:3009/api/invoices/download/${orderId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to get invoice URL');
+    }
+
+    const data = await res.json();
+    const { signedUrl } = data;
+
+    if (!signedUrl) {
+      alert('Invoice URL not found');
+      return;
+    }
+
+    // Now fetch the PDF as a blob
+    const pdfResponse = await fetch(signedUrl);
+    const blob = await pdfResponse.blob();
+
+    // Create a temporary URL for the blob
+    const downloadUrl = URL.createObjectURL(blob);
+
+    // Create a hidden anchor and trigger download
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `Invoice-${orderId}.pdf`; // Name the file
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    // Clean up the object URL
+    URL.revokeObjectURL(downloadUrl);
+  } catch (err) {
+    console.error('Error downloading invoice:', err);
+    alert('Failed to download invoice.');
+  }
+}
+
+
+
+async function handleCancelOrder(order: OrderData) {
+  if (order.dispatchStatus === 'dispatched' || order.dispatchStatus === 'on transit') {
+    toast.error('Order has been delivered or is in transit and cannot be cancelled');
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    toast.error('Please login to cancel the order');
+    return;
+  }
+
+  try {
+    const res = await fetch(`http://localhost:3002/api/orders/${order.id}/cancel`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.message || 'Failed to cancel order');
+    }
+
+    const json = await res.json();
+
+    if (json.success) {
+      toast.success('Order cancelled successfully');
+      // Optionally, refetch orders or update the order state here to reflect cancellation
+      setOrders(prevOrders => prevOrders.map(o => (o.id === order.id ? { ...o, status: 'cancelled' } : o)));
+    } else {
+      throw new Error(json.message || 'Failed to cancel order');
+    }
+  } catch (err: any) {
+    toast.error(err.message || 'Something went wrong');
+  }
+}
+
   return (
   <div className="orderapagefull2">
   <div className="orderapagefull">
@@ -255,7 +350,7 @@ useEffect(() => {
   filteredOrders.map(order => (
     <div key={order.id} className="sectionsorder">
       {/* You can put OrderCard for that order */}
-      <OrderCard order={order} />
+      <OrderCard onDownloadInvoice={handleDownloadInvoice}  order={order}  onCancelOrder={(order) => handleCancelOrder(order as any)} />
 
       {/* If YourOrder is supposed to show multiple orders, you might want to filter or pass only this order */}
       {/* Or if YourOrder is a summary component, maybe keep it outside the map? */}

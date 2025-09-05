@@ -13,11 +13,11 @@ export const invoiceService = {
     buyerEmail: string;
     items: { name: string; price: number; quantity: number }[];
     total: number;
-  }): Promise<void> => {
+  }): Promise<string> => {
     const doc = new PDFDocument();
     const chunks: Buffer[] = [];
 
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       doc.text('🧾 MVP Shop Invoice', { align: 'center' });
       doc.text(`Order ID: ${orderData.orderId}`);
       doc.text(`Buyer: ${orderData.buyerEmail}`);
@@ -62,7 +62,7 @@ export const invoiceService = {
             },
           });
 
-          resolve();
+       resolve(pdfUrl); 
         } catch (err) {
           console.error('Error generating invoice:', err);
           reject(err);

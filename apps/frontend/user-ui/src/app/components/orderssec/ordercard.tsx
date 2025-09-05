@@ -29,20 +29,28 @@ interface OrderItem {
 
 interface OrderData {
   id: string;
+  buyerId: string;
   totalAmount: string;
   paymentMode: string;
   paymentStatus: string;
+  shippingAddressId: string;
   placedAt: string;
+  updatedAt: string;
+  stripePaymentIntentId: string | null;
+  dispatchStatus: string;
   dispatchTime: string | null;
-  shippingAddress: ShippingAddress;
+  status: string;
   items: OrderItem[];
+  shippingAddress: ShippingAddress;
 }
 
 interface OrderCardProps {
   order: OrderData;
+  onDownloadInvoice: (orderId: string) => void;
+    onCancelOrder: (order: OrderData) => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order, onDownloadInvoice, onCancelOrder   }) => {
   const {
     id,
     placedAt,
@@ -78,7 +86,21 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           </p>
         </div>
         <div className="orderheader-right">
-          <p>Download Invoice</p>
+        <button
+  className="background-button"
+  onClick={() => onDownloadInvoice(order.id)}
+>
+  Download Invoice
+</button>
+ <button
+        className="cancel-button"
+        onClick={() => onCancelOrder(order)}
+        disabled={order.dispatchStatus === 'dispatched' || order.dispatchStatus === 'on transit'}
+        style={{ marginTop: '10px', backgroundColor: 'red', color: 'white', padding: '8px 12px', borderRadius: '5px' }}
+      >
+        Cancel Order
+      </button>
+
         </div>
       </div>
 
