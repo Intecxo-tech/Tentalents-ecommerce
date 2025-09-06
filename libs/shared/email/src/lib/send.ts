@@ -1,11 +1,22 @@
 import nodemailer from 'nodemailer';
-import { env } from '@shared/middlewares/config/src/lib/env';
-import { logger } from '@shared/middlewares/logger/src/lib/logger';
+
+const env = {
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.sendgrid.net',
+  SMTP_PORT: Number(process.env.SMTP_PORT) || 587,
+  SMTP_USER: process.env.SMTP_USER || 'apikey',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  EMAIL_FROM: process.env.EMAIL_FROM || 'no-reply@example.com',
+};
+
+const logger = {
+  info: (...args: any[]) => console.info(...args),
+  error: (...args: any[]) => console.error(...args),
+};
 
 const transporter = nodemailer.createTransport({
   host: env.SMTP_HOST,
   port: env.SMTP_PORT,
-  secure: false,
+  secure: env.SMTP_PORT === 465,
   auth: {
     user: env.SMTP_USER,
     pass: env.SMTP_PASS,
@@ -33,5 +44,9 @@ export const sendEmail = async ({
   }
 };
 
+
+
 // npm install -D @types/nodemailer
 // npm install nodemailer
+
+

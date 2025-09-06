@@ -1,6 +1,7 @@
-import { sendEmail } from '@shared/middlewares/email/src/lib/send';
-import { EmailPayload } from '@shared/middlewares/email/src/lib/send';
+// shared/email/service.ts
+import { sendEmail } from './client';
+import { EmailPayload } from './types';
 
-export const sendEmailService = async (data: EmailPayload) => {
-  await sendEmail(data);
+export const sendEmailService = async (payload: EmailPayload) => {
+  return await sendEmail(payload);
 };
