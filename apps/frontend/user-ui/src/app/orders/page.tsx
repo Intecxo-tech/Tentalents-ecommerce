@@ -11,6 +11,7 @@ import { ChevronRight, Search } from 'lucide-react';
 import '../home-page/headerbanner.css';
 import type { Product } from '../components/orderplaced/orderplaced';
 import toast from 'react-hot-toast';
+import Exchange from '../components/exchange/Exchange';
 interface ShippingAddress {
   name: string;
   phone: string;
@@ -269,7 +270,7 @@ async function handleDownloadInvoice(orderId: string) {
 
 
 const handleCancelOrder = async (order: OrderData) => {
-  // Check if the order is dispatched or in transit
+  // Prevent cancelling dispatched/on-transit orders
   if (order.dispatchStatus === 'dispatched' || order.dispatchStatus === 'on transit') {
     toast.error('This order cannot be cancelled as it is already on its way.');
     return;
@@ -281,9 +282,15 @@ const handleCancelOrder = async (order: OrderData) => {
     return;
   }
 
+  // --- Optimistic UI update ---
+  setOrders(prevOrders =>
+    prevOrders.map(o =>
+      o.id === order.id ? { ...o, status: 'canceled' } : o
+    )
+  );
+  toast.success('Order cancelled successfully');
+
   try {
-    // --- FIX IS HERE ---
-    // Replace 'localhost:3002' with your deployed order service URL
     const API_URL = 'https://order-service-faxh.onrender.com'; 
     const res = await fetch(`${API_URL}/api/orders/${order.id}/cancel`, {
       method: 'POST',
@@ -292,7 +299,6 @@ const handleCancelOrder = async (order: OrderData) => {
         'Content-Type': 'application/json',
       },
     });
-    // --- END OF FIX ---
 
     if (!res.ok) {
       const errData = await res.json();
@@ -300,19 +306,18 @@ const handleCancelOrder = async (order: OrderData) => {
     }
 
     const json = await res.json();
-
-    if (json.success) {
-      // This code will now be reached successfully!
-      setOrders(prevOrders =>
-        prevOrders.map(o =>
-          o.id === order.id ? { ...o, status: 'cancelled' } : o
-        )
-      );
-      toast.success('Order cancelled successfully');
-    } else {
+    if (!json.success) {
       throw new Error(json.message || 'Failed to cancel order');
     }
+
+    // No need to update state again — we already did optimistic update
   } catch (err: any) {
+    // Revert UI change if API fails
+    setOrders(prevOrders =>
+      prevOrders.map(o =>
+        o.id === order.id ? { ...o, status: order.status } : o
+      )
+    );
     toast.error(err.message || 'Something went wrong');
     console.error('Error while canceling order:', err);
   }
@@ -366,7 +371,8 @@ const handleCancelOrder = async (order: OrderData) => {
       {/* If YourOrder is supposed to show multiple orders, you might want to filter or pass only this order */}
       {/* Or if YourOrder is a summary component, maybe keep it outside the map? */}
       {/* But since you want the section repeated for every order, let's assume you want YourOrder here as well */}
-      <YourOrder orders={[order]} loading={false} error={null} />
+      <YourOrder orders={[order]} loading={false} error={null}   buyerId={order.buyerId} />
+    
     </div>
   ))
 ) : (

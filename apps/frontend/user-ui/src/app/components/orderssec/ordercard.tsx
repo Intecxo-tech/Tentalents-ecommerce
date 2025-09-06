@@ -63,12 +63,13 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onDownloadInvoice, onCance
   status,
  } = order;
 
- const isCancelable =
-  // ✅ FIX #1: Changed 'cancelled' to 'canceled'
+const isCancelable =
   status.toLowerCase() !== 'canceled' &&
   dispatchStatus.toLowerCase() !== 'dispatched' &&
-  dispatchStatus.toLowerCase() !== 'on transit';
+  dispatchStatus.toLowerCase() !== 'on transit' &&
+  status.toLowerCase() !== 'delivered';  // <-- exclude delivered orders from cancel
 
+const isDelivered = status.toLowerCase() === 'delivered';
  const itemsSubtotal = items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
  const shippingCost = 50;
  const grandTotal = itemsSubtotal + shippingCost;
@@ -86,23 +87,29 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onDownloadInvoice, onCance
      </p>
     </div>
     <div className="orderheader-right">
-     <button
-      className="invoicebutton"
-      onClick={() => onDownloadInvoice(order.id)}
-     >
-      Download Invoice
-     </button>
+     
 
-     {isCancelable && (
-      <button className="cancel-button" onClick={() => onCancelOrder(order)}>
-       Cancel Order
-      </button>
-     )}
+    <div className="orderheader-right">
+  <button
+    className="invoicebutton"
+    onClick={() => onDownloadInvoice(order.id)}
+  >
+    Download Invoice
+  </button>
 
-     {/* ✅ FIX #2: Changed 'cancelled' to 'canceled' */}
-     {status.toLowerCase() === 'canceled' && (
-      <p className="cancelled-status">Order Canceled</p>
-     )}
+  {isCancelable && (
+    <button className="cancel-button" onClick={() => onCancelOrder(order)}>
+      Cancel Order
+    </button>
+  )}
+
+
+
+  {status.toLowerCase() === 'canceled' && (
+    <p className="cancelled-status">Order Canceled</p>
+  )}
+</div>
+
     </div>
    </div>
 

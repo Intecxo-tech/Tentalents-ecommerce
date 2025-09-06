@@ -1,0 +1,166 @@
+.returnform {
+  padding: 5px 20px;
+  border: 1px solid #ccc;
+  max-width: 400px;
+  width: 100%;
+  margin: auto;
+  padding-bottom: 20px;
+  border-radius: 10px;;
+  background-color: white;
+}
+.exchange-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.form-group {
+  margin-bottom: 20px;
+}
+.returnheading{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.dropdown {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+}
+
+.uploaded-images-preview {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.image-preview img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.dropdown {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  background-color: var(--lightbackground); /* Light background */
+  color: #333;
+  border-radius: 5px;
+  appearance: none; /* Removes native styling */
+  outline: none;
+  transition: border-color 0.3s;
+  border: 1px solid #ccc;
+
+  /* Custom chevron-down icon */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='%23999' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+  padding-right: 40px; /* Extra space for icon */
+}
+
+
+/* On focus */
+.dropdown:focus {
+  border-color: #007BFF;
+  background-color: #fff;
+}
+.imageupload{
+    background-color: #EBEBEB;
+    padding: 10px;
+    border-radius: 10px;;
+    display: flex;
+    margin-bottom: 15px;
+    align-items: center;
+    justify-content: space-between;
+    gap:10px;
+}
+/* .container1{
+    background-color: white;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 250px;;
+} */
+ .container1 {
+  /* border: 2px dashed #ccc; */
+  /* padding: 20px; */
+    height: 200px;  /* Use fixed height */
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 10px;
+  background-color: white;
+ padding: 20px 30px;
+  color: #666;
+  transition: border-color 0.3s;
+  margin-top: 10px;
+  position: relative;
+  /* min-height: 200px; */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.container1:hover {
+  border-color: #007bff;
+  color: var(--primary);
+}
+
+.uploaded-files-preview.inside {
+  display: flex;
+  /* flex-wrap: wrap; */
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  /* justify-content: center; */
+  width: 100%;
+}
+
+.file-preview img,
+.file-preview video {
+   width: 100%;
+   height: 100%;
+  object-fit: cover; /* ← fills the box, no white space */
+  border-radius: 8px;
+}
+
+.container1 p{
+    color: var(--primary);
+    text-decoration: underline;
+    font-size:15px;
+}
+.container1 span{
+    color: #CCCCCC;
+    font-size: 14px;;
+}
+/* Style placeholder option */
+.dropdown option[value=""] {
+  color: #888; /* Light gray placeholder */
+}
+
+/* Form group spacing */
+.form-group {
+  margin-bottom: 20px;
+}
+
+/* Label styling */
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}

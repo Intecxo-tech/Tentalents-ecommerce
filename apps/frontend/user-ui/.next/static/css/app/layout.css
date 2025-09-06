@@ -298,9 +298,6 @@
 .absolute {
   position: absolute;
 }
-.fixed {
-  position: fixed;
-}
 .relative {
   position: relative;
 }
@@ -468,6 +465,9 @@ ul li {
   padding: 10px 20px;
   border-radius: 10px;
   gap: 20px;
+  width: 100%;
+}
+.product-list-item2 .content-area2 {
   width: 100%;
 }
 .product-image {

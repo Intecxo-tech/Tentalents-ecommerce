@@ -43,7 +43,11 @@
 }
 .review-button-container {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+  /* justify-content: flex-end; */
   
 }
 .productlistaddtocart2{

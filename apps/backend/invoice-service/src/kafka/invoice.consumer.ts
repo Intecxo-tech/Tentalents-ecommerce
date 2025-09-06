@@ -5,7 +5,7 @@ import { generateInvoiceAndUpload } from '../../../../../libs/shared/utils/src/l
 import { PrismaClient } from '@prisma/client';
 import { MinioBuckets } from '@shared/minio';
 import { logger } from '@shared/logger';
-
+import { getPresignedUrl } from '@shared/minio';
 const prisma = new PrismaClient();
 
 function getPublicUrl(filePath: string): string {
@@ -56,7 +56,12 @@ const vendorId = orderItems[0].vendor.id;
         }
 
         // Derive public URL for the PDF file
-        const pdfUrl = getPublicUrl(filePath);
+       const pdfUrl = await getPresignedUrl({
+  bucketName: MinioBuckets.INVOICE,
+  objectName: filePath,
+  expirySeconds: 60 * 60, // or whatever expiry you want
+});
+
 
         await prisma.invoice.create({
           data: {

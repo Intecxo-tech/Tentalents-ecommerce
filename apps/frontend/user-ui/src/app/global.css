@@ -107,6 +107,9 @@ ul li{
   width:100%;
 
 }
+ .product-list-item2 .content-area2{
+  width: 100%;
+ }
 .product-image{
   background-color: var(--lightbackground);
 }
