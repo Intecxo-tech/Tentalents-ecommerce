@@ -1,3 +1,5 @@
+// libs/shared/middlewares/src/index.ts
+
 export * from './lib/error.middleware';
 export * from './lib/notFound.middleware';
 export * from './lib/requestLogger.middleware';
@@ -6,5 +8,5 @@ export * from './lib/helmet.middleware';
 export * from './lib/cors.middleware';
 export * from './lib/role.middleware';
 export * from './lib/validate.middleware';
-
 export * from './lib/multer.middleware';
+export * from './lib/rawBody.middleware'; // ✅ exported correctly

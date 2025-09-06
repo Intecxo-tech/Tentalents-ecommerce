@@ -4,23 +4,29 @@ import { errorHandler } from '@shared/error';
 import { logger } from '@shared/logger';
 import paymentRoutes from './app/routes/payment.routes';
 import cors from 'cors';
-import rawBodyMiddleware from '@shared/middlewares';
+import { raw } from 'express'; // ⚡ directly import raw parser
+
 const app = express();
 
+// Define rawBodyMiddleware locally
+const rawBodyMiddleware = raw({ type: 'application/json' });
+
 // Apply CORS middleware first
-app.use(cors({
-  origin: 'http://localhost:3000', // your frontend origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  })
+);
 
-// Then apply JSON body parser
-// ⚠️ Mount only the webhook first with raw body
-
+// Stripe webhook route with raw body parser
 app.post('/api/payments/stripe/webhook', rawBodyMiddleware, paymentRoutes);
+
+// Apply JSON parser for all other routes
 app.use(express.json());
 
-// Now apply your routes
+// Main payment routes
 app.use('/api/payments', paymentRoutes);
 
 // Swagger docs

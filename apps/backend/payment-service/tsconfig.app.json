@@ -29,15 +29,17 @@
       // Correct paths for service imports (include whole src folder)
       "@payment-service/*": ["apps/backend/payment-service/src/app/*"],  // Including all files in the payment-service
       "@order-service/*": ["apps/backend/order-service/src/app/*"],
-      "@cart-service/*":["apps/backend/cart-service/src/app/*"]  // Including all files in the order-service
+      "@cart-service/*":["apps/backend/cart-service/src/app/*"],  // Including all files in the cart-service
+      "@invoice-service/*": ["apps/backend/invoice-service/src/app/*"]  // Including all files in the invoice-service
     }
   },
   "include": [
     "src/**/*.ts",
     "../../../libs/shared/**/*.ts",
-    "../../../apps/backend/payment-service/src/**/*.ts",  // Ensure payment service files are included
+    "../../../apps/backend/payment-service/src/**/*.ts",
     "../../../apps/backend/order-service/src/**/*.ts",
-        "../../../apps/backend/cart-service/src/**/*.ts", // Ensure order service files are included
+    "../../../apps/backend/cart-service/src/**/*.ts",
+    "../../../apps/backend/invoice-service/src/**/*.ts"
   ],
   "exclude": [
     "jest.config.ts",
@@ -46,5 +48,9 @@
     "../../../node_modules",
     "../../../dist",
     "**/__tests__"
+   
+  ],
+  "references": [
+    { "path": "../invoice-service" }
   ]
 }

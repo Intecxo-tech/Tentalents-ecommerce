@@ -1,0 +1,190 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - ./.env
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+
+  redis-sentinel-0:
+    image: redis:7
+    container_name: redis-sentinel-0
+    restart: unless-stopped
+    command: redis-sentinel /etc/redis/sentinel.conf
+    volumes:
+      - ./libs/shared/redis/src/lib/sentinel-0.conf:/etc/redis/sentinel.conf
+    ports:
+      - "26379:26379"
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  kafka:
+    image: bitnami/kafka:3.7.0
+    container_name: kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"   # for docker internal access
+      - "29092:29092" # for host access
+    environment:
+      # KRaft mode (no Zookeeper)
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      # Listeners
+      KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+    networks:
+      - backend
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - backend
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server --console-address ":9001" /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - backend
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      SWAGGER_JSON_URL: ${SWAGGER_JSON_URL}
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+
+volumes:
+  redis-data:
+  minio-data:
+
+networks:
+  backend:
+    driver: bridge
+
+
+# # 🚀 Start all infra services (detached)
+# docker compose -f infra/docker/docker-compose-infrastructure.yml up -d
+
+# # 🛑 Stop all infra services
+# docker compose -f infra/docker/docker-compose-infrastructure.yml down
+
+# # 🔄 Rebuild + restart all infra services
+# docker compose -f infra/docker/docker-compose-infrastructure.yml up -d --build
+
+# # 🗑️ Stop + remove everything (containers, volumes, networks)
+# docker compose -f infra/docker/docker-compose-infrastructure.yml down -v
+
+
+# # =======================
+# # 📜 Logs
+# # =======================
+
+# # 📜 Tail logs for all infra services
+# docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f
+
+# # 📜 Tail logs for Redis
+# docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f redis
+
+# # 📜 Tail logs for Redis Sentinel
+# docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f redis-sentinel-0
+
+# # 📜 Tail logs for Kafka
+# docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f kafka
+
+# # 📜 Tail logs for Kafka-UI
+# docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f kafka-ui
+
+# # 🛑 Stop only Kafka
+# docker compose -f infra/docker/docker-compose-infrastructure.yml stop kafka
+
+# # 🚀 Start only Kafka
+# docker compose -f infra/docker/docker-compose-infrastructure.yml up -d kafka
+
+# # 🔄 Restart only Kafka
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart kafka
+
+# # 🛑 Stop only Kafka-UI
+# docker compose -f infra/docker/docker-compose-infrastructure.yml stop kafka-ui
+
+# # 🚀 Start only Kafka-UI
+# docker compose -f infra/docker/docker-compose-infrastructure.yml up -d kafka-ui
+
+# # 🔄 Restart only Kafka-UI
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart kafka-ui
+
+# # 📜 Tail logs for MinIO
+# docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f minio
+
+# # 📜 Tail logs for Swagger UI
+# docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f swagger-ui
+
+
+# # =======================
+# # 🔄 Restart
+# # =======================
+
+# # 🔄 Restart everything (all infra services)
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart
+
+# # 🔄 Restart Redis
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart redis
+
+# # 🔄 Restart Redis Sentinel
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart redis-sentinel-0
+
+# # 🔄 Restart Kafka
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart kafka
+
+# # 🔄 Restart Kafka-UI
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart kafka-ui
+
+# # 🔄 Restart MinIO
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart minio
+
+# # 🔄 Restart Swagger UI
+# docker compose -f infra/docker/docker-compose-infrastructure.yml restart swagger-ui
