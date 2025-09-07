@@ -35,7 +35,7 @@ const AccountPage = () => {
         return;
       }
 
-      const res = await fetch(`https://user-service-e1em.onrender.com/api/user/profile`, {
+      const res = await fetch(`http://localhost:3018/api/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -58,12 +58,93 @@ const AccountPage = () => {
       setLoading(false);
     }
   };
+// In AccountPage.tsx
+
+// In AccountPage.tsx
+
+// In AccountPage.tsx
+
+const handleBecomeSeller = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    if (profile?.isVendor || profile?.vendorId) {
+      toast.success('Redirecting to your seller dashboard...');
+      router.push(`http://localhost:3001/dashboard`);
+      return;
+    }
+
+    if (!profile?.phone || !profile?.name) { // Also check for name
+      toast.error("Please ensure your profile has a name and phone number.");
+      return;
+    }
+
+    // Call backend to convert user to vendor
+  const res = await fetch(`http://localhost:3010/api/vendor/convert`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  },
+  // ✅ THIS IS THE FIX: Send the user's profile data
+  body: JSON.stringify({
+    name: profile.name,
+    phone: profile.phone,
+    email: profile.email,
+  }),
+});
+
+    const data = await res.json();
+
+    // Check if the response from the backend is not OK
+    if (!res.ok) {
+      // Use the error message from the backend response if it exists
+      throw new Error(data.error || 'Failed to convert user to vendor');
+    }
+
+    setProfile((prev: any) => ({
+      ...prev,
+      isVendor: true,
+      vendorId: data.data?.id,
+    }));
+
+    // If profile is incomplete, redirect to vendor profile completion
+    if (!data.data?.profileComplete) {
+      toast.success('Complete your vendor profile');
+      localStorage.setItem('pendingVendorProfile', JSON.stringify({
+        id: data.data?.id,
+        name: profile.name,
+        phone: profile.phone,
+        email: profile.email,
+      }));
+    router.push(
+  `http://localhost:3001/signup?vendorId=${data.data?.id}&name=${encodeURIComponent(profile.name)}&phone=${profile.phone}&email=${profile.email}&token=${token}`
+);
+
+      return;
+    }
+
+    // Otherwise, redirect to seller dashboard
+    toast.success('You are now a seller! Redirecting to dashboard...');
+    router.push(`http://localhost:3001/dashboard`);
+
+  } catch (err: any) {
+    // This will now display the clear error from your backend
+    toast.error(err.message || 'Error becoming a seller');
+    console.error(err);
+  }
+};
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.replace('/login');
       return;
+      
     }
 
     fetchProfile();
@@ -88,7 +169,7 @@ const handleUpdateProfile = async () => {
       return;
     }
 
-    const res = await fetch(`https://user-service-e1em.onrender.com/api/user/profile`, {
+    const res = await fetch(`http://localhost:3018/api/user/profile`, {
   method: 'PATCH',
   headers: {
     'Content-Type': 'application/json',
@@ -148,7 +229,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const formData = new FormData();
   formData.append('avatar', file);
 
-    const res = await fetch(`https://user-service-e1em.onrender.com/api/user/profile/image`, {
+    const res = await fetch(`http://localhost:3018/api/user/profile/image`, {
      method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -274,10 +355,11 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         <div className="accountpage-right">
           <div className="menu-left">
             <Image src={Mainimage} alt="User" className="menu-image" />
-            <button className="background-button">
-              Become a Seller
-              <ChevronRight size={20} className="chevron-white" />
-            </button>
+        <button className="background-button" onClick={handleBecomeSeller}>
+            {profile?.isVendor || profile?.vendorId ? 'Switch to Seller' : 'Become a Seller'}
+            <ChevronRight size={20} className="chevron-white" />
+          </button>
+
           </div>
         </div>
       </div>

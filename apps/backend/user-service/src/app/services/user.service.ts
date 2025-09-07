@@ -148,47 +148,43 @@ const defaultProfileImage = `https://gravatar.com/avatar/${crypto.createHash('md
 
       await prisma.pendingUserOtp.delete({ where: { email } });
 
-      const kafkaPayload = { userId: user.id, email: user.email, role: user.role };
-    try {
-  await publishEvent({
-    topic: KAFKA_TOPICS.USER.CREATED,
-    messages: [{ value: JSON.stringify(kafkaPayload) }],
-  });
-} catch (kafkaErr) {
-  logger.warn('[Kafka] Failed to publish USER.CREATED event:', kafkaErr);
-}
+       try {
+        const kafkaPayload = { userId: user.id, email: user.email, role: user.role };
+        await publishEvent({
+          topic: KAFKA_TOPICS.USER.CREATED,
+          messages: [{ value: JSON.stringify(kafkaPayload) }],
+        });
 
-// Send EMAIL.USER_CREATED event
-try {
-  await publishEvent({
-    topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
-    messages: [{ value: JSON.stringify({ email: user.email }) }],
-  });
-} catch (kafkaErr) {
-  logger.warn('[Kafka] Failed to publish EMAIL.USER_CREATED event:', kafkaErr);
-}
+        await publishEvent({
+          topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
+          messages: [{ value: JSON.stringify({ email: user.email }) }],
+        });
 
-// Only for sellers
-if (user.role === UserRole.seller) {
-  try {
-    await publishEvent({
-      topic: KAFKA_TOPICS.USER.VENDOR_REGISTERED,
-      messages: [
-        {
-          value: JSON.stringify({
-            userId: user.id,
-            email: user.email,
-            phone: user.phone,
-            altphone: user.altPhone,
-            status: 'pending',
-          }),
-        },
-      ],
-    });
-  } catch (kafkaErr) {
-    logger.warn('[Kafka] Failed to publish USER.VENDOR_REGISTERED event:', kafkaErr);
-  }
-}
+        if (user.role === UserRole.seller) {
+          await publishEvent({
+            topic: KAFKA_TOPICS.USER.VENDOR_REGISTERED,
+            messages: [
+              {
+                value: JSON.stringify({
+                  userId: user.id,
+                  email: user.email,
+                  phone: user.phone,
+                  altphone: user.altPhone,
+                  status: 'pending',
+                }),
+              },
+            ],
+          });
+        }
+      } catch (kafkaErr) {
+        // If Kafka fails, we log it as a warning but DO NOT throw the error.
+        // This makes the Kafka integration optional and fault-tolerant.
+        logger.warn('⚠️ [UserService] Kafka event publishing failed but the process will continue.', kafkaErr);
+      }
+      // END: Graceful Kafka Publishing
+
+      logger.info(`[UserService] ✅ OTP-based registration complete for ${email}`);
+      return { id: user.id, email: user.email, role: user.role };
     } catch (err) {
       logger.error('[UserService] completeRegistration error:', err);
       throw err;
@@ -197,54 +193,83 @@ if (user.role === UserRole.seller) {
 
 
   loginUser: async ({ email, password }: LoginUserParams) => {
-    try {
-      logger.info('[UserService] 🔑 Login attempt for:', email);
-      const user = await prisma.user.findUnique({ where: { email } });
+  try {
+    logger.info('[UserService] 🔑 Login attempt for:', email);
+    const user = await prisma.user.findUnique({ where: { email } });
 
-      if (!user) {
-        logger.warn('[UserService] ❌ Email not found');
-        throw new Error('Invalid credentials');
-      }
-
-      if (!user.password) {
-        logger.warn('[UserService] ❌ User has no password (OAuth account)');
-        throw new Error('This account uses Google Login. Please sign in with Google.');
-      }
-
-      const isValid = await comparePassword(password, user.password);
-      if (!isValid) {
-        logger.warn('[UserService] ❌ Password mismatch');
-        throw new Error('Invalid credentials');
-      }
-
-      logger.info('[UserService] ✅ Authenticated:', user.email);
-      return generateJWT({ userId: user.id, email: user.email, role: user.role });
-    } catch (err: any) {
-      logger.error('[UserService] ❌ Login error:', err.message || err);
-      throw err;
+    if (!user) {
+      logger.warn('[UserService] ❌ Email not found');
+      throw new Error('Invalid credentials');
     }
-  },
 
-  getUserProfile: async (userId: string) => {
-    try {
-      if (!userId) throw new Error('User ID is required');
-
-      logger.info('[UserService] 📄 Fetching profile for ID:', userId);
-
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, email: true, role: true, name: true, phone: true,profileImage: true, altPhone: true, 
- },
-      });
-
-      if (!user) throw new Error(`User with ID ${userId} not found`);
-
-      return user;
-    } catch (err: any) {
-      logger.error('[UserService] ❌ getUserProfile error:', err.message || err);
-      throw err;
+    if (!user.password) {
+      logger.warn('[UserService] ❌ User has no password (OAuth account)');
+      throw new Error('This account uses Google Login. Please sign in with Google.');
     }
-  },
+
+    const isValid = await comparePassword(password, user.password);
+    if (!isValid) {
+      logger.warn('[UserService] ❌ Password mismatch');
+      throw new Error('Invalid credentials');
+    }
+
+    // Fetch vendor linked to user
+    const vendor = await prisma.vendor.findUnique({
+      where: { userId: user.id },
+    });
+
+    logger.info('[UserService] ✅ Authenticated:', user.email);
+
+    // Include vendorId in JWT payload
+    return generateJWT({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+     vendorId: vendor?.id ?? undefined,
+    });
+  } catch (err: any) {
+    logger.error('[UserService] ❌ Login error:', err.message || err);
+    throw err;
+  }
+},
+
+
+getUserProfile: async (userId: string) => {
+  try {
+    if (!userId) throw new Error('User ID is required');
+
+    logger.info('[UserService] 📄 Fetching profile for ID:', userId);
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        name: true,
+        phone: true,
+        profileImage: true,
+        altPhone: true,
+        vendor: {
+          select: { id: true }
+        }
+      }
+    });
+
+    if (!user) throw new Error(`User with ID ${userId} not found`);
+
+    // Now safe to access user.vendor
+    const vendorId = user.vendor?.id ?? null;
+
+    // If you want, you can attach vendorId to the user object or return separately
+    return { ...user, vendorId }; // or return user only as you want
+
+  } catch (err: any) {
+    logger.error('[UserService] ❌ getUserProfile error:', err.message || err);
+    throw err;
+  }
+},
+
  updateProfileImage: async (userId: string, imageUrl: string) => {
   try {
     if (!userId || !imageUrl) throw new Error('userId and imageUrl are required');
@@ -314,27 +339,15 @@ let user = await prisma.user.findFirst({ where: { firebaseUid: uid } });
       logger.info(`[UserService] 🆕 New Google user created: ${email}`);
 
       // Optionally publish Kafka events on user creation here
-      // If new user, publish events
-if (user && !user.firebaseUid) {
-  try {
-    await publishEvent({
-      topic: KAFKA_TOPICS.USER.CREATED,
-      messages: [{ value: JSON.stringify({ userId: user.id, email: user.email, role: user.role }) }],
-    });
-  } catch (kafkaErr) {
-    logger.warn('[Kafka] Failed to publish USER.CREATED event (OAuth):', kafkaErr);
-  }
+      await publishEvent({
+        topic: KAFKA_TOPICS.USER.CREATED,
+        messages: [{ value: JSON.stringify({ userId: user.id, email: user.email, role: user.role }) }],
+      });
 
-  try {
-    await publishEvent({
-      topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
-      messages: [{ value: JSON.stringify({ email: user.email }) }],
-    });
-  } catch (kafkaErr) {
-    logger.warn('[Kafka] Failed to publish EMAIL.USER_CREATED event (OAuth):', kafkaErr);
-  }
-}
-
+      await publishEvent({
+        topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
+        messages: [{ value: JSON.stringify({ email: user.email }) }],
+      });
     } else {
       logger.info(`[UserService] 🔑 Existing user logged in: ${email}`);
 
@@ -414,6 +427,3 @@ uploadImageAndGetUrl: async (userId: string, file: Express.Multer.File): Promise
 
 
 };
-
-
-

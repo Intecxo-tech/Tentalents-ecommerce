@@ -53,6 +53,7 @@ console.log('🔑 JWT Token:', token);
   const [uploadingKyc, setUploadingKyc] = useState(false);
 const fileInputRef = React.useRef<HTMLInputElement>(null);
  const [fileName, setFileName] = useState('');
+ const [isVendor, setIsVendor] = useState<boolean | null>(null); // null = loading
  const [certificateFileName, setCertificateFileName] = useState<string>('');
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
@@ -144,7 +145,7 @@ useEffect(() => {
 
       console.log(`📦 Fetching vendor details for ID: ${vendorId}`);  // Logs the vendorId for which you're fetching details
 
-      const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/profile/${vendorId}`, {
+      const response = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
         headers: {
           Authorization: `Bearer ${token}`,  // Send the token with the request
           'Content-Type': 'application/json',
@@ -830,10 +831,18 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
       <div className="accountpage-right">
           <div className="menu-left">
             <Image src={Mainimage} alt="User" className="menu-image" />
-            <button className="background-button">
-              Become a Seller
-              <ChevronRight size={20} className="chevron-white" />
-            </button>
+           {vendorId ? (
+  <button className="background-button" onClick={() => router.push('/dashboard')}>
+    Switch to Seller
+    <ChevronRight size={20} className="chevron-white" />
+  </button>
+) : (
+  <button className="background-button" onClick={() => router.push('/become-seller')}>
+    Become a Seller
+    <ChevronRight size={20} className="chevron-white" />
+  </button>
+)}
+
           </div>
           
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useRef, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import Image from 'next/image';
@@ -59,6 +59,7 @@ const SignUp = () => {
     password: false,
     confirmPassword: false,
   });
+  const searchParams = useSearchParams();
   const [rememberMe, setRememberMe] = useState(true);
   const [otp, setOtp] = useState(Array(6).fill(''));
   const [timer, setTimer] = useState(60);
@@ -70,13 +71,15 @@ const [kycFileNames, setKycFileNames] = useState<string[]>([]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
   const kycInputRef = useRef<HTMLInputElement>(null);
-  
+  const [isUpgrade, setIsUpgrade] = useState(false);
+const [pendingVendorId, setPendingVendorId] = useState('');
   const {
     register,
     handleSubmit,
     formState: { errors },
     trigger,
     getValues,
+    setValue,
   } = useForm<FormData>();
   const [passwordRules, setPasswordRules] = useState({
     length: false,
@@ -125,6 +128,36 @@ const [kycFileNames, setKycFileNames] = useState<string[]>([]);
       setLoading(false);
     }
   };
+
+useEffect(() => {
+  const pendingProfileData = localStorage.getItem('pendingVendorProfile');
+
+  if (pendingProfileData) {
+    try {
+      const profile = JSON.parse(pendingProfileData);
+
+      // ✅ Vendor ID
+      setPendingVendorId(profile.id || '');
+
+      // ✅ Pre-fill form fields
+      setValue('name', profile.name || '');
+      setValue('phone', profile.phone || '');
+      
+      // ✅ Set email properly
+      if (profile.email) {
+        setEmail(profile.email);
+        setValue('email', profile.email);
+      }
+
+      setStep('profile');
+      localStorage.removeItem('pendingVendorProfile');
+    } catch (error) {
+      console.error("Failed to parse pending vendor profile:", error);
+      localStorage.removeItem('pendingVendorProfile');
+    }
+  }
+}, [setValue]);
+
 
   const handleVerifyOtp = async () => {
     const otpCode = otp.join('');
@@ -185,88 +218,128 @@ const [kycFileNames, setKycFileNames] = useState<string[]>([]);
     setStep('bankDetails');
   };
 
-  const handleBankDetailsSubmit = async (data: FormData) => {
-    const isValid = await trigger(['accountNumber', 'ifscCode', 'bankName']);
-    if (!isValid) return;
+// In SignUp.tsx, replace your existing function with this one
+  useEffect(() => {
+    const vendorId = searchParams.get("vendorId");
+    const name = searchParams.get("name");
+    const phone = searchParams.get("phone");
+    const emailParam = searchParams.get("email");
+    const token = searchParams.get("token");
 
-    setLoading(true);
-    try {
-      const temporaryToken = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId');
-      if (!userId || !temporaryToken) {
-        throw new Error("User ID or temporary token not found in storage");
-      }
+    if (vendorId) {
+      setPendingVendorId(vendorId);
+      setIsUpgrade(true);
 
-      const kycFiles: string[] = [];
-      const kycFilenames: string[] = [];
-      const toBase64 = (file: File): Promise<string> =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = (error) => reject(error);
-        });
+      if (token) {
+        localStorage.setItem("token", token);
+        try {
+          // 🔴 FIX IS HERE: Change the type and the property you access
+          
+          // 1. Define the correct type for your decoded token
+          const decodedToken: { userId: string } = jwtDecode(token);
+          
+          // 2. Access the 'userId' property instead of 'sub'
+          const correctUserId = decodedToken.userId;
+          
+          localStorage.setItem("userId", correctUserId);
 
-      if (data.kycDocsUrl && data.kycDocsUrl.length > 0) {
-        for (let i = 0; i < data.kycDocsUrl.length; i++) {
-          const file = data.kycDocsUrl[i];
-          const base64 = await toBase64(file);
-          kycFiles.push(base64);
-          kycFilenames.push(file.name);
+        } catch (error) {
+          console.error("Failed to decode token from URL:", error);
+          toast.error("Invalid session link. Please log in.");
         }
       }
 
-      // Combine all data from all form steps
-      const allData = getValues();
-      const payload = {
-        userId,
-        vendorDetails: {
-          name: allData.name,
-          businessName: allData.businessName,
-          panNumber: allData.panNumber,
-          AadharNumber: allData.aadharNumber,
-          gstNumber: allData.gstNumber,
-          email,
-          phone: allData.phone || '',
-          address: allData.address,
-        },
-        bankDetails: {
-          accountHolder: allData.name, // Assuming name is account holder
-          accountNumber: allData.accountNumber,
-          ifscCode: allData.ifscCode,
-          bankName: allData.bankName,
-          branchName: allData.branchName || '',
-          upiId: allData.upiId || '',
-        },
-        kycFiles,
-        kycFilenames,
-      };
-
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_VENDOR_URI}/api/vendor/register/profile`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${temporaryToken}`,
-          },
-        }
-      );
-
-      const completeToken = response.data?.token;
-      if (!completeToken) {
-        throw new Error('Final login token was not received from the server.');
+      if (name) setValue("name", decodeURIComponent(name));
+      if (phone) setValue("phone", phone);
+      if (emailParam) {
+        setEmail(emailParam);
+        setValue("email", emailParam);
       }
-
-      localStorage.setItem('token', completeToken);
-      toast.success('Vendor profile completed successfully!');
-      router.push('/dashboard/myaccount');
-    } catch (err: any) {
-      console.error('Profile submission failed:', err);
-      toast.error(err?.response?.data?.message || 'Failed to complete profile.');
-    } finally {
-      setLoading(false);
+      setStep("profile");
     }
+  }, [searchParams, setValue, router]);
+
+
+const handleBankDetailsSubmit = async (data: FormData) => {
+  const isValid = await trigger(['accountNumber', 'ifscCode', 'bankName']);
+  if (!isValid) return;
+
+  setLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    if (!userId || !token) throw new Error("User ID or token not found in storage");
+
+    const allData = getValues();
+    const kycFiles: string[] = [];
+    const kycFilenames: string[] = [];
+
+    const toBase64 = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
+
+    if (data.kycDocsUrl && data.kycDocsUrl.length > 0) {
+      for (let i = 0; i < data.kycDocsUrl.length; i++) {
+        const file = data.kycDocsUrl[i];
+        const base64 = await toBase64(file);
+        kycFiles.push(base64);
+        kycFilenames.push(file.name);
+      }
+    }
+
+    // Single payload for both new registration and upgrade
+   const payload = {
+    userId,
+    vendorId: pendingVendorId || undefined,
+    vendorDetails: {
+      name: allData.name,
+      businessName: allData.businessName,
+      panNumber: allData.panNumber,
+
+      // 🔴 FIX IS HERE: Change 'aadharNumber' to 'AadharNumber'
+      AadharNumber: allData.aadharNumber,
+      
+      gstNumber: allData.gstNumber,
+      email,
+      phone: allData.phone || '',
+      address: allData.address,
+    },
+    bankDetails: {
+      accountHolder: allData.name,
+      accountNumber: allData.accountNumber,
+      ifscCode: allData.ifscCode,
+      bankName: allData.bankName,
+      branchName: allData.branchName || '',
+      upiId: allData.upiId || '',
+    },
+    kycFiles,
+    kycFilenames,
   };
+    const response = await axios.post(
+      `http://localhost:3010/api/vendor/register/profile`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const completeToken = response.data?.token;
+    if (!completeToken) throw new Error('Final login token not received from server.');
+
+    localStorage.setItem('token', completeToken);
+    toast.success('Vendor profile completed successfully!');
+    router.push('/dashboard/myaccount');
+
+  } catch (err: any) {
+    console.error('Profile submission failed:', err);
+    toast.error(err?.response?.data?.message || 'Failed to complete profile.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -343,18 +416,17 @@ const handleKycUploadClick = () => {
       setLoading(false);
     }
   };
+const handleBack = () => {
+  if (isUpgrade) {
+    if (step === 'bankDetails') setStep('profile');
+    return;
+  }
 
-  const handleBack = () => {
-    if (step === 'otp') {
-      setStep('email');
-    } else if (step === 'password') {
-      setStep('otp');
-    } else if (step === 'profile') {
-      setStep('password');
-    } else if (step === 'bankDetails') {
-      setStep('profile');
-    }
-  };
+  if (step === 'otp') setStep('email');
+  else if (step === 'password') setStep('otp');
+  else if (step === 'profile') setStep('password');
+  else if (step === 'bankDetails') setStep('profile');
+};
 
   return (
     <div>
@@ -369,7 +441,7 @@ const handleKycUploadClick = () => {
             <div className="spacer" />
           </div>
 
-          {step === 'email' && (
+         {!isUpgrade && step === 'email' && (
             <>
               <button className="google-button" onClick={handleFirebaseGoogleSignIn} disabled={loading}>
                 <Image src={Google} alt="Google Logo" width={20} height={20} />
@@ -404,7 +476,7 @@ const handleKycUploadClick = () => {
             </>
           )}
 
-          {step === 'otp' && (
+          {!isUpgrade && step === 'otp' && (
             <div className="otp-verification-container" style={{ textAlign: 'center' }}>
               <h2 style={{ fontWeight: '600', fontSize: '1.25rem' }}>We've Emailed You A Code</h2>
               <p style={{ color: '#888', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
@@ -487,7 +559,7 @@ const handleKycUploadClick = () => {
             </div>
           )}
 
-          {step === 'password' && (
+         {!isUpgrade && step === 'password' && (
             <form onSubmit={handleSubmit(handleSetPassword)}>
               <div className="form-group" style={{ position: 'relative' }}>
                 <input

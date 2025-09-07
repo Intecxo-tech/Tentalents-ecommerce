@@ -6,9 +6,11 @@ import Tenanlents from "../../assets/tenanlenst-menu.png";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import './footer&header.css'
+import { CircleUserRound } from 'lucide-react';
 import { categories, navItems } from '../../configs/constants';
 
 const Header = () => {
+   const [cartCount, setCartCount] = useState(0);
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -18,6 +20,7 @@ const [showSearchCategories, setShowSearchCategories] = useState(false);
   const [searchCategory, setSearchCategory] = useState('');
   const [searchBrand, setSearchBrand] = useState('');
 
+ const [profile, setProfile] = useState<any>(null);
   // ref for menu container to detect outside clicks
   const menuRef = useRef<HTMLDivElement>(null);
 const router = useRouter();
@@ -74,7 +77,74 @@ const router = useRouter();
 
     setIsLoading(false);
   };
+   useEffect(() => {
+    const fetchCartCount = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setCartCount(0);
+          return;
+        }
 
+        const res = await fetch(`https://cart-service-5lo3.onrender.com/api/cart`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          setCartCount(0);
+          return;
+        }
+
+        const data = await res.json();
+
+        // Calculate total quantity
+        const totalItems = Array.isArray(data.data)
+          ? data.data.reduce((acc: number, item: { quantity: number }) => acc + item.quantity, 0)
+          : 0;
+
+        setCartCount(totalItems);
+      } catch (error) {
+        setCartCount(0);
+      }
+    };
+
+    fetchCartCount();
+
+    // Optional: refetch cart count every few minutes or when user logs in/out, etc.
+  }, []);
+ useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setProfile(null);
+          return;
+        }
+
+        const res = await fetch(`http://localhost:3018/api/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          setProfile(null);
+          return;
+        }
+
+        const data = await res.json();
+        setProfile(data.data);
+      } catch (err) {
+        setProfile(null);
+      }
+    };
+
+    fetchProfile();
+  }, []);
   // Debounce the search input to avoid too many API calls
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -111,10 +181,7 @@ const router = useRouter();
 
           <div className='header-right'>
             <div className="search-bar" style={{ position: 'relative' }}>
-              <div className="search-categories">
-                Categories
-                <ChevronDown size={16} className="chevron" />
-              </div>
+             
               <input
                 className="search-input"
                 placeholder="Search Tentalents.in"
@@ -177,13 +244,54 @@ const router = useRouter();
                 </div>
               )}
             </div>
-
-            <div className="cart">
-              <Link href="/cart" className="cart-link">
-                <ShoppingCart className="cart-icon" size={20} />
-                <span>Cart</span>
-              </Link>
+            <div className='account-button'>
+              {profile ? (
+                <Link href="/account" className="logged-in-user" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <span className='profilename'>Hi, {profile.name.split(' ')[0]}</span>
+                  {profile.profileImage ? (
+                    <Image
+                      src={profile.profileImage}
+                      alt="Profile Image"
+                      width={30}
+                      height={30}
+                      style={{ borderRadius: '50%' }}
+                    />
+                  ) : (
+                    <CircleUserRound className='user-icon' />
+                  )}
+                </Link>
+              ) : (
+                <button className='bordered-button' onClick={() => router.push('/login')}>
+                  Account
+                  <CircleUserRound className='user-icon' />
+                </button>
+              )}
             </div>
+                  <div className="cart">
+        <Link href="/cart" className="cart-link" style={{ position: 'relative' }}>
+          <ShoppingCart className="cart-icon" size={20} />
+          {cartCount > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-10px',
+                backgroundColor: 'red',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '2px 6px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                lineHeight: 1,
+              }}
+              aria-label={`${cartCount} items in cart`}
+            >
+              {cartCount}
+            </span>
+          )}
+        </Link>
+      </div>
+
 
             {/* Attach ref to menu container */}
             <div
@@ -193,7 +301,7 @@ const router = useRouter();
               style={{ position: 'relative' }} // make sure dropdown absolute positions inside this container
             >
               <Menu className="menu-icon" size={20} />
-              <span>Menu</span>
+          
 
               {showMenuDropdown && (
                 <div className="menu-dropdown" style={{ position: 'absolute', top: '30px', right: 0, zIndex: 1000 }}>

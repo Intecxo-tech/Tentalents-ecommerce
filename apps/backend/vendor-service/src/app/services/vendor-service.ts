@@ -111,11 +111,13 @@ completeVendorProfileRegistration: async (
       )
     );
   }
+const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(user.email).digest('hex')}?d=identicon`;
 
   const vendorCreateData: Prisma.VendorCreateInput = {
     ...vendorData,
     user: { connect: { id: userId } },
     status: PrismaVendorStatus.pending,
+      profileImage: gravatarUrl, 
   };
 
   if (kycDocsUrls.length > 0) {
@@ -229,55 +231,49 @@ updateOrAddVendorBankDetails: async (
     throw err;
   }
 },
-  handleUserBecameVendor: async (event: { userId: string; email: string; phone: string; altphone?: string }) => {
-  
-    const { userId, email, phone, altphone } = event;
-  const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').update(email).digest('hex')}?d=identicon`;
-    const existingVendor = await prisma.vendor.findFirst({ where: { userId } });
-    if (existingVendor) {
-      logger.info(`[${SERVICE_NAMES.VENDOR}] Vendor already exists for user: ${userId}`);
-      return;
-    }
+// In vendorService.ts
 
-    const vendor = await prisma.vendor.create({
-      data: {
-        user: { connect: { id: userId } },
-        email,
-        phone,
-        name: '',          // Can be updated later
-        businessName: '',  // Optional until vendor completes profile
-        status: PrismaVendorStatus.pending,
-          profileImage: gravatarUrl,
+// In vendorService.ts
+
+handleUserBecameVendor: async (event: { userId: string; email: string }) => {
+  const { userId, email } = event;
+
+  // 1️⃣ Check if user exists
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // 2️⃣ Check if vendor already exists
+  const existingVendor = await prisma.vendor.findFirst({ where: { userId } });
+  if (existingVendor) {
+    logger.info(`[VendorService] Vendor already exists for user: ${userId}`);
+    return {
+      vendor: existingVendor,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
       },
-    });
-
-    // Emit Kafka events
-    const createdEvent: VendorCreatedEvent = {
-      vendorId: vendor.id,
-      name: vendor.name,
-      status: vendor.status as VendorStatus,
-      createdAt: vendor.createdAt.toISOString(),
+      needsVendorProfileCompletion: false,
     };
+  }
 
-    const statusUpdatedEvent: VendorStatusUpdatedEvent = {
-      vendorId: vendor.id,
-      status: vendor.status as VendorStatus,
-      updatedAt: vendor.createdAt.toISOString(),
-    };
+  // 3️⃣ No vendor exists yet → return flag to trigger profile completion flow
+  logger.info(`[VendorService] User ${userId} needs to complete vendor profile`);
+  return {
+    vendor: null,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
+    needsVendorProfileCompletion: true,  // 👈 frontend should redirect to profile step
+  };
+},
 
-    await Promise.all([
-      produceKafkaEvent({
-        topic: KAFKA_TOPICS.VENDOR.CREATED,
-        messages: [{ value: JSON.stringify(createdEvent) }],
-      }),
-      produceKafkaEvent({
-        topic: KAFKA_TOPICS.VENDOR.STATUS_UPDATED,
-        messages: [{ value: JSON.stringify(statusUpdatedEvent) }],
-      }),
-    ]);
 
-    logger.info(`[${SERVICE_NAMES.VENDOR}] 🏪 Vendor created for user: ${userId}`);
-  },
+// ... (the rest of your vendorService code remains the same)
 // In vendorService.ts
 
 loginVendorUser: async (email: string, password: string) => {

@@ -13,7 +13,7 @@ import {
   approveVendor,
   rejectVendor,
   getVendorAnalytics,
-  convertUserToVendor,
+  userBecameVendorController,
   initiateVendorRegistrationOtp,
   verifyVendorEmailOtp,
   completeVendorUserRegistration,
@@ -61,7 +61,7 @@ router.post('/login', loginVendor);
 router.post('/register/profile', authMiddleware([UserRole.BUYER, UserRole.SELLER]), completeVendorProfileRegistration);
 
 router.get('/', authMiddleware(UserRole.ADMIN), getAllVendors);
-router.post('/vendor/convert', authMiddleware(), convertUserToVendor);
+router.post('/convert', authMiddleware(), userBecameVendorController);
 router.get('/:id', authMiddleware(), getVendorById);
 router.put(
   '/profile/:vendorId',
