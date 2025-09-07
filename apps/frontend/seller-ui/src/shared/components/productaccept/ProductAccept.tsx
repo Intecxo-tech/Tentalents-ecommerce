@@ -3,7 +3,7 @@
 import React from 'react';
 import './productaccept.css';
 import Image from 'next/image';
-
+import { ShoppingCart } from 'lucide-react';
 // --- Interfaces for props ---
 
 interface Product {
@@ -53,7 +53,9 @@ const ProductAccept = ({ orders, limit }: ProductAcceptProps) => {
   };
 
   const limitedOrders = limit ? orders.slice(0, limit) : orders;
-  if (limitedOrders.length === 0) return <div>No orders to display for this tab.</div>;
+  if (limitedOrders.length === 0) return <div className='ordersempty'>
+    <ShoppingCart className='ordericon' size={80} />
+    <p>No Orders Yet</p></div>;
 
   return (
     <div className="productsection">

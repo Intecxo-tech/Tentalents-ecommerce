@@ -23,39 +23,112 @@ interface VendorOrder {
     createdAt?: string;
   };
 }
+interface Listing {
+  id: string;
+  variantName?: string | null;
+  stock?: number | null;
+}
 const page = () => {
-    const [productCount, setProductCount] = useState<number>(0);
-    const [orders, setOrders] = useState<VendorOrder[]>([]);
-  
-    useEffect(() => {
-      const token = localStorage.getItem('token');
-  
-      async function fetchVendorProducts() {
-        try {
-          const res = await axios.get(
-            'https://product-service-23pc.onrender.com/api/products/vendor/products',
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          setProductCount(res.data.data.length);
-        } catch (error) {
-          console.error('Failed to fetch products.');
-        }
-      }
-    async function fetchVendorOrders() {
+ const [products, setProducts] = useState<any[]>([]);
+  const [productCount, setProductCount] = useState<number>(0);
+  const [orders, setOrders] = useState<VendorOrder[]>([]);
+  const [fulfilledPercentage, setFulfilledPercentage] = useState<number>(0);
+  const [recentMessage, setRecentMessage] = useState<string>("");
+
+ useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    async function fetchVendorProducts() {
       try {
         const res = await axios.get(
-          'https://order-service-faxh.onrender.com/api/orders/vendor/orders',
+          'http://localhost:3003/api/products/vendor/products',
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setOrders(res.data.data);
+
+        setProductCount(res.data.data.length);
+        const rawProducts = res.data.data;
+
+        const mappedProducts = rawProducts.map((product: any) => {
+          const listings: Listing[] = product.listings || [];
+
+          const hasVariants = listings.some(
+            (listing: Listing) =>
+              listing.variantName && listing.variantName.trim() !== ''
+          );
+
+          if (hasVariants) {
+            return {
+              id: product.id,
+              name: product.title,
+              image: product.imageUrls?.[0] || '',
+              stock: 0,
+              inventory: {
+                variants: listings.map((listing: Listing, index: number) => ({
+                  id: listing.id || `variant-${index}`,
+                  name: listing.variantName?.trim() || `Variant ${index + 1}`,
+                  stock: listing.stock ?? 0,
+                  status:
+                    listing.stock && listing.stock > 10
+                      ? 'avail'
+                      : listing.stock && listing.stock > 0
+                      ? 'restock'
+                      : 'empty',
+                })),
+              },
+            };
+          } else {
+            const totalStock = listings.reduce(
+              (acc: number, listing: Listing) => acc + (listing.stock ?? 0),
+              0
+            );
+            return {
+              id: product.id,
+              name: product.title,
+              image: product.imageUrls?.[0] || '',
+              stock: totalStock,
+              inventory: {
+                variants: [],
+              },
+            };
+          }
+        });
+
+        setProducts(mappedProducts);
+      } catch (error) {
+        console.error('❌ Failed to fetch products.', error);
+      }
+    }
+
+
+    async function fetchVendorOrders() {
+      try {
+        const res = await axios.get(
+          'http://localhost:3002/api/orders/vendor/orders',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const fetchedOrders = res.data.data;
+        setOrders(fetchedOrders);
+
+        // Calculate fulfilled orders
+     const fulfilled = fetchedOrders.filter((order: VendorOrder) => order.order?.status === 'delivered');
+
+        const percentage = fetchedOrders.length > 0
+          ? Math.round((fulfilled.length / fetchedOrders.length) * 100)
+          : 0;
+
+        setFulfilledPercentage(percentage);
+
+        const recentCount = Math.min(10, fulfilled.length);
+        setRecentMessage(`Recent ${recentCount} order${recentCount !== 1 ? 's' : ''} were fulfilled`);
+
       } catch (err) {
         console.error('Failed to fetch orders.');
       }
@@ -64,6 +137,7 @@ const page = () => {
     fetchVendorProducts();
     fetchVendorOrders();
   }, []);
+  
 
   return (
     <div className='background-[var(--lightblue2)] p-[10px] rounded-[10px] main-pagesettings' >
@@ -71,7 +145,7 @@ const page = () => {
 
    <div className="topsection flex justify-between gap-[10px] background-[white] p-[10px] rounded-[10px] mb-[15px]">
   <div className=" producthistorts w-1/3">
-    <Balance orders={orders} />
+    <Balance  />
   </div>
   <div className=" producthistorts w-1/3">
     <HomeProducts />
@@ -87,7 +161,7 @@ const page = () => {
   </div>
   <div className="inventory-sectionw">
 
-<InventorySection />
+<InventorySection products={products} />
    
   </div>
 </div>

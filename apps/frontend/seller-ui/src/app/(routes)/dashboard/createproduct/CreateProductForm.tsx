@@ -330,9 +330,10 @@ const onSubmit = async (data: FormData) => {
      <div className="producst-main">
         
      <div className="product-headerleft">
-      <button className='bordered-button' >
-        <ChevronLeft />
-      </button>
+     <button className='bordered-button' type="button" onClick={handleBackClick}>
+  <ChevronLeft />
+</button>
+
      <div className='title-sect'>
   <p>Products</p>
   <h2 className='product-input'>

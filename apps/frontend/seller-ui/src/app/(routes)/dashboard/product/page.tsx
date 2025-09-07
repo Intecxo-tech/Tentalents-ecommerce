@@ -78,10 +78,13 @@ const Page: React.FC = () => {
   }
 
   if (loading) return <div>Loading your products...</div>;
-  if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
+  if (error) {
+  return <div className="noproductsyet">You have no products yet. Create one!</div>;
+}
+
 
   if (products.length === 0) {
-    return <div>You have no products yet. Create one!</div>;
+    return <div className='noproductsyet'>You have no products yet. Create one!</div>;
   }
 
   return (

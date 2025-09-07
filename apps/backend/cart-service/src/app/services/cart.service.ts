@@ -1,7 +1,7 @@
 import { redisClient, setCache, getCache, deleteCache } from '@shared/redis';
 import { connectKafkaProducer, KAFKA_TOPICS } from '@shared/kafka';
 import type { Producer } from 'kafkajs';
-import { PrismaClient } from '../../../../../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const CART_TTL = 60 * 60 * 2; // 2 hours

@@ -2,17 +2,31 @@
 
 import React from "react";
 import Image from "next/image";
-import { useAtom } from "jotai";
-import { orderListAtom } from "../../../../configs/constants"; // Adjust path as needed
 import './inventory.css';
 
-interface InventoryProps {
-  limit?: number; // Optional prop to limit how many orders to show
+interface Variant {
+  id: string;
+  name: string;
+  stock: number;
+  status: string;
 }
 
-const Inventory: React.FC<InventoryProps> = ({ limit = 3 }) => {
-  const [orders] = useAtom(orderListAtom);
+interface Product {
+  id: string;
+  name: string;
+  image: string;
+  stock: number;
+  inventory?: {
+    variants?: Variant[];
+  };
+}
 
+interface InventoryProps {
+  products: Product[];
+  limit?: number;
+}
+
+const Inventory: React.FC<InventoryProps> = ({ products, limit = 3 }) => {
   const getStatusClass = (status: string) => {
     switch (status.toLowerCase()) {
       case "avail":
@@ -28,35 +42,51 @@ const Inventory: React.FC<InventoryProps> = ({ limit = 3 }) => {
 
   return (
     <div className="inventory">
-      {orders.slice(0, limit).map((order) => {
-        const { product } = order;
+      {products.slice(0, limit).map((product) => {
+        const variants = product.inventory?.variants || [];
+
         return (
           <div key={product.id} className="inventor-container">
             <div className="single-inventory">
               <div className="inventory-conent">
+                {/* Image & Title */}
                 <div className="inventory-top">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    width={80}
-                    height={80}
-                    className="rounded-md"
-                  />
+                 <Image
+  src={product.image}
+  alt={product.name}
+  width={80}
+  height={80}
+  className="rounded-md"
+/>
+
                   <h2 className="product-title">{product.name}</h2>
                 </div>
 
+                {/* Stock Display */}
                 <div className="inventory-section">
-                  {product.inventory.variants.map((variant) => (
-                    <div key={variant.id} className="inventory-sectionin">
-                      <span className="variant-name">{variant.name}</span>
+                  {variants.length > 0 ? (
+                    variants.map((variant) => (
+                      <div key={variant.id} className="inventory-sectionin">
+                        <span className="variant-name">{variant.name}</span>
+                        <div className="inventorystock">
+                          <strong className="text-[var(--primary)]">{variant.stock}</strong>
+                          <span className={getStatusClass(variant.status)}>
+                            {variant.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="inventory-sectionin">
+                      <span className="variant-name">Stock</span>
                       <div className="inventorystock">
-                        <strong className="text-[var(--primary)]">{variant.stock}</strong>
-                        <span className={getStatusClass(variant.status)}>
-                          {variant.status}
+                        <strong className="text-[var(--primary)]">{product.stock}</strong>
+                        <span className={getStatusClass('avail')}>
+                          avail
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>

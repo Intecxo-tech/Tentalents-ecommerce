@@ -18,6 +18,14 @@ export const getAllUsers = async (
     return next(err);
   }
 };
+export const getAllVendors = async (req: Request, res: Response) => {
+  try {
+    const vendors = await adminService.getAllVendors();
+    res.json(vendors);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch vendors', error: err });
+  }
+};
 
 /**
  * PATCH /api/admin/users/role

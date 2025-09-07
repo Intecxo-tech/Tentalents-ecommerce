@@ -26,11 +26,39 @@
 .prodiucttabdsw{
       flex: 2;
 
-}
+
+    }
+    .inventory-empty {
+         background-color: #F6F5FF;
+
+
+         text-align: left;
+    }
+
+    .Balance,.productHistory{
+        background-color: white;
+        border-radius: 10px;
+    }
+    .soldimages{
+        max-width: 60px;
+        object-fit: cover;
+        width: 100%;
+        max-height: 60px;
+        height: 100%;
+
+    }
+    .productsoldmain {
+        background-color: white;
+        border-radius: 10px;
+    }
 .inventory-sectionw {
   flex: 1; 
+  background-color: white;
+  border-radius: 10px;
+  padding:10px;
 
 }
+
 .layout-content{
     /* padding: 0px 20px; */
     width: 100%;
