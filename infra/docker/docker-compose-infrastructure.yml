@@ -139,24 +139,6 @@ networks:
 # # 📜 Tail logs for Kafka-UI
 # docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f kafka-ui
 
-# # 🛑 Stop only Kafka
-# docker compose -f infra/docker/docker-compose-infrastructure.yml stop kafka
-
-# # 🚀 Start only Kafka
-# docker compose -f infra/docker/docker-compose-infrastructure.yml up -d kafka
-
-# # 🔄 Restart only Kafka
-# docker compose -f infra/docker/docker-compose-infrastructure.yml restart kafka
-
-# # 🛑 Stop only Kafka-UI
-# docker compose -f infra/docker/docker-compose-infrastructure.yml stop kafka-ui
-
-# # 🚀 Start only Kafka-UI
-# docker compose -f infra/docker/docker-compose-infrastructure.yml up -d kafka-ui
-
-# # 🔄 Restart only Kafka-UI
-# docker compose -f infra/docker/docker-compose-infrastructure.yml restart kafka-ui
-
 # # 📜 Tail logs for MinIO
 # docker compose -f infra/docker/docker-compose-infrastructure.yml logs -f minio
 
