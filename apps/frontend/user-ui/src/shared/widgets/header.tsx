@@ -247,7 +247,10 @@ const router = useRouter();
             <div className='account-button'>
               {profile ? (
                 <Link href="/account" className="logged-in-user" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <span className='profilename'>Hi, {profile.name.split(' ')[0]}</span>
+                  <span className='profilename'>
+  Hi, {profile?.name ? profile.name.split(' ')[0] : 'User'}
+</span>
+
                   {profile.profileImage ? (
                     <Image
                       src={profile.profileImage}

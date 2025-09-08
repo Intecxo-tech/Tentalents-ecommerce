@@ -6,7 +6,7 @@ import ProductCard from '../../components/productcard/productcard';
 import type { ProductItem } from '../../components/productcard/productcard';
 import { getAllProducts } from '../../../services/productService';
 import './productgrid.css';
-
+import ProductCardSkeleton from '../../components/productcard/ProductCardSkeleton';
 type ProductsProps = {
   columns?: number;
   category?: string;
@@ -81,9 +81,9 @@ const Products = ({ columns = 5, category, showHeader = true, products: propProd
     : products;
 
 
-  if (loading) return <p>Loading products...</p>;
-  if (error) return <p>{error}</p>;
 
+
+  if (loading || error) {
   return (
     <div className="products-grid">
       {showHeader && (
@@ -95,17 +95,15 @@ const Products = ({ columns = 5, category, showHeader = true, products: propProd
         </div>
       )}
 
-     <div className={`product-grid columns-${columns}`}>
-        {filteredProducts.length === 0 ? (
-          <p>No products found.</p>
-        ) : (
-          filteredProducts.slice(0, columns).map((product) => (
-            <ProductCard key={product.id} product={product} getDiscount={getDiscount} />
-          ))
-        )}
+      <div className={`product-grid columns-${columns}`}>
+        {Array.from({ length: columns }).map((_, i) => (
+          <ProductCardSkeleton key={i} />
+        ))}
       </div>
     </div>
   );
+}
+
 };
 
 export default Products;

@@ -14,7 +14,7 @@ const Footer = () => {
               <ChevronRight className="search-icon" size={20} />
             </div>
        </div>
-       <p>	No.19/20, Opposite Magarpatta South Gate, Bhosale Nagar, Hadapsar, Pune, Maharashtra 411013, India</p>
+      
        </div>
         <div className="footer-part2">
         <h3>Categories</h3>

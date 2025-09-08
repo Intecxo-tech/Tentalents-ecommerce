@@ -6,6 +6,7 @@ import ProductListItem from '../../components/productitemlist/Productitemlist';
 import { getAllProducts } from '../../../services/productService';
 import './productlist.css';
 import type { StaticImageData } from 'next/image';
+import ProductSkeletonItem from '../../components/productitemlist/ProductSkeletonItem';
 
 export type ProductItem = {
   id: string;
@@ -71,19 +72,22 @@ const Productslist = ({ listCount = 2 }: ProductsProps) => {
       </div>
 
       <div className="product-list">
-        {loading ? (
-          <p>Loading products...</p>
-        ) : error ? (
-          <p>{error}</p>
-        ) : discountedItems.length === 0 ? (
-          <p>No discounted products found.</p>
-        ) : (
-          discountedItems.map((product, index) => (
-            <div key={index}>
-              <ProductListItem product={product} />
-            </div>
-          ))
-        )}
+       {loading || error ? (
+  <>
+    {Array.from({ length: listCount }).map((_, i) => (
+      <ProductSkeletonItem key={i} />
+    ))}
+  </>
+) : discountedItems.length === 0 ? (
+  <p>No discounted products found.</p>
+) : (
+  discountedItems.map((product, index) => (
+    <div key={index}>
+      <ProductListItem product={product} />
+    </div>
+  ))
+)}
+
       </div>
     </div>
   );
