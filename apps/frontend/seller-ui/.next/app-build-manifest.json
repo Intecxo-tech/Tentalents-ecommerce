@@ -29,12 +29,6 @@
       "static/css/app/(routes)/dashboard/myaccount/page.css",
       "static/chunks/app/(routes)/dashboard/myaccount/page.js"
     ],
-    "/(routes)/dashboard/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(routes)/dashboard/page.css",
-      "static/chunks/app/(routes)/dashboard/page.js"
-    ],
     "/(routes)/dashboard/store/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -46,6 +40,18 @@
       "static/chunks/main-app.js",
       "static/css/app/(routes)/dashboard/createproduct/page.css",
       "static/chunks/app/(routes)/dashboard/createproduct/page.js"
+    ],
+    "/(routes)/dashboard/order/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(routes)/dashboard/order/page.css",
+      "static/chunks/app/(routes)/dashboard/order/page.js"
+    ],
+    "/(routes)/dashboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(routes)/dashboard/page.css",
+      "static/chunks/app/(routes)/dashboard/page.js"
     ]
   }
 }
