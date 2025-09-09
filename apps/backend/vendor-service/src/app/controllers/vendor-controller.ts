@@ -433,20 +433,35 @@ export const getVendorAnalytics = async (_req: Request, res: Response) => {
   }
 };
 
-export const convertUserToVendor = async (req: Request, res: Response) => {
-  try {
-    const { userId, email, phone, altphone } = req.body;
+// In apps/backend/vendor-service/src/app/controllers/vendor-controller.ts
 
-    if (!userId || !email || !phone) {
-      return res.status(400).json({ error: 'Missing required fields' });
+// In apps/backend/vendor-service/src/app/controllers/vendor-controller.ts
+
+// In apps/backend/vendor-service/src/app/controllers/vendor-controller.ts
+
+export const userBecameVendorController = async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+
+    if (!authReq.user || !authReq.user.userId || !authReq.user.email) {
+      return res.status(401).json({ error: 'Unauthorized. Invalid token payload.' });
     }
 
-    await vendorService.handleUserBecameVendor({ userId, email, phone, altphone });
+    const { userId, email } = authReq.user;
 
-    res.status(200).json({ message: 'User successfully converted to vendor' });
-  } catch (err) {
-    logger.error('Error converting user to vendor', err);
-    res.status(500).json({ error: 'Failed to convert user to vendor' });
+    // Call the updated service
+    const result = await vendorService.handleUserBecameVendor({
+      userId,
+      email,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (err: any) {
+    logger.error('Error in userBecameVendorController', { error: err.message });
+    return res.status(500).json({ error: err.message || 'Failed to process user vendor check' });
   }
 };
 export const loginVendor = async (req: Request, res: Response) => {

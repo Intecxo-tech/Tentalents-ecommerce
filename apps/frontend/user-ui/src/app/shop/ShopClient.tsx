@@ -11,6 +11,7 @@ import { getAllProducts } from '../../services/productService';
 import Image from 'next/image';
 import type { ProductItem } from '../components/productcard/productcard';
 import ProductTabs from '../home-page/productstabs/ProductTabs';
+import ProductCardSkeleton from '../components/productcard/ProductCardSkeleton';
 // Define the Category type used in product.category
 type Category = string | { name: string };
 type ProductWithCategories = ProductItem & {
@@ -406,19 +407,25 @@ const filteredProducts = useMemo(() => {
           </div>
         </div>
 
-       <div className="filter-itemsright">
-  {loading ? (
-    <div className="loading-state" style={{ padding: '20px', textAlign: 'center' }}>
-      Loading products...
-    </div>
-  ) : filteredProducts.length === 0 ? (
-    <div className="no-products" style={{ padding: '20px', textAlign: 'center' }}>
-      No products found.
-    </div>
-  ) : (
-    <Products showHeader={false} products={filteredProducts} />
-  )}
+      <div className="filter-itemsright">
+  {loading && products.length === 0 ? (
+  // Only show skeleton when loading and no products loaded yet (initial fetch)
+  <div className="skeleton-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '20px', padding: '20px' }}>
+    {Array.from({ length: 8 }).map((_, index) => (
+      <ProductCardSkeleton key={index} />
+    ))}
+  </div>
+) : filteredProducts.length === 0 ? (
+  // No products found after filtering
+  <div className="no-products" style={{ padding: '20px', textAlign: 'center' }}>
+    No products found.
+  </div>
+) : (
+  <Products showHeader={false} products={filteredProducts} />
+)}
+
 </div>
+
       </div>
       <ProductTabs />
     </div>

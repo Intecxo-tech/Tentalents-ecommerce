@@ -160,3 +160,36 @@ float: right;
   margin-right: -8px;;
 
 }
+
+@media (max-width:768px){
+  .paymentcard{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  .paymentcard{
+    margin: 0px;
+    padding:10px;
+  }
+  .paymentheading{
+    width: 100%;
+  }
+  .paymentright{
+    width: 100%;
+  }
+  .debitleft{
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: row;
+    gap:10px;
+    align-items: center;
+  }
+  .paymentheader{
+    width: 100%;
+  }
+  .cashondeilvery{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,353 @@
+.orderpageheader{
+    display:flex;
+    gap:20px;
+    align-items:center;
+    justify-content: space-between;
+  
+    border-radius:10px;
+    padding:15px 5px;
+    margin-bottom: 0px;
+}
+.orderpage{
+    margin: 10px 0px;;
+}
+
+.orderdetails{
+  display:flex;
+    gap:20px;
+    align-items:flex-start;
+    justify-content: space-between;
+    border:1px solid grey;
+    border-radius:10px;
+    padding:15px;
+  width:100%;
+  margin-bottom: 10px;
+}
+.cancel-button,.invoicebutton{
+  background-color: white;
+  border: 1px solid var(--primary);
+  border-radius:5px;
+  color:var(--primary);
+  padding:10px 15px;
+}
+.cancelled-status{
+  font-size: 15px;
+  font-weight: 500;
+  color: grey !important;
+  border-bottom:0px !important;
+  text-decoration: none;
+}
+/* .invoicebutton{
+  padding:10px 15px;
+  background-color: transparent;
+  color:var(--primary);
+  font-weight: 600;
+  border: none;
+  border-bottom: 1px solid var(--primary);
+} */
+
+.orderpage-headerleft {
+  display: flex;
+  margin-bottom: 10px;;
+  
+  align-items: center;
+  justify-content:flex-start;
+
+}
+
+.border-grey {
+  padding-right: 20px;
+  border-right: 1px solid var(--black);
+  margin-right: 20px; /* Space after the border */
+}
+.orderheader-right{
+  display: flex;
+  align-items:center;
+  justify-content: space-between;
+  gap:10px
+}
+
+.orderheader-right p{
+  color:var(--primary);
+  text-decoration: underline;
+}
+.shipto{
+  width:40%;
+  border-right: 1px solid var(--bordergrey);
+}
+.payment-method{
+    border-left: 1px solid grey;
+    padding-left: 15px;
+  width: 25%;
+  display: flex;
+
+  flex-direction: column;
+
+}
+.paymentamount{
+  border-left: 1px solid grey;
+  width:40%;
+  padding-left: 20px;
+
+}
+
+.total{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.orderupdates{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--bordergrey);
+  border-radius: 10px;
+  margin:20px 0px;
+  padding:20px 15px;
+}
+.ordervalueleft{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap:15px;
+}
+.product-title{
+  display: -webkit-box;
+  -webkit-line-clamp: 2; 
+  padding:10px 0px;/* Limit to 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  color:var(--darkgrey);
+  font-weight: 500;
+  margin: 0px !important;
+  line-height: 1.4; /* Optional: improves vertical spacing */
+ /* 2 lines * line-height */
+}
+.image-wrapper2{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.quantity-sec{
+    padding: 5px 8px;
+    border: 1px solid grey;
+    border-radius: 20px;
+
+
+}
+.firstsection{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:10px;
+}
+.image-wrapper2{
+    width: 100%;
+}
+.rating-stars{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: grey;
+}
+.orderlistitem{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 10px 0px ;
+    gap:20px;
+    
+}
+.quantity{
+    text-align: left;
+    align-items: flex-start;
+}
+.flexcontainer{
+    display: flex;
+    align-items: center;
+    justify-content:space-between;
+    gap:40px;
+    width: 50%;
+}
+
+.orderfirst{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.orderpricevalue{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:20px;
+}
+
+.staras{
+    margin:0px;
+    padding:0px;
+}
+.orderimage{
+    display: flex;
+    align-items: center;
+    justify-content:flex-start;
+    width:50%;
+    gap:20px
+}
+.review-button-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+  /* justify-content: flex-end; */
+  
+}
+.productlistaddtocart2{
+    padding-top: 0px;;
+}
+/* .products-lists button{
+    float: right;
+
+} */
+
+.lucide-star {
+  width: 20px;
+  height: 20px;
+
+}
+.yourorder{
+    font-size: 16px;
+    color: black;
+}
+.orderlabel{
+  font-size: 14px;
+  color:var(--grey);
+  font-weight: 400;
+}
+.ordervalue{
+   font-size: 14px;
+  color:var(--black);
+  font-weight: 300;
+}
+.laststep{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap:10px;
+}
+.orderheadingpage{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.orderspage{
+  padding: 10px;;
+}
+.tracking-container {
+  background-color: white;
+  border: 1px solid #919191;
+  border-radius: 10px;
+  padding: 20px;
+  width:100%;
+  max-width: 100%;
+  margin-top: 20px;
+}
+
+.tracking-step {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.dot-line-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 12px;
+  position: relative;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  background-color: #fc5b0b;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.line {
+  width: 2px;
+  height: 100%;
+  background-color: #fc5b0b;
+  margin-top: 2px;
+  flex-grow: 1;
+}
+
+.tracking-info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.tracking-label {
+  font-weight: 500;
+  font-size: 15px;
+  color: #333;
+  margin: 0;
+  min-width: 220px;
+}
+
+.tracking-datetime {
+  font-size: 14px;
+  color: #555;
+  margin: 0;
+  white-space: nowrap;
+}
+/* Sidebar overlay (dark background) */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  display: flex;
+  justify-content: flex-end;
+  transition: background 0.3s ease-in-out;
+}
+
+/* Sidebar drawer container */
+.sidebar-drawer {
+  width: auto;
+  max-width: 100%;
+  background-color: #fff;
+  height: 100%;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  transform: translateX(0%);
+  transition: transform 0.3s ease-in-out;
+  position: relative;
+}
+.ordercomponent{
+  padding: 10px;
+  border-radius: 10px;;
+  background-color: var(--lightblue2);
+}
+
+/* Sidebar inner content padding */
+/* .sidebar-content {
+  padding: 20px;
+} */
+
+/* Close button styling (top right corner) */
+.orderheadingpage {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

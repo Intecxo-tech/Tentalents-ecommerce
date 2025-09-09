@@ -68,7 +68,20 @@
   --unpaid:#DBDBDBA6;
   --warning:#FFFF99;
 }
-
+.product-title{
+  display: -webkit-box;
+  -webkit-line-clamp: 2; 
+  padding:10px 0px;/* Limit to 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  color:var(--darkgrey);
+  font-weight: 500;
+  margin: 0px !important;
+  line-height: 1.4; /* Optional: improves vertical spacing */
+ /* 2 lines * line-height */
+}
 .productlistaddtocart{
   background:transparent !important;
   border:1px solid var(--bordergrey);

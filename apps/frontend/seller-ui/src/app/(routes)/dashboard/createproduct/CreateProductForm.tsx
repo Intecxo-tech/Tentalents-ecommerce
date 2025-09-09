@@ -330,9 +330,10 @@ const onSubmit = async (data: FormData) => {
      <div className="producst-main">
         
      <div className="product-headerleft">
-      <button className='bordered-button' >
-        <ChevronLeft />
-      </button>
+     <button className='bordered-button' type="button" onClick={handleBackClick}>
+  <ChevronLeft />
+</button>
+
      <div className='title-sect'>
   <p>Products</p>
   <h2 className='product-input'>
@@ -382,14 +383,14 @@ const onSubmit = async (data: FormData) => {
        
         <div className="desc-container">
  <div>
-         
+         <label>Product Name</label>
           <input {...register('title', { required: 'Title is required' })} placeholder='Product Name' />
           {errors.title && <p style={{color: 'red'}}>{errors.title.message}</p>}
         </div>
 
         {/* Description */}
         <div>
-         
+         <label>Description</label>
           <textarea {...register('description')} placeholder='Description' />
         </div>
         </div>
@@ -416,7 +417,7 @@ const onSubmit = async (data: FormData) => {
   {errors.category && <p style={{ color: 'red' }}>{errors.category.message}</p>}
 </div>
           <div>
-        
+        <label>Subcategory</label>
           <input {...register('subCategory')} placeholder='SubCategory'  />
         </div>
  </div>
@@ -428,20 +429,20 @@ const onSubmit = async (data: FormData) => {
          <div className="desc-container">
           <div className="paer1">
 <div>
-       
+         <label>Brand</label>
           <input {...register('brand')} placeholder='Brand' />
         </div>
 
         {/* Included Components */}
          <div>
-        
+        <label>No of items</label>
           <input type="number" {...register('numberOfItems', { valueAsNumber: true })} placeholder='Number of Items' />
         </div>
        
           </div>
                <div className="paer1">
   <div>
-         
+         <label>Included Components (comma separated)</label>
           <input {...register('includedComponents')} placeholder='Included Components (comma separated)'/>
         </div>
 
@@ -450,8 +451,8 @@ const onSubmit = async (data: FormData) => {
                </div>
 
  <div>
-      
-          <textarea {...register('enclosureMaterial')} placeholder='Enclosure Material' />
+         <label>Enclosure Material</label>
+          <input {...register('enclosureMaterial')} placeholder='Enclosure Material' />
         </div>
         
         
@@ -460,14 +461,14 @@ const onSubmit = async (data: FormData) => {
       
 
         {/* Product Care Instructions */}
-        <div>
-
-          <textarea {...register('productCareInstructions')}  placeholder='Product Care Instructions' />
-        </div>
+    
+        <label>Product Care Instructions</label>
+          <input {...register('productCareInstructions')}  placeholder='Product Care Instructions' />
+       
 
         {/* Product Features */}
         <div>
-  
+          <label>Product Features (comma separated)</label>
           <input {...register('productFeatures')} placeholder='Product Features (comma separated)'/>
         </div>
         </div>
@@ -731,12 +732,16 @@ const onSubmit = async (data: FormData) => {
          
          <div className="desc-container">
           <div>
+            <label>Item Weight</label>
           
           <input type="number" step="0.01" {...register('itemWeight', { required: 'Item Weight is required', valueAsNumber: true })} placeholder='Item Weight' />
           {errors.itemWeight && <p style={{color: 'red'}}>{errors.itemWeight.message}</p>}
         </div>
         <div className="packaging">
+          <div className="columnwidth">
+            <label>Length</label>
   <div className="input-with-unit">
+    
   <input
     type="number"
     step="0.01"
@@ -745,8 +750,11 @@ const onSubmit = async (data: FormData) => {
   />
   <span className="unit">in</span>
 </div>
-
+</div>
+<div className="columnwidth">
+  <label>Width (in)</label>
   <div className="input-with-unit">
+    
     <input
       type="number"
       step="0.01"
@@ -755,8 +763,11 @@ const onSubmit = async (data: FormData) => {
     />
       <span className="unit">in</span>
   </div>
-
+  </div>
+<div className="columnwidth">
+   <label>Height (in)</label>
   <div className="input-with-unit">
+   
     <input
       type="number"
       step="0.01"
@@ -764,6 +775,7 @@ const onSubmit = async (data: FormData) => {
       placeholder="Height (in)"
     />
       <span className="unit">in</span>
+  </div>
   </div>
         </div>
          </div>
@@ -799,14 +811,14 @@ const onSubmit = async (data: FormData) => {
          <div className="desc-container">
              <div className="paer1">
           <div>
-       
+         <label>SKU</label>
           <input {...register('sku', { required: 'SKU is required' })} placeholder='SKU' />
           {errors.sku && <p style={{color: 'red'}}>{errors.sku.message}</p>}
         </div>
 
         {/* Stock */}
         <div>
-      
+        <label>Stock</label>
           <input type="number" {...register('stock', { required: 'Stock is required', valueAsNumber: true })} placeholder='Stock' />
           {errors.stock && <p style={{color: 'red'}}>{errors.stock.message}</p>}
         </div>
@@ -814,14 +826,14 @@ const onSubmit = async (data: FormData) => {
  <div className="paer1">
         {/* Unit */}
         <div>
-        
+          <label>Unit</label>
           <input {...register('unit', { required: 'Unit is required' })} placeholder='Unit' />
           {errors.unit && <p style={{color: 'red'}}>{errors.unit.message}</p>}
         </div>
 
         
         <div>
-   
+        <label>Delivery ETA</label>
           <input {...register('deliveryEta')} placeholder='Delivery ETA' />
         </div>
         </div>
@@ -829,44 +841,46 @@ const onSubmit = async (data: FormData) => {
         {/* Dispatch Time in Days */}
          <div className="paer1">
         <div>
-     
+         <label>Dispatch Time(days)</label>
           <input type="number" {...register('dispatchTimeInDays', { valueAsNumber: true })} placeholder='Dispatch Time(days)' />
         </div>
 
         {/* Shipping Cost */}
         <div>
-       
+       <label>Shipping Cost</label>
           <input type="number" step="0.01" {...register('shippingCost', { valueAsNumber: true })} placeholder='Shipping Cost' />
         </div>
-        <div className='section-desc'>
+     
+        </div>
+           <div className='replacement'>
   <div className="desc-heading">
     <h2>Return Policy</h2>
   </div>
-  <div className="desc-container">
-    <div className="radio-group">
-      <label>
-        <input
-          type="radio"
-          value="REFUND"
-          {...register('returnPolicyType', { required: 'Return policy is required' })}
-          className="radio-input"
-        />
-        Refund
-      </label>
-      <label>
-        <input
-          type="radio"
-          value="REPLACEMENT"
-          {...register('returnPolicyType', { required: 'Return policy is required' })}
-          className="radio-input"
-        />
-        Replacement
-      </label>
+<div className="desc-container">
+  <div className="radio-group">
+    <div className='replace'>
+      <input
+        type="radio"
+        value="REFUND"
+        {...register('returnPolicyType', { required: 'Return policy is required' })}
+        className="radio-input"
+      />
+      <label>Product Can Be Refunded</label>  {/* <-- Corrected label */}
     </div>
-    {errors.returnPolicyType && <p style={{ color: 'red' }}>{errors.returnPolicyType.message}</p>}
+    <div className='replace'>
+      <input
+        type="radio"
+        value="REPLACEMENT"
+        {...register('returnPolicyType', { required: 'Return policy is required' })}
+        className="radio-input"
+      />
+      <label>Product Can Be Replaced</label>
+    </div>
   </div>
+  {errors.returnPolicyType && <p style={{ color: 'red' }}>{errors.returnPolicyType.message}</p>}
 </div>
-        </div>
+
+</div>
          </div>
          </div>
        </div>

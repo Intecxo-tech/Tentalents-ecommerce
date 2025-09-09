@@ -18,3 +18,17 @@
 .closet-left button{
     margin: 10px 0px;;
 }
+@media(max-width:768px){
+    .closet-section{
+        display: flex;
+        flex-direction: column;
+        gap:10px;
+    }
+    .closet-right img{
+        width: 100%;
+        height: 100%;
+    }
+    .closet{
+        padding: 10px 15px;;
+    }
+}

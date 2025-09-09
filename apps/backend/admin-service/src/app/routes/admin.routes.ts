@@ -5,6 +5,7 @@ import {
   getPendingSellers,
   approveSeller,
   getAdminDashboard,
+  getAllVendors
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -38,5 +39,5 @@ router.put('/sellers/status', approveSeller);
  * @desc Get admin dashboard summary
  */
 router.get('/dashboard', getAdminDashboard);
-
+router.get('/sellers/all', getAllVendors);
 export default router;

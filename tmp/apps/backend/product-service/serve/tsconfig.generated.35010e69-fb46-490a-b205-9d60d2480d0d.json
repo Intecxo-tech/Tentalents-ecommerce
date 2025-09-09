@@ -40,18 +40,6 @@
       "@shared/utils": [
         "libs/shared/utils/src/index.ts"
       ],
-      "@payment-service/*": [
-        "apps/backend/payment-service/src/app/*"
-      ],
-      "@order-service/*": [
-        "apps/backend/order-service/src/app/*"
-      ],
-      "@cart-service/*": [
-        "apps/backend/cart-service/src/app/*"
-      ],
-      "@invoice-service/*": [
-        "apps/backend/invoice-service/src/app/*"
-      ],
       "shared-auth": [
         "dist/libs/shared/auth"
       ],
@@ -99,5 +87,5 @@
       ]
     }
   },
-  "extends": "../../../../../apps/backend/payment-service/tsconfig.app.json"
+  "extends": "..\\..\\..\\..\\..\\apps\\backend\\product-service\\tsconfig.app.json"
 }

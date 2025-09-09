@@ -16,7 +16,21 @@
 
   font-weight: 500;
 }
+.inventoryicon-empty{
+  display: flex;;
+  align-items: center;
+  flex-direction: column;
+   height: calc(50vh - 100px);
+   justify-content: center;
 
+}
+.emptybox{
+  color: #919191;
+}
+.rounded-md{
+  background-color: white;
+  border: 10px;
+}
 .inventorystock {
   display: flex;
   align-items: center;

@@ -4,7 +4,7 @@ import {
   Vendor,
   UserRole ,
   VendorStatus,
-} from '../../../generated/admin-service';
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -57,7 +57,7 @@ export const adminService = {
     })[]
   > => {
     return prisma.vendor.findMany({
-      where: { status: VendorStatus.PENDING },
+      where: { status: VendorStatus.pending },
       include: {
         user: {
           select: {
@@ -75,8 +75,8 @@ export const adminService = {
     approve: boolean
   ): Promise<Vendor> => {
     const newStatus: VendorStatus = approve
-      ? VendorStatus.APPROVED
-      : VendorStatus.REJECTED;
+      ? VendorStatus.approved
+      : VendorStatus.rejected;
 
     const vendor = await prisma.vendor.findUnique({
       where: { id: vendorId },
@@ -103,4 +103,22 @@ export const adminService = {
 
     return { userCount, vendorCount };
   },
+  getAllVendors: async (): Promise<
+  (Vendor & {
+    user: Pick<User, 'id' | 'email' | 'role'> | null;
+  })[]
+> => {
+  return prisma.vendor.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+  });
+},
+
 };

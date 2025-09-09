@@ -6,6 +6,11 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -15,19 +20,20 @@
     "/(routes)/dashboard/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(routes)/dashboard/layout.js",
-      "static/css/app/(routes)/dashboard/layout.css"
+      "static/css/app/(routes)/dashboard/layout.css",
+      "static/chunks/app/(routes)/dashboard/layout.js"
     ],
     "/(routes)/dashboard/myaccount/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(routes)/dashboard/myaccount/page.js",
-      "static/css/app/(routes)/dashboard/myaccount/page.css"
+      "static/css/app/(routes)/dashboard/myaccount/page.css",
+      "static/chunks/app/(routes)/dashboard/myaccount/page.js"
     ],
-    "/_not-found/page": [
+    "/(routes)/dashboard/order/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/css/app/(routes)/dashboard/order/page.css",
+      "static/chunks/app/(routes)/dashboard/order/page.js"
     ]
   }
 }

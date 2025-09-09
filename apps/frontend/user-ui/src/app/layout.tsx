@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './auth/callback/AuthContext'; // don't use useAuth here
 import { Poppins, Roboto } from 'next/font/google';
 import AuthUIWrapper from '../app/components/AuthUIWrapper'; // 👈 new client component
+import BottomNav from '../shared/widgets/BottomNav';
 
 export const metadata = {
   title: 'Welcome to user-ui',
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="layout-wrapper">{children}</div>
             <SignUpBanner />
             <Footer />
+            <BottomNav />
             <Toaster position="top-right" reverseOrder={false} />
             <AuthUIWrapper /> {/* 👈 moved client logic here */}
           </Providers>

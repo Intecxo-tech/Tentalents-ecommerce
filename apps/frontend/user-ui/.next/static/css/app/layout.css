@@ -290,6 +290,12 @@
   cursor: pointer;
   color:var(--primary)
  }
+
+ @media(max-width:768px){
+  .logincontainer{
+    width: 100%;
+  }
+ }
 /*!******************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/global.css ***!
   \******************************************************************************************************************************************************************************************************************************************************************************/
@@ -318,6 +324,9 @@
 }
 .flex {
   display: flex;
+}
+.grid {
+  display: grid;
 }
 .hidden {
   display: none;
@@ -1319,6 +1328,72 @@ flex-direction: column;
     padding-left: 20px;
 }
 }
+/*!********************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/shared/widgets/bottomnav.css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************/
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background-color: white;
+  border-top: 1px solid #ddd;
+  display: none;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 999;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #222;
+  font-size: 12px;
+  text-decoration: none;
+  padding-top: 15px;
+  /* padding-bottom: 15px;; */
+  height: 100%;
+  position: relative;
+}
+
+/* Add custom top border with radius using ::before */
+.bottom-nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  width: 60%; /* control how wide the border is */
+  height: 4px; /* this is the "border height" */
+  background-color: var(--primary);
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  margin-bottom: 5px;;
+}
+
+/* 👇 Active item styles */
+.bottom-nav-item.active {
+  color: var(--primary);
+  /* border-top: 3px solid var(--primary); */
+}
+
+.bottom-nav-item svg {
+  margin-bottom: 4px;
+}
+
+/* Show only on mobile */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex;
+    align-items: center;
+        justify-content: space-around;
+  }
+  .bottom-nav-item{
+    width: 100%;
+  }
+}
+
 /*!************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/shared/widgets/footer&header.css ***!
   \************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -1332,7 +1407,14 @@ flex-direction: column;
   z-index: 100;
 
 }
-
+.logged-in-user{
+  border: 1px solid var(--primary);
+  padding:8px 10px;
+  border-radius: 10px;;
+}
+.profilename{
+  color: var(--primary);
+}
 .header-container {
   width: 100%;
   padding: 0px 30px;
@@ -1433,9 +1515,9 @@ width:50%;
   
   gap: 0.25rem;
   border: 1px solid var(--primary);
-  width: 100px;
-  padding: 0 0.75rem;
-  height: 48px;
+
+  /* padding: 0 0.75rem; */
+  padding: 13px 20px;
   border-radius: 10px;
   cursor: pointer;
   flex-shrink: 0;
@@ -1449,16 +1531,16 @@ width:50%;
   align-items: center;
   gap: 0.25rem;
   border: 1px solid var(--primary);
-  width: 100px;
-  padding: 0 0.75rem;
-  height: 48px;
+  
+  /* padding: 0 0.75rem; */
+ padding: 13px 20px;
   border-radius: 10px;
   cursor: pointer;
   flex-shrink: 0;
   position: relative;
   color: var(--primary);
   font-weight: 500;
-  justify-content: space-between;
+
 }
 
 .menu-dropdown {
@@ -1742,6 +1824,10 @@ width:25%;
 }
 
 @media(max-width:768px){
+  .footer-part3 h3,.footer-part4 h3,.footer-part2 h3{
+    margin: 0px;
+
+  }
   .footer{
     display: flex;
     align-items: center;
@@ -1750,6 +1836,20 @@ width:25%;
   .footer-part1,.footer-part2,.footer-part3,.footer-part4{
     width:100%;
   }
+.header-inner{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.header-container{
+  padding: 10px;;
+}
+.header-left{
+padding-bottom: 10px;
+}
+.account-button,.cart,.menu{
+  display: none !important;
+}
 }
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[2].use[1]!../../../node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js??ruleSet[1].rules[13].oneOf[2].use[2]!../../../node_modules/next/font/google/target.css?{"path":"src\\app\\layout.tsx","import":"Poppins","arguments":[{"subsets":["latin"],"weight":["100","200","300","400","500","600","700","800","900"],"variable":"--font-poppins"}],"variableName":"poppins"} ***!

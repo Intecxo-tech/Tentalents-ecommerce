@@ -17,7 +17,7 @@ const Products = ({ count }: ProductsProps) => {
             </div>
             <div className=" flex justify-flex-start items-center p-[10px] gap-[15px] rounded-[10px] bg-[#E2FFD9]">
                 <ChartNoAxesCombined className='text-[var(--grey)]' />
-                <h2>+2 Products</h2>
+                 <h2>+{count} Products</h2>
             </div>
       
       

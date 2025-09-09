@@ -151,6 +151,12 @@
   border-radius: 10px;
   
 }
+.upload-field{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+}
 .upload-field h2{
   color:#919191;
   padding:10px 10px;

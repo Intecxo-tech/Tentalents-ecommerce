@@ -72,7 +72,7 @@ const StoreLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="storecomponents">
           <div className="earning">
             {/* ✅ Pass orders to Balance */}
-            <Balance orders={orders} />
+            <Balance  />
           </div>
           <div className="noproducts">
             <Products count={productCount} />
