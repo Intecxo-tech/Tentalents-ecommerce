@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from './jwt';
-// We need the ROLES object for comparisons
-import { AuthPayload, UserRole, ROLES } from './types'; 
-import { logger } from '@shared/middlewares/logger/src/index';
+import { AuthPayload, UserRole, ROLES } from './types';
 
-// Make sure your Express Request is properly extended
+// Extend Express Request type
 declare global {
   namespace Express {
     interface Request {
@@ -14,8 +12,9 @@ declare global {
 }
 
 /**
- * A smarter, hybrid authentication middleware.
- * It checks for roles OR specific capabilities (like being a vendor).
+ * Authentication middleware
+ * @param allowedRoles Optional roles to restrict access
+ * @param secret JWT secret (default from env)
  */
 export function authMiddleware(
   allowedRoles?: UserRole | UserRole[],
@@ -40,7 +39,7 @@ export function authMiddleware(
       req.user = decoded;
       const userRole = decoded.role;
 
-      // If the route doesn't require any specific role, just being logged in is enough.
+      // If no specific roles are required, allow access
       if (!allowedRoles || (Array.isArray(allowedRoles) && allowedRoles.length === 0)) {
         next();
         return;
@@ -48,35 +47,28 @@ export function authMiddleware(
 
       const required = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
-      // --- START OF NEW HYBRID LOGIC ---
-
-      // Rule 1: An ADMIN can do anything.
+      // Admin can access anything
       if (userRole === ROLES.ADMIN) {
-        logger.info(`[Auth] Admin access granted for user ${decoded.userId}`);
         next();
         return;
       }
-      
-      // Rule 2 (THE KEY CHANGE): Check for VENDOR capability.
-      // If the route requires 'seller' role, we check if the token contains a 'vendorId'.
-      // This is the TRUE test of whether they are a vendor, regardless of their role string.
+
+      // Vendor access if required role is SELLER and token has vendorId
       if (required.includes(ROLES.SELLER) && decoded.vendorId) {
-        logger.info(`[Auth] Vendor access granted for user ${decoded.userId} (vendorId: ${decoded.vendorId})`);
         next();
         return;
       }
 
-      // Rule 3: For all other cases (like BUYER), check the role string directly.
+      // Other roles: check role string directly
       if (required.includes(userRole)) {
-        logger.info(`[Auth] Access granted for user ${decoded.userId} with role ${userRole}`);
         next();
         return;
       }
-      
-      // --- END OF NEW HYBRID LOGIC ---
 
-      logger.warn(`[Auth] Forbidden: User ${decoded.userId} with role '${userRole}' tried to access route requiring '${required.join(', ')}'`);
-      res.status(403).json({ message: `Forbidden: You do not have the required permissions for this action.` });
+      // Forbidden
+      res.status(403).json({
+        message: `Forbidden: You do not have the required permissions for this action.`
+      });
       return;
 
     } catch (err: any) {
@@ -92,4 +84,3 @@ export function authMiddleware(
 }
 
 export const requireAuth = authMiddleware;
-
