@@ -1,0 +1,75 @@
+version: "3.8"
+
+networks:
+  kong-net:
+
+services:
+  kong:
+    image: kong:3.8
+    container_name: kong-api-gateway-kong
+    restart: unless-stopped
+    networks:
+      - kong-net
+    ports:
+      - "8000:8000"   # Public proxy
+      - "8443:8443"   # HTTPS proxy
+      - "8001:8001"   # Admin API
+      - "8444:8444"   # Admin HTTPS
+    environment:
+      KONG_DATABASE: "off"   # DB-less mode
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yaml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+    volumes:
+      - ./kong.yaml:/etc/kong/kong.yaml
+
+  konga:
+    image: pantsel/konga:latest
+    container_name: kong-api-gateway-konga
+    restart: unless-stopped
+    networks:
+      - kong-net
+    ports:
+      - "1337:1337"
+    environment:
+      NODE_ENV: development
+    depends_on:
+      - kong
+
+
+
+
+
+# # 1️⃣ Start Kong + Konga
+# docker compose -f infra/kong-API-gateway/docker-compose-kong.yaml up -d
+
+# # 2️⃣ Stop Kong + Konga
+# docker compose -f infra/kong-API-gateway/docker-compose-kong.yaml down
+
+# # 3️⃣ Rebuild + restart Kong + Konga
+# docker compose -f infra/kong-API-gateway/docker-compose-kong.yaml up -d --build
+
+# # 4️⃣ Reload declarative configuration (DB-less) using the Admin API
+# curl -i -X POST http://localhost:8001/config \
+#   -H "Content-Type: application/yaml" \
+#   --data-binary "@infra/kong-API-gateway/kong.yaml"
+
+# # 5️⃣ Check running Kong/Konga containers
+# docker ps
+
+# # 6️⃣ View Kong logs
+# docker logs -f kong-api-gateway-kong
+
+# # 7️⃣ View Konga logs
+# docker logs -f kong-api-gateway-konga
+
+# # 8️⃣ Test Kong proxy is running
+# curl -i http://localhost:8000/
+
+# # 9️⃣ Verify Kong Admin API
+# curl -i http://localhost:8001/
+
+# # 🔟 Test a microservice through Kong route (example: user-service)
+# curl -i http://localhost:8000/api/user

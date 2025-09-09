@@ -1,48 +1,54 @@
-# Dockerfile for 'product-service'
-
-# --- Stage 1: Build ---
-# Use a specific version of Node for reproducibility
+# ===========================
+# Stage 1: Builder
+# ===========================
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# 1. Copy only the necessary package and config files first
-# This leverages Docker's layer caching. The build only re-runs `npm install`
-# if these specific files change, not on every code change.
+# 1️⃣ Copy root package files and install all dependencies
 COPY package.json package-lock.json ./
-COPY tsconfig.base.json nx.json ./
+RUN npm ci
 
-# 2. Install dependencies for the entire monorepo
-# This is necessary for the build step to work
-RUN npm install
+# 2️⃣ Copy only the service and shared libs
+COPY apps/backend/rating-service ./apps/backend/rating-service
+COPY libs ./libs
 
-# 3. Copy the rest of the source code
-COPY . .
+# 3️⃣ Build the rating-service (including dependent libs)
+RUN npx nx build rating-service --configuration=production --skip-nx-cache
 
-# 4. Build the specific application.
-# Nx will automatically create a pruned package.json in the output directory
-# if your project's build target is configured correctly.
-RUN npx nx build rating-service --configuration=production
-
-
-# --- Stage 2: Production Runtime ---
-FROM node:20-alpine
+# ===========================
+# Stage 2: Production Runtime
+# ===========================
+FROM node:20-alpine AS runtime
 WORKDIR /app
-
-# Set to production environment
 ENV NODE_ENV=production
 
-# 5. Copy the pruned package.json from the build output
-COPY --from=builder /app/dist/apps/rating-service/package.json ./package.json
+# 4️⃣ Install only production dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-# 6. Install ONLY the production dependencies for 'product-service'
-RUN npm install --omit=dev
+# 5️⃣ Copy the built rating-service
+COPY --from=builder /app/dist/apps/backend/rating-service ./
 
-# 7. Copy the built application code and prisma schema
-COPY --from=builder /app/dist/apps/rating-service .
-COPY --from=builder /app/prisma ./prisma
+# 6️⃣ Copy built libs
+COPY --from=builder /app/dist/libs ./libs
 
-# Expose the correct port
+# 7️⃣ Expose the service port
 EXPOSE 3007
 
-# 8. Run the application using the correct file name
+# 8️⃣ Start the service
 CMD ["node", "main.js"]
+
+
+
+# docker build -t rating-service:latest -f apps/backend/rating-service/Dockerfile .
+
+# docker run -d --name rating-service \
+#   -p 3007:3007 \
+#   --env NODE_ENV=production \
+#   rating-service:latest
+
+# docker logs -f rating-service
+
+# docker stop rating-service
+# docker rm rating-service
+

@@ -1,4 +1,4 @@
-# Dockerfile for 'product-service'
+# Dockerfile for 'admin-service'
 
 # --- Stage 1: Build ---
 # Use a specific version of Node for reproducibility
