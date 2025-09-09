@@ -26,7 +26,7 @@ const Ordercancel: React.FC = () => {
 
     async function fetchOrders() {
       try {
-        const res = await axios.get('http://localhost:3002/api/orders/vendor/orders', {
+        const res = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

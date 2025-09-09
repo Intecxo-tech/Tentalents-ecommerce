@@ -27,6 +27,7 @@
       "@shared/types": ["libs/shared/types/src/index.ts"],
       "@shared/utils": ["libs/shared/utils/src/index.ts"],
       // Correct paths for service imports (include whole src folder)
+      "@invoice-service/*":["apps/backend/invoice-service/src/app/*"],
       "@payment-service/*": ["apps/backend/payment-service/src/app/*"],  // Including all files in the payment-service
       "@order-service/*": ["apps/backend/order-service/src/app/*"],
       "@cart-service/*":["apps/backend/cart-service/src/app/*"]  // Including all files in the order-service
@@ -37,7 +38,8 @@
     "../../../libs/shared/**/*.ts",
     "../../../apps/backend/payment-service/src/**/*.ts",  // Ensure payment service files are included
     "../../../apps/backend/order-service/src/**/*.ts",
-        "../../../apps/backend/cart-service/src/**/*.ts", // Ensure order service files are included
+        "../../../apps/backend/cart-service/src/**/*.ts",
+        "../../../apps/backend/invoice-service/src/**/*.ts" // Ensure order service files are included
   ],
   "exclude": [
     "jest.config.ts",

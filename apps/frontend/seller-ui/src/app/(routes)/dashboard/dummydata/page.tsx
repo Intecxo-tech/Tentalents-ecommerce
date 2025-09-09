@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from "react";
 
-const API_URL = "http://localhost:3002/api/orders/vendor/orders";
+const API_URL = "https://order-service-322f.onrender.com/api/orders/vendor/orders";
 
 // Define interfaces based on your JSON response shape
 interface Product {

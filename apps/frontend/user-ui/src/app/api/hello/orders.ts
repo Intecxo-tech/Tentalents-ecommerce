@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({ error: 'API URL not defined in env' });
       }
 
-      const apiResponse = await fetch(`https://order-service-faxh.onrender.com/api/orders`, {
+      const apiResponse = await fetch(`https://order-service-322f.onrender.com/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

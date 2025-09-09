@@ -15,7 +15,7 @@ type AddAddressProps = {
   addressToEdit?: any;  // Added this prop for editing an existing address
 };
 
-const API_BASE_URL = 'https://order-service-faxh.onrender.com'; 
+const API_BASE_URL = 'https://order-service-322f.onrender.com'; 
 
 const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddressProps) => {
   const formRef = useRef<HTMLDivElement>(null);

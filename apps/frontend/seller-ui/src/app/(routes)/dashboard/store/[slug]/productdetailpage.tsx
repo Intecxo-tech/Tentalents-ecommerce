@@ -47,7 +47,7 @@ const fetchRatings = async () => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const response = await axios.get(
-      `https://rating-service-kd8p.onrender.com/api/rating/product/${product.id}`,
+      `https://rating-service-pkgb.onrender.com/api/rating/product/${product.id}`,
       { headers }
     );
 
@@ -86,7 +86,7 @@ const handleDelete = async (productId: string) => {
   if (!window.confirm('Are you sure you want to delete this product?')) return;
 
   try {
-    await axios.delete(`https://product-service-23pc.onrender.com/api/products/${productId}`, {
+    await axios.delete(`https://product-service-i82l.onrender.com/api/products/${productId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },

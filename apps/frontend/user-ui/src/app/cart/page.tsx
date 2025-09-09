@@ -38,7 +38,7 @@ type ApiCartResponse = {
 };
 
 const Cart = () => {
-  const CART_API_BASE_URL =  `https://cart-service-5lo3.onrender.com`;
+  const CART_API_BASE_URL =  `https://cart-service-kona.onrender.com`;
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +57,7 @@ const Cart = () => {
         return;
       }
 
-      const res = await fetch(`https://cart-service-5lo3.onrender.com/api/cart`, {
+      const res = await fetch(`https://cart-service-kona.onrender.com/api/cart`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,

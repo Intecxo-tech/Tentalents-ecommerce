@@ -45,7 +45,7 @@ const [error, setError] = useState<string | null>(null);
 
     const fetchVendor = async () => {
       try {
-        const res = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
+        const res = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',

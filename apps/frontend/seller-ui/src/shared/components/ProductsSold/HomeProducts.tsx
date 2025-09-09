@@ -26,13 +26,13 @@ const HomeProducts = () => {
     async function fetchData() {
       try {
         // Fetch products
-        const productRes = await axios.get('http://localhost:3003/api/products/vendor/products', {
+        const productRes = await axios.get('https://product-service-i82l.onrender.com/api/products/vendor/products', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const products = productRes.data.data;
 
         // Fetch orders
-        const ordersRes = await axios.get('http://localhost:3002/api/orders/vendor/orders', {
+        const ordersRes = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const orders = ordersRes.data.data;

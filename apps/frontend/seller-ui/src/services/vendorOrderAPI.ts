@@ -8,7 +8,7 @@ export const getVendorOrders = async (): Promise<VendorOrder[]> => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
   // 2. Make the API call with Authorization header
-  const response = await axios.get('https://order-service-faxh.onrender.com/api/orders/vendor/orders', {
+  const response = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
     headers: {
       Authorization: token ? `Bearer ${token}` : '',
     },
@@ -32,7 +32,7 @@ export async function updateDispatchStatus(
   dispatchStatus: string,
   token: string
 ) {
-  const res = await fetch(`https://order-service-faxh.onrender.com/api/orders/vendor/orders/${orderId}/dispatch`, {
+  const res = await fetch(`https://order-service-322f.onrender.com/api/orders/vendor/orders/${orderId}/dispatch`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

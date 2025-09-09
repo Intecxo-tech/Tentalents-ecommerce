@@ -41,7 +41,7 @@ const page = () => {
     async function fetchVendorProducts() {
       try {
         const res = await axios.get(
-          'http://localhost:3003/api/products/vendor/products',
+          'https://product-service-i82l.onrender.com/api/products/vendor/products',
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -107,7 +107,7 @@ const page = () => {
     async function fetchVendorOrders() {
       try {
         const res = await axios.get(
-          'http://localhost:3002/api/orders/vendor/orders',
+          'https://order-service-322f.onrender.com/api/orders/vendor/orders',
           {
             headers: {
               Authorization: `Bearer ${token}`,

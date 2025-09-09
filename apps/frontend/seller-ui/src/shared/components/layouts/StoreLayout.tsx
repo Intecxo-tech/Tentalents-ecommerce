@@ -33,7 +33,7 @@ const StoreLayout = ({ children }: { children: React.ReactNode }) => {
     async function fetchVendorProducts() {
       try {
         const res = await axios.get(
-          'https://product-service-23pc.onrender.com/api/products/vendor/products',
+          'https://product-service-i82l.onrender.com/api/products/vendor/products',
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -49,7 +49,7 @@ const StoreLayout = ({ children }: { children: React.ReactNode }) => {
     async function fetchVendorOrders() {
       try {
         const res = await axios.get(
-          'https://order-service-faxh.onrender.com/api/orders/vendor/orders',
+          'https://order-service-322f.onrender.com/api/orders/vendor/orders',
           {
             headers: {
               Authorization: `Bearer ${token}`,

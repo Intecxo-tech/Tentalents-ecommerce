@@ -4,7 +4,7 @@ import { errorHandler } from '@shared/error';
 import { logger } from '@shared/logger';
 import paymentRoutes from './app/routes/payment.routes';
 import cors from 'cors';
-import rawBodyMiddleware from '@shared/middlewares';
+import {rawBodyMiddleware} from '@shared/middlewares';
 const app = express();
 
 // Apply CORS middleware first

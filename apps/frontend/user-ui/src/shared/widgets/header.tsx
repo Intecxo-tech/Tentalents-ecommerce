@@ -61,7 +61,7 @@ const router = useRouter();
 
     setIsLoading(true);
  try {
-  const res = await fetch(`https://search-service-mo6h.onrender.com/api/search?${params.toString()}`);
+  const res = await fetch(`https://search-service-71lc.onrender.com/api/search?${params.toString()}`);
   const data = await res.json();
   console.log('Search API result for query:', searchQuery, data);
 
@@ -86,7 +86,7 @@ const router = useRouter();
           return;
         }
 
-        const res = await fetch(`https://cart-service-5lo3.onrender.com/api/cart`, {
+        const res = await fetch(`https://cart-service-kona.onrender.com/api/cart`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
@@ -124,7 +124,7 @@ const router = useRouter();
           return;
         }
 
-        const res = await fetch(`http://localhost:3018/api/user/profile`, {
+        const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',

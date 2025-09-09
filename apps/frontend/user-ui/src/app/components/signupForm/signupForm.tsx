@@ -97,7 +97,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     try {
       const { email: enteredEmail } = getValues();
       await axios.post(
-        `https://user-service-e1em.onrender.com/api/auth/register/otp/initiate`,
+        `https://user-service-zje4.onrender.com/api/auth/register/otp/initiate`,
         { email: enteredEmail }
       );
       setEmail(enteredEmail);
@@ -128,7 +128,7 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     setLoading(true);
     try {
       await axios.post(
-        `https://user-service-e1em.onrender.com/api/auth/register/otp/verify`,
+        `https://user-service-zje4.onrender.com/api/auth/register/otp/verify`,
         {
           email,
           otp: otpCode,
@@ -146,7 +146,7 @@ const onSubmit = async (data: FormData) => {
   setLoading(true);
   try {
     await axios.post(
-      `https://user-service-e1em.onrender.com/api/auth/register/otp/complete`,
+      `https://user-service-zje4.onrender.com/api/auth/register/otp/complete`,
       {
         email,
         password: data.password,
@@ -155,7 +155,7 @@ const onSubmit = async (data: FormData) => {
     );
 
  const loginResponse = await axios.post(
-  `https://user-service-e1em.onrender.com/api/auth/login`,
+  `https://user-service-zje4.onrender.com/api/auth/login`,
   {
     email: getValues('email'),  // <- use latest
     password: data.password,
@@ -207,7 +207,7 @@ if (onSuccess) {
 
     setLoading(true);
     try {
-      await axios.post(`https://user-service-e1em.onrender.com/api/auth/register/otp/initiate`, {
+      await axios.post(`https://user-service-zje4.onrender.com/api/auth/register/otp/initiate`, {
         email,
       });
       setCanResend(false);
@@ -262,7 +262,7 @@ const handleGoogleCallback = async (response: any) => {
     // Log the Google token for debugging
     console.log('Google ID Token:', response.credential);
 
-  const res = await axios.post(`https://user-service-e1em.onrender.com/api/auth/google-login`, {
+  const res = await axios.post(`https://user-service-zje4.onrender.com/api/auth/google-login`, {
   provider: 'google',
   idToken: response.credential,
 });

@@ -96,7 +96,7 @@ const handleBankSave = async () => {
   try {
     setSaving(true);
     const response = await fetch(
-      `http://localhost:3010/api/vendor/vendors/${vendorId}/bank-details`,
+      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/vendors/${vendorId}/bank-details`,
       {
         method: 'PUT',
         headers: {
@@ -145,7 +145,7 @@ useEffect(() => {
 
       console.log(`📦 Fetching vendor details for ID: ${vendorId}`);  // Logs the vendorId for which you're fetching details
 
-      const response = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
+      const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
         headers: {
           Authorization: `Bearer ${token}`,  // Send the token with the request
           'Content-Type': 'application/json',
@@ -280,7 +280,7 @@ const handlePersonalDetailsSave = async (e: FormEvent) => {
   };
 
   try {
-    const response = await fetch(`https://vendor-service-8bzv.onrender.com/api/vendor/profile/${vendorId}`, {
+    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
       method: 'PUT',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -316,7 +316,7 @@ const handleBusinessDetailsSave = async (e: FormEvent) => {
 
   try {
     // Sending the PUT request to the backend
-    const response = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
+    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
       method: 'PUT',
       headers: {
         Authorization: token ? `Bearer ${token}` : '', // Ensure token is set
@@ -357,7 +357,7 @@ const handleBankDetailsSave = async (e: FormEvent) => {
   try {
     setSaving(true);
     const response = await fetch(
-      `http://localhost:3010/api/vendor/vendors/${vendorId}/bank-details`,
+      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/vendors/${vendorId}/bank-details`,
       {
         method: 'PUT',
         headers: {
@@ -425,7 +425,7 @@ const handleProfileImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
       file: base64Image, // key name matches backend expected key
     };
 
-    const response = await fetch(`http://localhost:3010/api/vendor/profile-image/${vendorId}`, {
+    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile-image/${vendorId}`, {
       method: 'POST',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -490,7 +490,7 @@ const handleKycUploadTyped = async (e: ChangeEvent<HTMLInputElement>, docType: s
     console.log('Payload:', payload);
 
     // Send the request to the backend
-    const response = await fetch(`http://localhost:3010/api/vendor/kyc-docs/${vendor.id}`, {
+    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/kyc-docs/${vendor.id}`, {
       method: 'POST',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',

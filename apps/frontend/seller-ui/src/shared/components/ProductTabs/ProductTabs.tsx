@@ -7,7 +7,7 @@ import { FaBox } from "react-icons/fa";
 
 // --- Interfaces & API Logic ---
 
-const API_URL = "http://localhost:3002/api/orders/vendor/orders";
+const API_URL = "https://order-service-322f.onrender.com/api/orders/vendor/orders";
 
 interface Product {
   id: string;

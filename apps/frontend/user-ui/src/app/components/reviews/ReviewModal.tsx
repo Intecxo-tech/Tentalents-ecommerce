@@ -71,7 +71,7 @@ useEffect(() => {
       }
 
       const response = await axios.post(
-        `https://rating-service-kd8p.onrender.com/api/rating/rate`,
+        `https://rating-service-pkgb.onrender.com/api/rating/rate`,
         formData,
         {
          headers: {

@@ -24,7 +24,7 @@ const Page = () => {
         if (!vendorId || !token) return;
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_VENDOR_URI}/api/vendor/profile/${vendorId}`,
+          `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -85,7 +85,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ productId }) => {
   async function fetchProduct() {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`https://product-service-23pc.onrender.com/api/products/${productId}`, {
+      const response = await axios.get(`https://product-service-i82l.onrender.com/api/products/${productId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -219,7 +219,7 @@ const onSubmit = async (data: FormData) => {
       };
 
       await axios.put(
-        `https://product-service-23pc.onrender.com/api/products/${productId}`,
+        `https://product-service-i82l.onrender.com/api/products/${productId}`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -252,7 +252,7 @@ const onSubmit = async (data: FormData) => {
       };
 
       await axios.post(
-        `https://product-service-23pc.onrender.com/api/products`,
+        `https://product-service-i82l.onrender.com/api/products`,
         createPayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );

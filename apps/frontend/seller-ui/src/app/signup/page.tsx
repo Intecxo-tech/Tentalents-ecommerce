@@ -109,7 +109,7 @@ const [pendingVendorId, setPendingVendorId] = useState('');
     try {
       const { email: enteredEmail } = getValues();
       await axios.post(
-        `${process.env.NEXT_PUBLIC_VENDOR_URI}/api/vendor/register/initiate-otp`,
+        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/initiate-otp`,
         { email: enteredEmail }
       );
       setEmail(enteredEmail);
@@ -169,7 +169,7 @@ useEffect(() => {
     setLoading(true);
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_VENDOR_URI}/api/vendor/register/verify-otp`,
+        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/verify-otp`,
         {
           email,
           otp: otpCode,
@@ -187,7 +187,7 @@ useEffect(() => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_VENDOR_URI}/api/vendor/register/user`,
+        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/user`,
         {
           email,
           password: data.password,
@@ -320,7 +320,7 @@ const handleBankDetailsSubmit = async (data: FormData) => {
     kycFilenames,
   };
     const response = await axios.post(
-      `http://localhost:3010/api/vendor/register/profile`,
+      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/profile`,
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -404,7 +404,7 @@ const handleKycUploadClick = () => {
     setLoading(true);
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_VENDOR_URI}/api/vendor/register/initiate-otp`,
+        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/initiate-otp`,
         { email }
       );
       setCanResend(false);

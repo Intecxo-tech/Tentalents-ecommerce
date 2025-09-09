@@ -18,7 +18,7 @@ type Props = {
   onLoginSuccess?: (userData: any) => void;
 };
 
-const API_URL = 'https://user-service-e1em.onrender.com/api/auth';
+const API_URL = 'https://user-service-zje4.onrender.com/api/auth';
 
 const LoginRegisterSidebar = ({ isOpen, onClose, onLoginSuccess }: Props) => {
   const formRef = useRef<HTMLDivElement>(null);
@@ -85,7 +85,7 @@ const handleFirebaseGoogleSignIn = async () => {
     const result = await signInWithPopup(auth, provider);
     const firebaseIdToken = await result.user.getIdToken();
 
-    const res = await fetch(`https://user-service-e1em.onrender.com/api/auth/google-login`, {
+    const res = await fetch(`https://user-service-zje4.onrender.com/api/auth/google-login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

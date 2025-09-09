@@ -35,7 +35,7 @@ const AccountPage = () => {
         return;
       }
 
-      const res = await fetch(`http://localhost:3018/api/user/profile`, {
+      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ const handleBecomeSeller = async () => {
 
     if (profile?.isVendor || profile?.vendorId) {
       toast.success('Redirecting to your seller dashboard...');
-      router.push(`http://localhost:3001/dashboard`);
+      router.push(`https://tentalents-ecommerce-seller.vercel.app/dashboard`);
       return;
     }
 
@@ -84,7 +84,7 @@ const handleBecomeSeller = async () => {
     }
 
     // Call backend to convert user to vendor
-  const res = await fetch(`http://localhost:3010/api/vendor/convert`, {
+  const res = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/convert`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ const handleBecomeSeller = async () => {
         email: profile.email,
       }));
     router.push(
-  `http://localhost:3001/signup?vendorId=${data.data?.id}&name=${encodeURIComponent(profile.name)}&phone=${profile.phone}&email=${profile.email}&token=${token}`
+  `https://tentalents-ecommerce-seller.vercel.app/signup?vendorId=${data.data?.id}&name=${encodeURIComponent(profile.name)}&phone=${profile.phone}&email=${profile.email}&token=${token}`
 );
 
       return;
@@ -130,7 +130,7 @@ const handleBecomeSeller = async () => {
 
     // Otherwise, redirect to seller dashboard
     toast.success('You are now a seller! Redirecting to dashboard...');
-    router.push(`http://localhost:3001/dashboard`);
+    router.push(`https://tentalents-ecommerce-seller.vercel.app/dashboard`);
 
   } catch (err: any) {
     // This will now display the clear error from your backend
@@ -169,7 +169,7 @@ const handleUpdateProfile = async () => {
       return;
     }
 
-    const res = await fetch(`http://localhost:3018/api/user/profile`, {
+    const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
   method: 'PATCH',
   headers: {
     'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const formData = new FormData();
   formData.append('avatar', file);
 
-    const res = await fetch(`http://localhost:3018/api/user/profile/image`, {
+    const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile/image`, {
      method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
