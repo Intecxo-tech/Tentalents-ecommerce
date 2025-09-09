@@ -83,7 +83,28 @@ const Products = ({ columns = 5, category, showHeader = true, products: propProd
 
 
 
-  if (loading || error) {
+   if (loading || error) {
+    return (
+      <div className="products-grid">
+        {showHeader && (
+          <div className="main-heading">
+            <h3 className="heading">Popular Products</h3>
+            <button className="background-button">
+              Explore <ChevronRight />
+            </button>
+          </div>
+        )}
+
+        <div className={`product-grid columns-${columns}`}>
+          {Array.from({ length: columns }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Return actual product cards after loading is done
   return (
     <div className="products-grid">
       {showHeader && (
@@ -96,13 +117,13 @@ const Products = ({ columns = 5, category, showHeader = true, products: propProd
       )}
 
       <div className={`product-grid columns-${columns}`}>
-        {Array.from({ length: columns }).map((_, i) => (
-          <ProductCardSkeleton key={i} />
+        {filteredProducts.map((product) => (
+          <ProductCard key={product.id} product={product} getDiscount={getDiscount} />
         ))}
       </div>
     </div>
   );
-}
+
 
 };
 

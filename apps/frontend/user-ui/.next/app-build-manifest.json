@@ -12,16 +12,17 @@
       "static/css/app/page.css",
       "static/chunks/app/page.js"
     ],
-    "/orders/page": [
+    "/shop/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/orders/page.css",
-      "static/chunks/app/orders/page.js"
+      "static/css/app/shop/page.css",
+      "static/chunks/app/shop/page.js"
     ],
-    "/_not-found/page": [
+    "/shop/[slug]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/css/app/shop/[slug]/page.css",
+      "static/chunks/app/shop/[slug]/page.js"
     ]
   }
 }

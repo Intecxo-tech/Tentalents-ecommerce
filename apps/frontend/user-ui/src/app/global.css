@@ -286,6 +286,7 @@ button{
   font-size: 16px;
   color:var(--darkgrey);
   font-weight: 500;
+  height: 59px;;
   margin: 0px !important;
   line-height: 1.4; /* Optional: improves vertical spacing */
  /* 2 lines * line-height */
