@@ -446,9 +446,24 @@ width:25%;
   padding: 10px;;
 }
 .header-left{
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
 padding-bottom: 10px;
+  padding-right: 10px;
+  gap:3px;
+  width: 100%;
 }
 .account-button,.cart,.menu{
   display: none !important;
+}
+.search-bar{
+  width: 100%;
+  min-width:100%
+}
+.header-right{
+  width: 100%;
+}
+.logo{
+  font-size: 30px;
 }
 }

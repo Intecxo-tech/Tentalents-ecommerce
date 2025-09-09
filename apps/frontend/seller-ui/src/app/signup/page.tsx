@@ -54,12 +54,12 @@ type FormData = {
   upiId?: string;
 };
 
-const SignUp = () => {
+const SignUp = ({ searchParams }: { searchParams: URLSearchParams }) => {
   const [passwordVisible, setPasswordVisible] = useState({
     password: false,
     confirmPassword: false,
   });
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   const [rememberMe, setRememberMe] = useState(true);
   const [otp, setOtp] = useState(Array(6).fill(''));
   const [timer, setTimer] = useState(60);

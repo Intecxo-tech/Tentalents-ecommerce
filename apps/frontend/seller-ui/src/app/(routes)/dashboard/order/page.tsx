@@ -43,11 +43,11 @@ export interface VendorOrder {
   createdAt: string;
 }
 
-interface ProductAcceptProps {
-  limit?: number;
-}
+// interface ProductAcceptProps {
+//   limit?: number;
+// }
 
-const Page = ({ limit }: ProductAcceptProps) => {
+const Page = () => {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filteredOrders, setFilteredOrders] = useState<VendorOrder[]>([]);
@@ -122,7 +122,7 @@ useEffect(() => {
     setFilteredOrders(updated);
   }, [orders, dateFilter, statusFilter]);
 
-  const limitedOrders = limit ? filteredOrders.slice(0, limit) : filteredOrders;
+  // const limitedOrders = limit ? filteredOrders.slice(0, limit) : filteredOrders;
 
   // Handlers for buttons
   const handleConfirm = (id: string) => console.log('Confirmed product ID:', id);
@@ -134,7 +134,8 @@ useEffect(() => {
   };
 
   if (loading) return <div className="ordersempty"><p>Loading...</p></div>;
-  if (limitedOrders.length === 0) return <div className="ordersempty"><p>No orders found.</p></div>;
+if (filteredOrders.length === 0) return <div className="ordersempty"><p>No orders found.</p></div>;
+
 
   return (
     <div className="orderspage">
@@ -180,7 +181,7 @@ useEffect(() => {
       </div>
 
       <div className="productsection">
-        {limitedOrders.map((orderItem) => {
+     {filteredOrders.map((orderItem) => {
           const orderStatus = orderItem.order?.status?.toLowerCase() || 'pending';
           const dispatchStatus = orderItem.order?.dispatchStatus?.toLowerCase() || 'not_started';
 
