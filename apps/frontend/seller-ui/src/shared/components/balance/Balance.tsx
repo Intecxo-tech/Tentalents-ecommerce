@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Dropdown from '../dropdown/Dropdownbutton';
 import Balanceicon from '../../../assets/balance.png';
 import axios from 'axios';
+import BalanceSkeleton from './BalanceSkeleton'; // ✅ Import the skeleton
 
 interface VendorOrder {
   id: string;
@@ -49,7 +50,7 @@ const Balance: React.FC = () => {
     fetchOrders();
   }, []);
 
-  if (loading) return <div>Loading balance data...</div>;
+  if (loading) return <BalanceSkeleton />; // ✅ Show skeleton while loading
   if (error) return <div>{error}</div>;
 
   const completedOrders = orders.filter(
@@ -58,18 +59,18 @@ const Balance: React.FC = () => {
       order.order?.status?.toLowerCase() === 'delivered'
   );
 
-const totalBalance = completedOrders.length > 0
-  ? completedOrders.reduce((sum, order) => sum + parseFloat(order.totalPrice), 0)
-  : null;  // null means no data
+  const totalBalance = completedOrders.length > 0
+    ? completedOrders.reduce((sum, order) => sum + parseFloat(order.totalPrice), 0)
+    : null;
 
-const recentOrder = completedOrders[0];
-const recentAmount = recentOrder ? parseFloat(recentOrder.totalPrice) : null;
+  const recentOrder = completedOrders[0];
+  const recentAmount = recentOrder ? parseFloat(recentOrder.totalPrice) : null;
 
   return (
     <div>
       <div className="Balance p-[15px] rounded-[10px] flex flex-col gap-[10px] flex-1">
-        <div className="balanceheading flex justify-between items-center ">
-          <div className="flex justify-flex-start gap-[10px] items-center">
+        <div className="balanceheading flex justify-between items-center">
+          <div className="flex gap-[10px] items-center">
             <Image src={Balanceicon} alt="balanceicon" />
             <h2 className="mainheading">Balance</h2>
           </div>
@@ -79,20 +80,19 @@ const recentAmount = recentOrder ? parseFloat(recentOrder.totalPrice) : null;
               defaultValue="Past Week"
               onSelect={(value) => {
                 console.log('Selected status:', value);
-                // Optionally, add filtering here based on selection
               }}
             />
           </div>
         </div>
 
-       <div className="balanceamount text-[32px] text-[var(--secondary)]">
-  <h2>{totalBalance !== null ? `$${totalBalance.toFixed(2)}` : 'N/A'}</h2>
-</div>
+        <div className="balanceamount text-[32px] text-[var(--secondary)]">
+          <h2>{totalBalance !== null ? `$${totalBalance.toFixed(2)}` : 'N/A'}</h2>
+        </div>
 
-<div className="totalbalance bg-[#EBEBEB] flex justify-between items-center p-[10px] rounded-[10px]">
-  <p className="text-[var(--grey)]">Recents</p>
-  <p>{recentAmount !== null ? `+$${recentAmount.toFixed(2)}` : '+$0.00'}</p>
-</div>
+        <div className="totalbalance bg-[#EBEBEB] flex justify-between items-center p-[10px] rounded-[10px]">
+          <p className="text-[var(--grey)]">Recents</p>
+          <p>{recentAmount !== null ? `+$${recentAmount.toFixed(2)}` : '+$0.00'}</p>
+        </div>
       </div>
     </div>
   );

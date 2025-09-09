@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Google from '../../assets/google.jpg';
+import './login.css';
 import axios from 'axios';
 import '../signup/signup.css';
 import { ChevronLeft } from 'lucide-react';

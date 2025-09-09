@@ -79,6 +79,7 @@
   color:var(--darkgrey);
   font-weight: 500;
   margin: 0px !important;
+  height: 59px;;
   line-height: 1.4; /* Optional: improves vertical spacing */
  /* 2 lines * line-height */
 }

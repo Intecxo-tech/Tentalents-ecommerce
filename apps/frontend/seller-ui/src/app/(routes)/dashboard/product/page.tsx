@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import Link from 'next/link';
 import Products from 'apps/frontend/seller-ui/src/shared/components/noproducts/products';
+import ProductSkeleton from './ProductSkeleton';
 interface Variant {
   id: string;
   name: string;
@@ -77,7 +78,7 @@ const Page: React.FC = () => {
     }
   }
 
-  if (loading) return <div>Loading your products...</div>;
+ if (loading) return <ProductSkeleton />;
   if (error) {
   return <div className="noproductsyet">You have no products yet. Create one!</div>;
 }

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Dropdown from '../dropdown/Dropdownbutton';
 import { Bell } from 'lucide-react';
 import axios from 'axios';
+import ProductHistorySkeleton from './ProductHistorySkeleton'; 
 
 const statusOptions = ['10 Orders', '20 Orders', '30 Orders'];
 
@@ -55,7 +56,7 @@ const ProductHistory: React.FC = () => {
     fetchOrders();
   }, []);
 
-  if (loading) return <div>Loading fulfillment data...</div>;
+  if (loading) return <ProductHistorySkeleton />;
 
   return (
     <div className="productHistory p-[15px] rounded-[10px] bg-white flex flex-col gap-[10px] flex-1">

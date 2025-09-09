@@ -187,3 +187,14 @@
  .login-page .form-group input{
   width: 100%;
  } */
+
+ @media(max-width:768px){
+    .logincontainer{
+        width: 100% !important;
+        padding: 0px 20px;
+
+    }
+    .login-page{
+        width: 100%;
+    }
+}

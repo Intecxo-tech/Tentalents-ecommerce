@@ -4,6 +4,7 @@ import Graph from '../../../assets/monitoring.png'
 import Image from 'next/image'
 import axios from 'axios';
 import Dropdown from '../dropdown/Dropdownbutton';
+import ProductSoldSkeleton from '../ProductsSold/product_soldperformance/ProductSoldSkeleton'; 
 const statusOptions = [
   "Past Week",
   "Yesterday",
@@ -88,14 +89,16 @@ const HomeProducts = () => {
 
         </div>
        <div className="productsoldvalues">
-  {productsSold.length === 0 ? (
-    <div className="inventory-empty text-center p-[20px] bg-white rounded-[10px]">
-      <h2 className="text-[18px] text-[var(--grey)] font-medium">NA</h2>
-    </div>
-  ) : (
-    <ProductSold limit={2} products={productsSold} />
-  )}
-</div>
+        {loading ? (
+          <ProductSoldSkeleton count={2} />
+        ) : productsSold.length === 0 ? (
+          <div className="inventory-empty text-center p-[20px] bg-white rounded-[10px]">
+            <h2 className="text-[18px] text-[var(--grey)] font-medium">NA</h2>
+          </div>
+        ) : (
+          <ProductSold limit={2} products={productsSold} />
+        )}
+      </div>
 
      </div>
   )

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart, ChartNoAxesCombined, Code } from 'lucide-react';
 import axios from 'axios';
-
+import OrdercancelSkeleton from './OrdercancelSkeleton';
 interface VendorOrder {
   id: string;
   quantity: number;
@@ -44,7 +44,7 @@ const Ordercancel: React.FC = () => {
     fetchOrders();
   }, []);
 
-  if (loading) return <div>Loading canceled orders...</div>;
+  if (loading) return <div><OrdercancelSkeleton /></div>;
   if (error) return <div>{error}</div>;
 
   // Filter canceled orders (accepts both 'canceled' and 'cancelled')

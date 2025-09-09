@@ -10,6 +10,7 @@ import Balance from '../../../shared/components/balance/Balance';
 import ProductHistory from '../../../shared/components/ProductHistory/ProductHistory';
 import './page.css'
 import axios from 'axios';
+import BalanceSkeleton from '../../../shared/components/balance/BalanceSkeleton';
 
 interface VendorOrder {
   id: string;
@@ -34,7 +35,7 @@ const page = () => {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [fulfilledPercentage, setFulfilledPercentage] = useState<number>(0);
   const [recentMessage, setRecentMessage] = useState<string>("");
-
+const [balanceLoading, setBalanceLoading] = useState(true);
  useEffect(() => {
     const token = localStorage.getItem('token');
 
