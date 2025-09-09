@@ -1,5 +1,6 @@
 'use client';
 
+// All your existing imports
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useRef, useState, useEffect } from 'react';
@@ -15,51 +16,58 @@ import Menu from '../../shared/components/menu/menu';
 import { auth, provider } from '../../utils/firebase';
 import { signInWithPopup } from "firebase/auth";
 
+// All your existing types and helper functions
 const maskEmail = (email: string) => {
-  if (!email) return '';
-  const [user, domain] = email.split('@');
-  if (!domain) return email;
-
-  const maskedUser =
-    user.length <= 2
-      ? user[0] + '*'.repeat(user.length - 1)
-      : user[0] + '*'.repeat(user.length - 2) + user.slice(-1);
-
-  return `${maskedUser}@${domain}`;
+  if (!email) return '';
+  const [user, domain] = email.split('@');
+  if (!domain) return email;
+  const maskedUser =
+    user.length <= 2
+      ? user[0] + '*'.repeat(user.length - 1)
+      : user[0] + '*'.repeat(user.length - 2) + user.slice(-1);
+  return `${maskedUser}@${domain}`;
 };
 
 declare global {
-  interface Window {
-    google: any;
-  }
+  interface Window {
+    google: any;
+  }
 }
 
 type FormData = {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  name: string;
-  businessName: string;
-  phone?: string;
-  address: string;
-  gstNumber?: string;
-  profileImage?: FileList;
-  kycDocsUrl?: FileList;
-  panNumber: string;
-  aadharNumber: string;
-  accountNumber: string;
-  ifscCode: string;
-  bankName: string;
-  branchName?: string;
-  upiId?: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  businessName: string;
+  phone?: string;
+  address: string;
+  gstNumber?: string;
+  profileImage?: FileList;
+  kycDocsUrl?: FileList;
+  panNumber: string;
+  aadharNumber: string;
+  accountNumber: string;
+  ifscCode: string;
+  bankName: string;
+  branchName?: string;
+  upiId?: string;
 };
 
-const SignUp = ({ searchParams }: { searchParams: URLSearchParams }) => {
-  const [passwordVisible, setPasswordVisible] = useState({
-    password: false,
-    confirmPassword: false,
-  });
-  // const searchParams = useSearchParams();
+// Define the props for your UI component.
+// It now expects a simple object, not the complex Next.js type.
+type SignUpFormProps = {
+  searchParams: Record<string, string>;
+};
+
+
+// ========================================================================
+// 1. YOUR MAIN SIGNUP COMPONENT (RENAMED TO SignUpForm)
+// This component contains all your original UI and logic.
+// ========================================================================
+const SignUpForm = ({ searchParams }: SignUpFormProps) => {
+  // All your existing state, hooks, and functions go here...
+  const [passwordVisible, setPasswordVisible] = useState({ password: false, confirmPassword: false });
   const [rememberMe, setRememberMe] = useState(true);
   const [otp, setOtp] = useState(Array(6).fill(''));
   const [timer, setTimer] = useState(60);
@@ -67,164 +75,26 @@ const SignUp = ({ searchParams }: { searchParams: URLSearchParams }) => {
   const [step, setStep] = useState<'email' | 'otp' | 'password' | 'profile' | 'bankDetails'>('email');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-const [kycFileNames, setKycFileNames] = useState<string[]>([]);
+  const [kycFileNames, setKycFileNames] = useState<string[]>([]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
   const kycInputRef = useRef<HTMLInputElement>(null);
   const [isUpgrade, setIsUpgrade] = useState(false);
-const [pendingVendorId, setPendingVendorId] = useState('');
+  const [pendingVendorId, setPendingVendorId] = useState('');
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    trigger,
-    getValues,
-    setValue,
-  } = useForm<FormData>();
-  const [passwordRules, setPasswordRules] = useState({
-    length: false,
-    capital: false,
-    specialChar: false,
-  });
+    register,
+    handleSubmit,
+    formState: { errors },
+    trigger,
+    getValues,
+    setValue,
+  } = useForm<FormData>();
+  const [passwordRules, setPasswordRules] = useState({ length: false, capital: false, specialChar: false });
 
+  // Your useEffect hook no longer needs the getQueryParam helper
+  // because the wrapper provides simple string values.
   useEffect(() => {
-    if (timer === 0) {
-      setCanResend(true);
-      return;
-    }
-
-    if (!canResend && timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer, canResend]);
-
-  const handleSendOtp = async () => {
-    const isValid = await trigger('email');
-    if (!isValid) return;
-
-    setLoading(true);
-    try {
-      const { email: enteredEmail } = getValues();
-      await axios.post(
-        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/initiate-otp`,
-        { email: enteredEmail }
-      );
-      setEmail(enteredEmail);
-      setStep('otp');
-      setCanResend(false);
-      setTimer(60);
-      setOtp(Array(6).fill(''));
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.response?.data?.error;
-      if (errorMessage === 'Vendor already exists') {
-        toast.error('This email is already registered. Please login or use a different email.');
-      } else {
-        toast.error(errorMessage || 'OTP verification failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-useEffect(() => {
-  const pendingProfileData = localStorage.getItem('pendingVendorProfile');
-
-  if (pendingProfileData) {
-    try {
-      const profile = JSON.parse(pendingProfileData);
-
-      // ✅ Vendor ID
-      setPendingVendorId(profile.id || '');
-
-      // ✅ Pre-fill form fields
-      setValue('name', profile.name || '');
-      setValue('phone', profile.phone || '');
-      
-      // ✅ Set email properly
-      if (profile.email) {
-        setEmail(profile.email);
-        setValue('email', profile.email);
-      }
-
-      setStep('profile');
-      localStorage.removeItem('pendingVendorProfile');
-    } catch (error) {
-      console.error("Failed to parse pending vendor profile:", error);
-      localStorage.removeItem('pendingVendorProfile');
-    }
-  }
-}, [setValue]);
-
-
-  const handleVerifyOtp = async () => {
-    const otpCode = otp.join('');
-    if (otpCode.length !== 6) {
-      toast.error('Please enter 6 digit OTP');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await axios.post(
-        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/verify-otp`,
-        {
-          email,
-          otp: otpCode,
-        }
-      );
-      setStep('password');
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to verify OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSetPassword = async (data: FormData) => {
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/user`,
-        {
-          email,
-          password: data.password,
-        }
-      );
-
-      const userId = response?.data?.userId;
-      const newToken = response?.data?.token;
-
-      if (!userId || !newToken) {
-        throw new Error("User ID or Token was not returned from the backend");
-      }
-
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('token', newToken);
-
-      setStep('profile');
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Registration error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleProfileSubmit = async () => {
-    const isValid = await trigger(['name', 'businessName', 'panNumber', 'aadharNumber', 'address']);
-    if (!isValid) return;
-    setStep('bankDetails');
-  };
-
-// In SignUp.tsx, replace your existing function with this one
-  useEffect(() => {
-    const vendorId = searchParams.get("vendorId");
-    const name = searchParams.get("name");
-    const phone = searchParams.get("phone");
-    const emailParam = searchParams.get("email");
-    const token = searchParams.get("token");
+    const { vendorId, name, phone, email: emailParam, token } = searchParams;
 
     if (vendorId) {
       setPendingVendorId(vendorId);
@@ -233,19 +103,11 @@ useEffect(() => {
       if (token) {
         localStorage.setItem("token", token);
         try {
-          // 🔴 FIX IS HERE: Change the type and the property you access
-          
-          // 1. Define the correct type for your decoded token
           const decodedToken: { userId: string } = jwtDecode(token);
-          
-          // 2. Access the 'userId' property instead of 'sub'
-          const correctUserId = decodedToken.userId;
-          
-          localStorage.setItem("userId", correctUserId);
-
+          localStorage.setItem("userId", decodedToken.userId);
         } catch (error) {
           console.error("Failed to decode token from URL:", error);
-          toast.error("Invalid session link. Please log in.");
+          toast.error("Invalid session link.");
         }
       }
 
@@ -259,174 +121,274 @@ useEffect(() => {
     }
   }, [searchParams, setValue, router]);
 
+  // All your other functions (handleSendOtp, handleVerifyOtp, etc.)
+  // remain exactly the same.
+  // ... (paste all your other handler functions here without any changes)
+  // handleSendOtp, handleVerifyOtp, handleSetPassword, handleProfileSubmit, 
+  // handleBankDetailsSubmit, handlePasswordChange, etc...
+
+  // (For brevity, the rest of your handler functions are omitted here, 
+  // but you should include them in your actual file)
+
+  const handleSendOtp = async () => {
+    const isValid = await trigger('email');
+    if (!isValid) return;
+
+    setLoading(true);
+    try {
+      const { email: enteredEmail } = getValues();
+      await axios.post(
+        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/initiate-otp`,
+        { email: enteredEmail }
+      );
+      setEmail(enteredEmail);
+      setStep('otp');
+      setCanResend(false);
+      setTimer(60);
+      setOtp(Array(6).fill(''));
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error;
+      if (errorMessage === 'Vendor already exists') {
+        toast.error('This email is already registered. Please login or use a different email.');
+      } else {
+        toast.error(errorMessage || 'OTP verification failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+useEffect(() => {
+  const pendingProfileData = localStorage.getItem('pendingVendorProfile');
+
+  if (pendingProfileData) {
+    try {
+      const profile = JSON.parse(pendingProfileData);
+      setPendingVendorId(profile.id || '');
+      setValue('name', profile.name || '');
+      setValue('phone', profile.phone || '');
+      if (profile.email) {
+        setEmail(profile.email);
+        setValue('email', profile.email);
+      }
+      setStep('profile');
+      localStorage.removeItem('pendingVendorProfile');
+    } catch (error) {
+      console.error("Failed to parse pending vendor profile:", error);
+      localStorage.removeItem('pendingVendorProfile');
+    }
+  }
+}, [setValue]);
+
+
+  const handleVerifyOtp = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      toast.error('Please enter 6 digit OTP');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(
+        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/verify-otp`,
+        { email, otp: otpCode }
+      );
+      setStep('password');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to verify OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetPassword = async (data: FormData) => {
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/user`,
+        { email, password: data.password }
+      );
+
+      const userId = response?.data?.userId;
+      const newToken = response?.data?.token;
+
+      if (!userId || !newToken) {
+        throw new Error("User ID or Token was not returned from the backend");
+      }
+
+      localStorage.setItem('userId', userId);
+      localStorage.setItem('token', newToken);
+
+      setStep('profile');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Registration error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileSubmit = async () => {
+    const isValid = await trigger(['name', 'businessName', 'panNumber', 'aadharNumber', 'address']);
+    if (!isValid) return;
+    setStep('bankDetails');
+  };
 
 const handleBankDetailsSubmit = async (data: FormData) => {
-  const isValid = await trigger(['accountNumber', 'ifscCode', 'bankName']);
-  if (!isValid) return;
+  const isValid = await trigger(['accountNumber', 'ifscCode', 'bankName']);
+  if (!isValid) return;
 
-  setLoading(true);
-  try {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
-    if (!userId || !token) throw new Error("User ID or token not found in storage");
+  setLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    if (!userId || !token) throw new Error("User ID or token not found in storage");
 
-    const allData = getValues();
-    const kycFiles: string[] = [];
-    const kycFilenames: string[] = [];
+    const allData = getValues();
+    const kycFiles: string[] = [];
+    const kycFilenames: string[] = [];
 
-    const toBase64 = (file: File): Promise<string> =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
-      });
+    const toBase64 = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
 
-    if (data.kycDocsUrl && data.kycDocsUrl.length > 0) {
-      for (let i = 0; i < data.kycDocsUrl.length; i++) {
-        const file = data.kycDocsUrl[i];
-        const base64 = await toBase64(file);
-        kycFiles.push(base64);
-        kycFilenames.push(file.name);
-      }
-    }
+    if (data.kycDocsUrl && data.kycDocsUrl.length > 0) {
+      for (let i = 0; i < data.kycDocsUrl.length; i++) {
+        const file = data.kycDocsUrl[i];
+        const base64 = await toBase64(file);
+        kycFiles.push(base64);
+        kycFilenames.push(file.name);
+      }
+    }
+   const payload = {
+    userId,
+    vendorId: pendingVendorId || undefined,
+    vendorDetails: {
+      name: allData.name,
+      businessName: allData.businessName,
+      panNumber: allData.panNumber,
+      AadharNumber: allData.aadharNumber,
+      gstNumber: allData.gstNumber,
+      email,
+      phone: allData.phone || '',
+      address: allData.address,
+    },
+    bankDetails: {
+      accountHolder: allData.name,
+      accountNumber: allData.accountNumber,
+      ifscCode: allData.ifscCode,
+      bankName: allData.bankName,
+      branchName: allData.branchName || '',
+      upiId: allData.upiId || '',
+    },
+    kycFiles,
+    kycFilenames,
+  };
+    const response = await axios.post(
+      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/profile`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-    // Single payload for both new registration and upgrade
-   const payload = {
-    userId,
-    vendorId: pendingVendorId || undefined,
-    vendorDetails: {
-      name: allData.name,
-      businessName: allData.businessName,
-      panNumber: allData.panNumber,
+    const completeToken = response.data?.token;
+    if (!completeToken) throw new Error('Final login token not received from server.');
 
-      // 🔴 FIX IS HERE: Change 'aadharNumber' to 'AadharNumber'
-      AadharNumber: allData.aadharNumber,
-      
-      gstNumber: allData.gstNumber,
-      email,
-      phone: allData.phone || '',
-      address: allData.address,
-    },
-    bankDetails: {
-      accountHolder: allData.name,
-      accountNumber: allData.accountNumber,
-      ifscCode: allData.ifscCode,
-      bankName: allData.bankName,
-      branchName: allData.branchName || '',
-      upiId: allData.upiId || '',
-    },
-    kycFiles,
-    kycFilenames,
-  };
-    const response = await axios.post(
-      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/profile`,
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    localStorage.setItem('token', completeToken);
+    toast.success('Vendor profile completed successfully!');
+    router.push('/dashboard/myaccount');
 
-    const completeToken = response.data?.token;
-    if (!completeToken) throw new Error('Final login token not received from server.');
-
-    localStorage.setItem('token', completeToken);
-    toast.success('Vendor profile completed successfully!');
-    router.push('/dashboard/myaccount');
-
-  } catch (err: any) {
-    console.error('Profile submission failed:', err);
-    toast.error(err?.response?.data?.message || 'Failed to complete profile.');
-  } finally {
-    setLoading(false);
-  }
+  } catch (err: any) {
+    console.error('Profile submission failed:', err);
+    toast.error(err?.response?.data?.message || 'Failed to complete profile.');
+  } finally {
+    setLoading(false);
+  }
 };
 
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setPasswordRules({
-      length: val.length >= 8,
-      capital: /[A-Z]/.test(val),
-      specialChar: /[@#%$]/.test(val),
-    });
-  };
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setPasswordRules({
+      length: val.length >= 8,
+      capital: /[A-Z]/.test(val),
+      specialChar: /[@#%$]/.test(val),
+    });
+  };
 const handleKycUploadClick = () => {
-  kycInputRef.current?.click();
+  kycInputRef.current?.click();
 };
-  const handleFirebaseGoogleSignIn = async () => {
-    try {
-      setLoading(true);
-      const result = await signInWithPopup(auth, provider);
-      const firebaseIdToken = await result.user.getIdToken();
+  const handleFirebaseGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      const result = await signInWithPopup(auth, provider);
+      const firebaseIdToken = await result.user.getIdToken();
 
-      await axios.post(`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`, {
-        provider: 'google',
-        idToken: firebaseIdToken,
-      });
+      await axios.post(`${process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API}`, {
+        provider: 'google',
+        idToken: firebaseIdToken,
+      });
 
-      toast.success('Logged in successfully!');
-      router.push('/myaccount');
-    } catch (error) {
-      console.error(error);
-      toast.error('Google login failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      toast.success('Logged in successfully!');
+      router.push('/myaccount');
+    } catch (error) {
+      console.error(error);
+      toast.error('Google login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const togglePassword = (field: 'password' | 'confirmPassword') => {
-    setPasswordVisible((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-  };
+  const togglePassword = (field: 'password' | 'confirmPassword') => {
+    setPasswordVisible((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (!/^[0-9]?$/.test(value)) return;
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^[0-9]?$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value && index < inputRefs.current.length - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
 
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
 
-    if (value && index < inputRefs.current.length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const resendOtp = async () => {
-    if (!email) return;
-
-    setLoading(true);
-    try {
-      await axios.post(
-        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/initiate-otp`,
-        { email }
-      );
-      setCanResend(false);
-      setTimer(60);
-      setOtp(Array(6).fill(''));
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to resend OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const resendOtp = async () => {
+    if (!email) return;
+    setLoading(true);
+    try {
+      await axios.post(
+        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/initiate-otp`,
+        { email }
+      );
+      setCanResend(false);
+      setTimer(60);
+      setOtp(Array(6).fill(''));
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 const handleBack = () => {
-  if (isUpgrade) {
-    if (step === 'bankDetails') setStep('profile');
-    return;
-  }
-
-  if (step === 'otp') setStep('email');
-  else if (step === 'password') setStep('otp');
-  else if (step === 'profile') setStep('password');
-  else if (step === 'bankDetails') setStep('profile');
+  if (isUpgrade) {
+    if (step === 'bankDetails') setStep('profile');
+    return;
+  }
+  if (step === 'otp') setStep('email');
+  else if (step === 'password') setStep('otp');
+  else if (step === 'profile') setStep('password');
+  else if (step === 'bankDetails') setStep('profile');
 };
+
 
   return (
     <div>
@@ -833,4 +795,4 @@ const handleBack = () => {
   );
 };
 
-export default SignUp;
+export default SignUpForm;
