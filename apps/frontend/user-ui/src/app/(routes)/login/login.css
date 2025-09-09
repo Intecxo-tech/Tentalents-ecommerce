@@ -179,3 +179,9 @@
   cursor: pointer;
   color:var(--primary)
  }
+
+ @media(max-width:768px){
+  .logincontainer{
+    width: 100%;
+  }
+ }

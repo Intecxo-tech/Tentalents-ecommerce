@@ -46,3 +46,46 @@
     font-weight: 500;
     font-size: 16px;
 } */
+ @media (max-width: 768px) {
+ .category-section ul {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 12px;
+    white-space: nowrap;
+    padding: 10px 15px;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+
+    /* Hide scrollbar */
+    scrollbar-width: none; /* Firefox */
+  }
+
+
+   .category-section ul::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
+  .category-section ul::-webkit-scrollbar-track {
+    background: #f0f0f0;
+  }
+
+  .category-section ul::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+
+  .category-section ul::-webkit-scrollbar-thumb:hover {
+    background: #666;
+  }
+
+  .category-section .category-list li {
+    flex: 0 0 auto;
+    min-width: max-content;
+  }
+  .category-section .category-list li button {
+    width: 100%;
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+}

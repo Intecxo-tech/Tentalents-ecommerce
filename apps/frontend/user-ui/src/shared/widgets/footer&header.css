@@ -425,6 +425,10 @@ width:25%;
 }
 
 @media(max-width:768px){
+  .footer-part3 h3,.footer-part4 h3,.footer-part2 h3{
+    margin: 0px;
+
+  }
   .footer{
     display: flex;
     align-items: center;
@@ -433,4 +437,18 @@ width:25%;
   .footer-part1,.footer-part2,.footer-part3,.footer-part4{
     width:100%;
   }
+.header-inner{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.header-container{
+  padding: 10px;;
+}
+.header-left{
+padding-bottom: 10px;
+}
+.account-button,.cart,.menu{
+  display: none !important;
+}
 }
