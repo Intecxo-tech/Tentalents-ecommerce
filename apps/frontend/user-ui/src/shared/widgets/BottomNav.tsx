@@ -29,7 +29,7 @@ const BottomNav = () => {
         <span>Orders</span>
       </Link>
 
-      <Link href="/account" className={`bottom-nav-item ${isActive('/account') ? 'active' : ''}`}>
+      <Link href="/myaccount" className={`bottom-nav-item ${isActive('/account') ? 'active' : ''}`}>
         <User size={24} />
         <span>Account</span>
       </Link>

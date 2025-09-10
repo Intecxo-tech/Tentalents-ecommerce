@@ -135,3 +135,75 @@ background-color: transparent;
   height: 50px;
   border-radius: 10px;
 }
+
+@media(max-width:768px){
+  .orderapagefull{
+    display: flex;
+    flex-direction: column;
+  }
+  .orderpageleft-2{
+    width: 100%;
+  }
+  .productpageright{
+    width: 100%;
+  }
+  .orderlistitem{
+display: flex;
+flex-direction: column;
+gap:10px;
+align-items: flex-start;
+  }
+  .image-wrapper2 {
+    width: 100%;
+    height: 100%;
+  }
+  .image-wrapper2 img{
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .orderimage{
+    width: 100%;
+  }
+  .flexcontainer{
+    width: 100%;
+  }
+  .yourorder-header{
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .dateorder{
+    width: 100%;
+    gap:10px;
+  }
+  .orderpageheader{
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .border-grey{
+margin-right: 0px;;
+padding-right: 5px;
+  }
+  .ordervalue{
+    padding-left: 5px;;
+  }
+  .orderdetails{
+    display: flex;
+    flex-direction: column;
+  }
+  .shipto,.payment-method,.paymentamount{
+    width: 100%;
+    border: none;
+  }
+  .paymentamount{
+    padding-left: 0px;
+  }
+  .orderupdates{
+    display: flex;
+    flex-direction: column;
+    gap:10px;
+    align-items: flex-start;
+    
+  }
+}

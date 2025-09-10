@@ -80,3 +80,26 @@
     color: var(--grey);
     
 }
+
+
+@media(max-width:768px){
+    .address-card {
+        display: flex;
+        flex-direction: column;
+        gap:10px
+    }
+    .addressleft,.addressright{
+        width: 100%;
+    }
+    .addressright{
+        align-items:center;
+        justify-content: flex-start;
+        width: 100%;
+    }
+    .addressright .bordered-button{
+    width: 100%;
+    }
+    .addressheading{
+        font-size: 18px;;
+    }
+}

@@ -107,3 +107,49 @@ object-fit: cover;
     margin-left: 90px;
     margin-top: -55px;
 }
+
+@media(max-width:768px){
+    .accountpagemain{
+        display: flex;
+        flex-direction: column;
+        gap:10px
+    }
+    .accountpage-right{
+        display: none;
+
+    }
+    .accountpage-right,.accountpage-leftsection{
+        width: 100%;
+    }
+    .profiledetails{
+        padding-top: 20px;
+        display: flex;
+        flex-direction: column;
+    align-items: flex-start;
+        gap:10px
+    }
+    .sectiontitle{
+        font-size: 18px;;
+    }
+    .profiledetailsright .first-column{
+        display: flex;
+        flex-direction: column;
+        gap:10px;
+    }
+    .profiledetailsright{
+        width: 100%;
+    }
+    .accountdetailsheader{
+        display: flex;
+        flex-direction: column;
+        gap:10px;
+        width: 100%;
+        align-items: flex-start;
+    }
+    .address-header{
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap:10px
+    }
+}

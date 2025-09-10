@@ -226,4 +226,12 @@ width: 100%;
     display: flex;
     justify-content: space-between;
    }
+   .cartproduct-image{
+    padding: 0px;
+    object-fit: cover
+    ;
+   }
+   .product-title{
+    height: auto;
+   }
 }

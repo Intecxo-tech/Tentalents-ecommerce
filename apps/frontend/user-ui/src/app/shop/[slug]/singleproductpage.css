@@ -403,6 +403,12 @@ color:var(--secondary);
 
 
 @media(max-width:768px){
+    .storeinfo{
+        display: flex;
+        flex-direction: column;
+        gap:10px;
+        align-items: flex-start;
+    }
 .productpage{
     display: flex;
     align-items: center;
@@ -417,4 +423,31 @@ color:var(--secondary);
 .storeinfo-review{
     gap:5px;
 }
+.pricesection{
+    display:flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
 }
+.coupon-section{
+    width: 100%;
+}
+.featuredproducts{
+    display: flex;
+    flex-direction: column;
+    gap:10px;
+}
+.heavydiscount{
+    width: 100%;
+}
+.popularproducts{
+    width: 100%;
+}
+.peoplealsobought{
+    display: none;
+}
+.productpage{
+    gap:10px;
+}
+}
+

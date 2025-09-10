@@ -1138,6 +1138,17 @@ summary svg {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+@media (max-width:768px) {
+  .layout-wrapper,.breadcrumb-container {
+    padding: 0px 15px;
+  }
+  .breadcrumb-container {
+    padding: 0px 15px !important;
+  }
+  .delivery {
+    padding: 0px 15px !important;
+  }
+}
 @property --tw-rotate-x {
   syntax: "*";
   inherits: false;
@@ -1247,7 +1258,6 @@ summary svg {
     }
   }
 }
-
 /*!***********************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!../../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./src/app/home-page/signupbanner/SignUpBanner.css ***!
   \***********************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -1835,6 +1845,11 @@ width:25%;
     display: flex;
     align-items: center;
     flex-direction: column;
+        padding: 15px 20px;
+        padding-bottom: 80px;
+  }
+  .searchbar{
+    width: 100%;
   }
   .footer-part1,.footer-part2,.footer-part3,.footer-part4{
     width:100%;

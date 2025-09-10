@@ -128,3 +128,24 @@ border-top:1px solid #E0E0E0;
   justify-content: flex-start;
   gap:15px;
 }
+
+@media(max-width:768px){
+  .filter-items{
+    display: flex;
+    flex-direction: column;
+  }
+  .filter-itemsleft{
+    width: 100%;
+  }
+.filter-itemsright{
+  width: 100%;
+}
+.shop-left{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.filter-component{
+  margin-left: 0px;
+}
+}

@@ -138,3 +138,28 @@
   outline: none; /* Remove default outline */
    background-color:var(--lightbackground); 
 }
+
+
+@media(max-width:768px){
+  .topsection{
+    display: flex;
+    flex-direction: column;
+    gap:10px
+  }
+  .chooseaddress{
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .addresstype{
+    padding-left: 0px;
+  }
+  .useaddress{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .editbutton{
+    left: -10px;
+  }
+}
