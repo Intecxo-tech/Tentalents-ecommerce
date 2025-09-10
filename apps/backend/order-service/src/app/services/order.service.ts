@@ -362,6 +362,14 @@ if (!buyer) {
   console.error('Failed to generate invoice:', error);
 }
       console.log('Order created for COD:', order);
+      // 🧹 Clear the cart after successful COD order
+await prisma.cartItem.deleteMany({
+  where: {
+    userId: buyerId,
+  },
+});
+console.log(`🛒 Cart cleared for user: ${buyerId}`);
+
       
       return order;
     } catch (error) {

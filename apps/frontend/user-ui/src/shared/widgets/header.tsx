@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPin, ShoppingCart, Menu, ChevronDown, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Tenanlents from "../../assets/tenanlenst-menu.png";
@@ -77,44 +77,58 @@ const router = useRouter();
 
     setIsLoading(false);
   };
-   useEffect(() => {
-    const fetchCartCount = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setCartCount(0);
-          return;
-        }
 
-        const res = await fetch(`https://cart-service-kona.onrender.com/api/cart`, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          setCartCount(0);
-          return;
-        }
-
-        const data = await res.json();
-
-        // Calculate total quantity
-        const totalItems = Array.isArray(data.data)
-          ? data.data.reduce((acc: number, item: { quantity: number }) => acc + item.quantity, 0)
-          : 0;
-
-        setCartCount(totalItems);
-      } catch (error) {
+  // 2. Define fetchCartCount outside useEffect and wrap in useCallback
+  // This allows us to use the same function in multiple places without recreating it.
+  const fetchCartCount = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
         setCartCount(0);
+        return;
       }
+      const cacheBuster = `_=${new Date().getTime()}`;
+      const res = await fetch(`https://cart-service-kona.onrender.com/api/cart?${cacheBuster}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) {
+        setCartCount(0);
+        return;
+      }
+      const data = await res.json();
+      const totalItems = Array.isArray(data.data)
+        ? data.data.reduce((acc: number, item: { quantity: number }) => acc + item.quantity, 0)
+        : 0;
+        console.log('API returned 0 items, setting cart count to:', totalItems);
+      setCartCount(totalItems);
+    } catch (error) {
+      setCartCount(0);
+    }
+  }, []); // Empty dependency array means this function is created only once
+
+  // 3. First useEffect: Fetch cart count on initial component mount
+  useEffect(() => {
+    fetchCartCount();
+  }, [fetchCartCount]);
+
+  // 4. Second useEffect: Add an event listener to re-fetch when the tab is focused
+  useEffect(() => {
+    const handleFocus = () => {
+      // Re-run the fetch function whenever the user clicks back into the window
+      console.log('Tab focused, refetching cart count...');
+      fetchCartCount();
     };
 
-    fetchCartCount();
+    window.addEventListener('focus', handleFocus);
 
-    // Optional: refetch cart count every few minutes or when user logs in/out, etc.
-  }, []);
+    // This is a cleanup function that removes the listener when the component is no longer on screen
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [fetchCartCount]);
  useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -246,7 +260,7 @@ const router = useRouter();
             </div>
             <div className='account-button'>
               {profile ? (
-                <Link href="/account" className="logged-in-user" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <Link href="/myaccount" className="logged-in-user" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <span className='profilename'>
   Hi, {profile?.name ? profile.name.split(' ')[0] : 'User'}
 </span>

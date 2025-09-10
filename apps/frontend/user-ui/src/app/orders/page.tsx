@@ -12,6 +12,7 @@ import '../home-page/headerbanner.css';
 import type { Product } from '../components/orderplaced/orderplaced';
 import toast from 'react-hot-toast';
 import Exchange from '../components/exchange/Exchange';
+import OrderCardSkeleton from '../components/orderssec/OrderCardSkeleton';
 interface ShippingAddress {
   name: string;
   phone: string;
@@ -359,7 +360,7 @@ const handleCancelOrder = async (order: OrderData) => {
 
      <div className="sectionorder">
  {loadingOrders ? (
-  <p>Loading your orders...</p>
+  <p><OrderCardSkeleton /></p>
 ) : orderError ? (
   <p className="error-message">{orderError}</p>
 ) : orders.length > 0 ? (

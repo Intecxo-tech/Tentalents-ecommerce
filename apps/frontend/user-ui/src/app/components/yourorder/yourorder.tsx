@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Star } from 'lucide-react';
 import Exchange from '../exchange/Exchange';
 import './yourorder.css';
-
+import YourOrderSkeleton from './YourOrderSkeleton';
 interface OrderItem {
   id: string;
   quantity: number;
@@ -37,7 +37,7 @@ const YourOrder: React.FC<YourOrderProps> = ({ orders, loading, error, buyerId }
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [returnRequests, setReturnRequests] = useState<any[]>([]);
 
-  if (loading) return <p>Loading orders...</p>;
+  if (loading) return <p><YourOrderSkeleton /></p>;
   if (error) return <p>Error loading orders: {error}</p>;
   if (orders.length === 0) return <p>No orders found.</p>;
 

@@ -47,61 +47,51 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  async function fetchCart() {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setCartItems([]);
-        setLoading(false);
-        return;
-      }
-
-      const res = await fetch(`https://cart-service-kona.onrender.com/api/cart`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) throw new Error('Failed to fetch cart');
-
-      const responseData = await res.json();
-console.log('Cart API Raw Data:', responseData.data);
-      const filtered = responseData.data
-        .map((item: CartItem) => {
-       const parsedPrice =
-  typeof item.productListing?.price === 'number'
-    ? item.productListing.price
-    : parseFloat(item.productListing?.price || '0');
-          if (
-            item.productListing &&
-            !isNaN(parsedPrice) &&
-            item.product &&
-            Array.isArray(item.product.imageUrls) &&
-            item.product.imageUrls.length > 0 &&
-            typeof item.product.title === 'string'
-          ) {
-            return {
-              ...item,
-              productListing: {
-                ...item.productListing,
-                price: parsedPrice,
-              },
-            };
-          }
-          return null;
-        })
-        .filter(Boolean) as CartItem[];
-
-      setCartItems(filtered);
-    } catch (error) {
-      console.error('Failed to fetch cart:', error);
+async function fetchCart() {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
       setCartItems([]);
-    } finally {
       setLoading(false);
+      return;
     }
+
+    // 1. Create a unique parameter to "bust" the cache
+    const cacheBuster = `_=${new Date().getTime()}`;
+
+    // 2. Add the cache-busting parameter to your fetch URL
+    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart?${cacheBuster}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'Cache-Control': 'no-cache', // Still good to keep this
+      },
+      cache: 'no-store', // And this one too
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch cart');
+
+    const responseData = await res.json();
+    console.log('Cart API Raw Data:', responseData.data);
+    
+    // Check if data is null or undefined after clearing
+    const itemsToFilter = responseData.data || [];
+
+    const filtered = itemsToFilter
+      .map((item: CartItem) => {
+        // ... your existing mapping logic
+      })
+      .filter(Boolean) as CartItem[];
+
+    setCartItems(filtered);
+  } catch (error) {
+    console.error('Failed to fetch cart:', error);
+    setCartItems([]);
+  } finally {
+    setLoading(false);
   }
+}
 // Inside Cart component
 
 async function updateQuantity(listingId: string, currentQty: number, change: number) {
@@ -177,6 +167,14 @@ async function updateQuantity(listingId: string, currentQty: number, change: num
   const price = item.productListing?.price ?? 0;
   return acc + price * item.quantity;
 }, 0);
+useEffect(() => {
+  const handleFocus = () => {
+    fetchCart(); // Re-fetch cart when tab regains focus
+  };
+
+  window.addEventListener('focus', handleFocus);
+  return () => window.removeEventListener('focus', handleFocus);
+}, []);
 
 const hasItems = cartItems.length > 0;
 
