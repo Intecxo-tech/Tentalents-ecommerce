@@ -129,54 +129,70 @@ export const paymentService = {
     };
   },
 
+  // In payment.service.ts
+
+// ... inside the paymentService object
+
   handleStripeWebhook: async (event: Stripe.Event) => {
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-logger.info(`[Stripe Webhook] Session metadata: ${JSON.stringify(session.metadata)}`);
-    if (!session.metadata) {
-      throw new Error('Metadata missing from Stripe session');
-    }
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      logger.info(`[Stripe Webhook] Session metadata: ${JSON.stringify(session.metadata)}`);
+      
+      if (!session.metadata) {
+        throw new Error('Metadata missing from Stripe session');
+      }
 
-    const { paymentId, orderId } = session.metadata;
+      const { orderId, userId,paymentId } = session.metadata; // <-- Get userId from metadata
 
-    if (!paymentId) {
-      throw new Error('PaymentId missing in metadata');
-    }
+      if (!orderId || !userId ) { // <-- Make sure userId exists
+        throw new Error('Webhook metadata missing orderId or userId');
+      }
+      
+      // ... your existing code to update payment and order status ...
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'confirmed',
+          paymentStatus: PaymentStatus.success,
+        },
+      });
 
-    // Find payment in DB
-    const existingPayment = await prisma.payment.findUnique({
-      where: { id: paymentId },
+      // ======================= THIS IS THE FIX =======================
+      
+      // BEFORE:
+      /*
+      try {
+        await cartService.checkout(session.metadata.userId);
+      } catch (err) {
+        logger.warn(`[paymentService] Failed to clear cart after Stripe payment: ${err}`);
+      }
+      */
+await prisma.payment.update({
+        where: { id: paymentId },
+        data: {
+            status: PaymentStatus.success,
+            // It's also good practice to store the final transaction ID from Stripe
+            transactionId: session.payment_intent as string,
+        },
     });
-
-    if (!existingPayment) {
-      throw new Error(`Payment record not found: ${paymentId}`);
+    console.log(`✅💰 Payment status updated for paymentId: ${paymentId}`);
+      // AFTER: Replace the above with the direct Prisma call
+      try {
+        await prisma.cartItem.deleteMany({
+          where: {
+            userId: userId, // Use the userId from the metadata
+          },
+        });
+        console.log(`✅🛒 Cart successfully cleared for user: ${userId} after Stripe payment.`);
+      } catch (err) {
+        console.error(`❌🛒 Failed to clear cart for user: ${userId} after Stripe payment. Error:`, err);
+        // Even if this fails, we don't stop the process, but now we have a clear error log.
+      }
+      // ===============================================================
     }
-
-    // **Single update here** — update status to success and save payment_intent as transactionId
-    await prisma.payment.update({
-      where: { id: paymentId },
-      data: {
-        status: PaymentStatus.success,
-        transactionId: session.payment_intent as string,
-        
-      },
-    });
-
-    // Update order status
-await prisma.order.update({
-  where: { id: orderId },
-  data: {
-    status: 'confirmed',
-    paymentStatus: PaymentStatus.success, // ✅ This line is critical
   },
-});
-try {
-  await cartService.checkout(session.metadata.userId);
-} catch (err) {
-  logger.warn(`[paymentService] Failed to clear cart after Stripe payment: ${err}`);
-}
-  }
-},
+
+// ... rest of the file
 
 
   handleStripeWebhookRaw: async (rawBody: Buffer, signature: string): Promise<Stripe.Event> => {

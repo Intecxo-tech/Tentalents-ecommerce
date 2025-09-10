@@ -7,6 +7,22 @@ const prisma = new PrismaClient();
 const CART_TTL = 60 * 60 * 2; // 2 hours
 
 let kafkaProducer: Producer | null = null;
+async function refreshCartCache(userId: string) {
+  const cart = await prisma.cartItem.findMany({
+    where: { userId },
+    include: includeCartRelations,
+  });
+
+  const cacheKey = `cart:${userId}`;
+
+  if (cart.length === 0) {
+    await deleteCache(cacheKey);
+  } else {
+    await setCache(cacheKey, cart, CART_TTL);
+  }
+
+  return cart;
+}
 
 async function getKafkaProducer(): Promise<Producer> {
   if (!kafkaProducer) {
@@ -42,30 +58,35 @@ const includeCartRelations = {
 
 
 export const cartService = {
-  getCart: async (userId: string) => {
-    const cacheKey = `cart:${userId}`;
-    try {
-      const cachedCart = await getCache<typeof includeCartRelations[]>(cacheKey);
-      console.log('Cached cart:', cachedCart);
-      if (cachedCart !== null) {
-        // Return cached cart if found (including empty array)
-        return cachedCart;
-      }
+getCart: async (userId: string) => {
+  const cacheKey = `cart:${userId}`;
+  try {
+    const cachedCart = await getCache<typeof includeCartRelations[]>(cacheKey);
+    console.log('Cached cart:', cachedCart);
 
-      // Cache miss, query DB
-      const cart = await prisma.cartItem.findMany({
-        where: { userId },
-        include: includeCartRelations,
-      });
-
-      console.log('Queried cart from DB:', cart);
-      await setCache(cacheKey, cart, CART_TTL);
-      return cart;
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-      throw error;
+    if (cachedCart !== null && Array.isArray(cachedCart)) {
+      return cachedCart;
     }
-  },
+
+    // Cache miss or invalid, fetch from DB
+    const cart = await prisma.cartItem.findMany({
+      where: { userId },
+      include: includeCartRelations,
+    });
+
+    if (cart.length === 0) {
+      await deleteCache(cacheKey); // Don't cache empty cart
+    } else {
+      await setCache(cacheKey, cart, CART_TTL);
+    }
+
+    return cart;
+  } catch (error) {
+    console.error('Error fetching cart:', error);
+    throw error;
+  }
+},
+
 
   addToCart: async (
     userId: string,
@@ -111,13 +132,7 @@ export const cartService = {
       }
 
       // Fetch updated cart with full details
-      const updatedCart = await prisma.cartItem.findMany({
-        where: { userId },
-        include: includeCartRelations,
-      });
-
-      // Update cache
-      await setCache(cacheKey, updatedCart, CART_TTL);
+     const updatedCart = await refreshCartCache(userId);
 
       // Send Kafka event
       try {
@@ -164,12 +179,7 @@ export const cartService = {
       }
 
       // Fetch updated cart with full details (consistent shape)
-      const updatedCart = await prisma.cartItem.findMany({
-        where: { userId },
-        include: includeCartRelations,
-      });
-
-      await setCache(cacheKey, updatedCart, CART_TTL);
+     const updatedCart = await refreshCartCache(userId);
 
       try {
         const producer = await getKafkaProducer();
@@ -196,12 +206,8 @@ export const cartService = {
       });
 
       // Fetch updated cart with full details
-      const updatedCart = await prisma.cartItem.findMany({
-        where: { userId },
-        include: includeCartRelations,
-      });
+    const updatedCart = await refreshCartCache(userId);
 
-      await setCache(cacheKey, updatedCart, CART_TTL);
 
       try {
         const producer = await getKafkaProducer();

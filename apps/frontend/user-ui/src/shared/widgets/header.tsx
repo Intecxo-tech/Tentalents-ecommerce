@@ -120,26 +120,26 @@ const fetchCartCount = useCallback(async () => {
   }
 }, []);
 
-  // 3. First useEffect: Fetch cart count on initial component mount
-  // useEffect(() => {
-  //   fetchCartCount();
-  // }, [fetchCartCount]);
 
-  // 4. Second useEffect: Add an event listener to re-fetch when the tab is focused
-  // useEffect(() => {
-  //   const handleFocus = () => {
-  //     // Re-run the fetch function whenever the user clicks back into the window
-  //     console.log('Tab focused, refetching cart count...');
-  //     fetchCartCount();
-  //   };
+  useEffect(() => {
+    fetchCartCount();
+  }, [fetchCartCount]);
 
-  //   window.addEventListener('focus', handleFocus);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      // Re-run the fetch function whenever the user clicks back into the window
+      console.log('Tab focused, refetching cart count...');
+      fetchCartCount();
+    };
+
+    window.addEventListener('focus', handleFocus);
 
     
-  //   return () => {
-  //     window.removeEventListener('focus', handleFocus);
-  //   };
-  // }, [fetchCartCount]);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [fetchCartCount]);
  useEffect(() => {
     const fetchProfile = async () => {
       try {
