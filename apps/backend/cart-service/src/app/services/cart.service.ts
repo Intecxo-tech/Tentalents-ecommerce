@@ -225,6 +225,42 @@ getCart: async (userId: string) => {
       throw error;
     }
   },
+getWishlist: async (userId: string) => {
+  try {
+    const wishlist = await prisma.cartItem.findMany({
+      where: {
+        userId,
+        savedForLater: true,
+      },
+      include: includeCartRelations,
+    });
+
+    return wishlist;
+  } catch (error) {
+    console.error('Error fetching wishlist:', error);
+    throw error;
+  }
+},
+toggleSaveForLater: async (userId: string, itemId: string, saveForLater: boolean) => {
+  try {
+    const updatedItem = await prisma.cartItem.updateMany({
+      where: {
+        id: itemId,
+        userId,
+      },
+      data: {
+        savedForLater: saveForLater,
+      },
+    });
+
+    const updatedCart = await refreshCartCache(userId);
+
+    return updatedItem;
+  } catch (error) {
+    console.error('Error toggling save for later:', error);
+    throw error;
+  }
+},
 
   checkout: async (userId: string) => {
     const cacheKey = `cart:${userId}`;

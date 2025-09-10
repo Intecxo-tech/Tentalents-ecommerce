@@ -394,6 +394,7 @@ model CartItem {
   productId String
   vendorId  String   @db.Uuid
   quantity  Int      @default(1)
+  savedForLater Boolean @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
   vendor    Vendor   @relation(fields: [vendorId], references: [id])

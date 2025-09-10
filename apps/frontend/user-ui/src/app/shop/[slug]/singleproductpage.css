@@ -449,5 +449,8 @@ color:var(--secondary);
 .productpage{
     gap:10px;
 }
+.productpage, .category-tab{
+    display: none;
+}
 }
 
