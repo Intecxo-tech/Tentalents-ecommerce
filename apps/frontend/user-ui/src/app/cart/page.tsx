@@ -78,11 +78,14 @@ async function fetchCart() {
     // Check if data is null or undefined after clearing
     const itemsToFilter = responseData.data || [];
 
-    const filtered = itemsToFilter
-      .map((item: CartItem) => {
-        // ... your existing mapping logic
-      })
-      .filter(Boolean) as CartItem[];
+   const filtered = itemsToFilter
+  .map((item: CartItem) => {
+    if (item.productListing && typeof item.productListing.price === 'string') {
+      item.productListing.price = parseFloat(item.productListing.price);
+    }
+    return item;
+  })
+  .filter(Boolean) as CartItem[];
 
     setCartItems(filtered);
   } catch (error) {

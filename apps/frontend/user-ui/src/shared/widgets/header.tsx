@@ -80,55 +80,66 @@ const router = useRouter();
 
   // 2. Define fetchCartCount outside useEffect and wrap in useCallback
   // This allows us to use the same function in multiple places without recreating it.
-  const fetchCartCount = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setCartCount(0);
-        return;
-      }
-      const cacheBuster = `_=${new Date().getTime()}`;
-      const res = await fetch(`https://cart-service-kona.onrender.com/api/cart?${cacheBuster}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) {
-        setCartCount(0);
-        return;
-      }
-      const data = await res.json();
-      const totalItems = Array.isArray(data.data)
-        ? data.data.reduce((acc: number, item: { quantity: number }) => acc + item.quantity, 0)
-        : 0;
-        console.log('API returned 0 items, setting cart count to:', totalItems);
-      setCartCount(totalItems);
-    } catch (error) {
+const fetchCartCount = useCallback(async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
       setCartCount(0);
+      return;
     }
-  }, []); // Empty dependency array means this function is created only once
+
+    const cacheBuster = `_=${new Date().getTime()}`;
+    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart?${cacheBuster}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'Cache-Control': 'no-cache',
+      },
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      setCartCount(0);
+      return;
+    }
+
+    const data = await res.json();
+
+    // ✅ Explicitly type item to avoid implicit 'any'
+    const totalItems = Array.isArray(data.data)
+      ? data.data
+          .filter((item: { productId?: string }) => item && item.productId)
+          .reduce((acc: number, item: { quantity: number }) => acc + item.quantity, 0)
+      : 0;
+
+    console.log('Header API Cart Items:', data.data);
+    setCartCount(totalItems);
+  } catch (error) {
+    console.error('Failed to fetch cart count:', error);
+    setCartCount(0);
+  }
+}, []);
 
   // 3. First useEffect: Fetch cart count on initial component mount
-  useEffect(() => {
-    fetchCartCount();
-  }, [fetchCartCount]);
+  // useEffect(() => {
+  //   fetchCartCount();
+  // }, [fetchCartCount]);
 
   // 4. Second useEffect: Add an event listener to re-fetch when the tab is focused
-  useEffect(() => {
-    const handleFocus = () => {
-      // Re-run the fetch function whenever the user clicks back into the window
-      console.log('Tab focused, refetching cart count...');
-      fetchCartCount();
-    };
+  // useEffect(() => {
+  //   const handleFocus = () => {
+  //     // Re-run the fetch function whenever the user clicks back into the window
+  //     console.log('Tab focused, refetching cart count...');
+  //     fetchCartCount();
+  //   };
 
-    window.addEventListener('focus', handleFocus);
+  //   window.addEventListener('focus', handleFocus);
 
-    // This is a cleanup function that removes the listener when the component is no longer on screen
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [fetchCartCount]);
+    
+  //   return () => {
+  //     window.removeEventListener('focus', handleFocus);
+  //   };
+  // }, [fetchCartCount]);
  useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -287,25 +298,25 @@ const router = useRouter();
                   <div className="cart">
         <Link href="/cart" className="cart-link" style={{ position: 'relative' }}>
           <ShoppingCart className="cart-icon" size={20} />
-          {cartCount > 0 && (
-            <span
-              style={{
-                position: 'absolute',
-                top: '-5px',
-                right: '-10px',
-                backgroundColor: 'red',
-                color: 'white',
-                borderRadius: '50%',
-                padding: '2px 6px',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                lineHeight: 1,
-              }}
-              aria-label={`${cartCount} items in cart`}
-            >
-              {cartCount}
-            </span>
-          )}
+         {cartCount > 0 && (
+  <span
+    style={{
+      position: 'absolute',
+      top: '-5px',
+      right: '-10px',
+      backgroundColor: 'red',
+      color: 'white',
+      borderRadius: '50%',
+      padding: '2px 6px',
+      fontSize: '12px',
+      fontWeight: 'bold',
+      lineHeight: 1,
+    }}
+    aria-label={`${cartCount} items in cart`}
+  >
+    {cartCount}
+  </span>
+)}
         </Link>
       </div>
 
