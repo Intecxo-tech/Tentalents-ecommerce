@@ -425,6 +425,13 @@ width:25%;
 }
 
 @media(max-width:768px){
+  .searchbutton{
+  margin-right: 0px !important;
+  margin: 0px;;
+}
+.search-input{
+  margin: 0px;;
+}
   .footer-part3 h3,.footer-part4 h3,.footer-part2 h3{
     margin: 0px;
 
@@ -471,4 +478,5 @@ padding-bottom: 10px;
 .logo{
   font-size: 30px;
 }
+
 }

@@ -1847,6 +1847,13 @@ width:25%;
 }
 
 @media(max-width:768px){
+  .searchbutton{
+  margin-right: 0px !important;
+  margin: 0px;;
+}
+.search-input{
+  margin: 0px;;
+}
   .footer-part3 h3,.footer-part4 h3,.footer-part2 h3{
     margin: 0px;
 
@@ -1893,6 +1900,7 @@ padding-bottom: 10px;
 .logo{
   font-size: 30px;
 }
+
 }
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ../../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[2].use[1]!../../../node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js??ruleSet[1].rules[13].oneOf[2].use[2]!../../../node_modules/next/font/google/target.css?{"path":"src\\app\\layout.tsx","import":"Poppins","arguments":[{"subsets":["latin"],"weight":["100","200","300","400","500","600","700","800","900"],"variable":"--font-poppins"}],"variableName":"poppins"} ***!
