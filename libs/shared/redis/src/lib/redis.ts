@@ -1,27 +1,30 @@
 import { createClient } from 'redis';
-import { logger } from '@shared/logger';
 
 export const redisClient = createClient({
-  url: process.env.REDIS_URL,
+  socket: {
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
+  },
+  password: process.env.REDIS_PASSWORD,
 });
 
-redisClient.on('error', (err: Error) => logger.error('❌ Redis Error:', err));
+redisClient.on('error', (err: Error) => console.error('❌ Redis Error:', err));
 
 export async function connectRedis(): Promise<void> {
   if (redisClient.isOpen) {
-    logger.info('⚠️ Redis connection already open, skipping connect.');
+    console.log('⚠️ Redis connection already open, skipping connect.');
     return;
   }
 
   await redisClient.connect();
-  logger.info('✅ Redis connected');
+  console.log('✅ Redis connected');
 }
 
 export async function disconnectRedis(): Promise<void> {
   if (!redisClient.isOpen) {
-    logger.info('⚠️ Redis connection already closed, skipping disconnect.');
+    console.log('⚠️ Redis connection already closed, skipping disconnect.');
     return;
   }
   await redisClient.quit();
-  logger.info('🔌 Redis disconnected');
+  console.log('🔌 Redis disconnected');
 }
