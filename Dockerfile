@@ -1,48 +1,38 @@
-# ---------- Stage 1: Builder ----------
-FROM node:20-alpine AS builder
+# ----------- Stage 1: Builder -----------
+FROM node:20.10.0 AS builder
 WORKDIR /app
 
+# Copy package manifests and Nx base config
+COPY package*.json tsconfig.base.json ./
+
+# Install all dependencies (including devDependencies for Nx build)
+RUN npm ci --legacy-peer-deps
+
+# Copy all source code
+COPY apps/ ./apps/
+COPY libs/ ./libs/
+
+# Disable Nx daemon & ESLint to avoid missing module errors in Docker
+ENV NX_DAEMON=false
+ENV NX_NO_ESLINT_PLUGIN=true
+
+# Build only the specified service
 ARG SERVICE_NAME
-ENV SERVICE_NAME=${SERVICE_NAME}
+RUN npx nx build apps/backend/${SERVICE_NAME} --configuration=production --skip-nx-cache --no-eslint
 
-# Install deps
-COPY package.json package-lock.json ./
-COPY tsconfig.base.json nx.json ./
-RUN npm install
-
-# Copy entire monorepo
-COPY . .
-
-# ✅ Generate Prisma Client for correct platform
-RUN npx prisma generate --schema=./prisma/schema.prisma
-
-# Build the specific service
-RUN npx nx build $SERVICE_NAME --configuration=production
-
-# ---------- Stage 2: Runtime ----------
-FROM node:20-alpine
+# ----------- Stage 2: Runtime -----------
+FROM node:20.10.0 AS runtime
 WORKDIR /app
 
+# Copy built service from builder stage
 ARG SERVICE_NAME
-ENV SERVICE_NAME=${SERVICE_NAME}
-ENV NODE_ENV=production
+COPY --from=builder /app/dist/apps/backend/${SERVICE_NAME} ./dist
 
-# Copy runtime package.json for that service
-COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME/package.json ./package.json
+# Copy package manifests for production install
+COPY package*.json ./
 
-# Install only prod deps
-RUN npm install --omit=dev
+# Install only production dependencies
+RUN npm ci --omit=dev --legacy-peer-deps
 
-# Copy built code and Prisma schema
-COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME/ ./
-COPY --from=builder /app/prisma ./prisma
-
-# ✅ Copy precompiled Prisma Client
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-# Optional: Check client exists
-RUN ls -la node_modules/.prisma/client
-
-EXPOSE 3000
-CMD ["node", "main.cjs"]
+# Start the service
+CMD ["node", "dist/main.js"]

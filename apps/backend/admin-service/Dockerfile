@@ -1,48 +1,34 @@
-# Dockerfile for 'admin-service'
-
-# --- Stage 1: Build ---
-# Use a specific version of Node for reproducibility
-FROM node:20-alpine AS builder
+# ---------------- Builder Stage ----------------
+FROM node:20.10.0 AS builder
 WORKDIR /app
 
-# 1. Copy only the necessary package and config files first
-# This leverages Docker's layer caching. The build only re-runs `npm install`
-# if these specific files change, not on every code change.
-COPY package.json package-lock.json ./
-COPY tsconfig.base.json nx.json ./
+# Copy package manifests and Nx config
+COPY package*.json tsconfig.base.json nx.json ./
 
-# 2. Install dependencies for the entire monorepo
-# This is necessary for the build step to work
-RUN npm install
+# Install all dependencies (including dev for Nx build)
+RUN npm ci --legacy-peer-deps
 
-# 3. Copy the rest of the source code
-COPY . .
+# Copy source code
+COPY apps/ ./apps/
+COPY libs/ ./libs/
 
-# 4. Build the specific application.
-# Nx will automatically create a pruned package.json in the output directory
-# if your project's build target is configured correctly.
-RUN npx nx build admin-service --configuration=production
+# Disable Nx daemon & ESLint globally
+ENV NX_DAEMON=false
+ENV NX_NO_ESLINT_PLUGIN=true
 
+# Build this service
+ARG SERVICE_NAME=admin-service
+RUN npx nx build apps/backend/$SERVICE_NAME --configuration=production --skip-nx-cache --no-eslint
 
-# --- Stage 2: Production Runtime ---
-FROM node:20-alpine
+# ---------------- Runtime Stage ----------------
+FROM node:20.10.0 AS runtime
 WORKDIR /app
 
-# Set to production environment
-ENV NODE_ENV=production
+ARG SERVICE_NAME=admin-service
+COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME ./dist
+COPY package*.json ./
 
-# 5. Copy the pruned package.json from the build output
-COPY --from=builder /app/dist/apps/admin-service/package.json ./package.json
+# Install only production dependencies
+RUN npm ci --omit=dev --legacy-peer-deps
 
-# 6. Install ONLY the production dependencies for 'product-service'
-RUN npm install --omit=dev
-
-# 7. Copy the built application code and prisma schema
-COPY --from=builder /app/dist/apps/product-service .
-COPY --from=builder /app/prisma ./prisma
-
-# Expose the correct port
-EXPOSE 3008
-
-# 8. Run the application using the correct file name
-CMD ["node", "main.js"]
+CMD ["node", "dist/main.js"]

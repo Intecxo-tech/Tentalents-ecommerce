@@ -17,14 +17,14 @@ ENV NX_DAEMON=false
 ENV NX_NO_ESLINT_PLUGIN=true
 
 # Build this service
-ARG SERVICE_NAME=cart-service
+ARG SERVICE_NAME=post-mvp-services
 RUN npx nx build apps/backend/$SERVICE_NAME --configuration=production --skip-nx-cache --no-eslint
 
 # ---------------- Runtime Stage ----------------
 FROM node:20.10.0 AS runtime
 WORKDIR /app
 
-ARG SERVICE_NAME=cart-service
+ARG SERVICE_NAME=post-mvp-services
 COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME ./dist
 COPY package*.json ./
 
