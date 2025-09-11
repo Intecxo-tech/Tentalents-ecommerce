@@ -12,13 +12,13 @@ import userRoutes from './app/routes/user.routes';
 const app = express();
 
 // 🛡️ Global Middlewares
-// app.use(cors()); // Enable CORS
 app.use(helmet()); // Set security-related headers
 app.use(express.json()); // Parse JSON request bodies
 app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true, // if using cookies/session
 }));
+
 // 📚 Swagger API Documentation
 setupSwagger(app, {
   title: 'User Service',
@@ -28,7 +28,8 @@ setupSwagger(app, {
 
 // 📦 Feature Routes
 app.use('/api/auth', authRoutes); // 🔐 Auth: login, register, token, etc.
-app.use('/api/user', userRoutes); // 👤 User: profile, roles, etc.
+// ✅ Use plural 'users' to match route definitions
+app.use('/api/users', userRoutes); // 👤 User: profile, roles, addresses, etc.
 
 // 🩺 Health Check Endpoint
 app.get('/healthz', (_req, res) => {

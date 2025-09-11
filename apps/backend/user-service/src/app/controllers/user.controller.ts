@@ -122,6 +122,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
+
 // 🏠 POST /api/users/address
 export const saveAddress = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -132,7 +133,6 @@ export const saveAddress = async (req: Request, res: Response, next: NextFunctio
     const saved = await userService.saveAddress(userId, address);
     return sendSuccess(res, 'Address saved successfully', saved);
   } catch (err: any) {
-    console.error('[saveAddress error]', err);
     res.status(400).json({ error: err.message || 'Failed to save address' });
   }
 };
