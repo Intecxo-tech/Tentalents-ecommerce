@@ -149,7 +149,7 @@ const sellerInfo = product.vendor;
             ))}
           </div>
         </div>
-
+      
         {sellerInfo && (
           <div className="storeinfo">
             <div className="storeinfo-left">
@@ -185,7 +185,49 @@ const sellerInfo = product.vendor;
         </div>
 
         <h1 className="producttitle">{product.title}</h1>
+              <div className="productpage-right mobilesection">
+        <div className="pricesection1">
+          <div className="pricecontainer">
+            <p className="price2">${product.offerPrice ?? product.price}</p>
+            {product.offerPrice && <p className="offer-price">(${product.price})</p>}
+          </div>
+          {product.offerPrice && <p className="calculate-discount">-{calculateDiscount(product.price, product.offerPrice)}% Off</p>}
+        </div>
+        <div className="delivery-date"><h2>Get Delivered By {product.deliveryDate}</h2></div>
+        <div className="locationaddress"><MapPinPlus className="map" /><p>{product.deliveryLocation}</p><Pencil className="pencil" /></div>
+        <div className="adtocart-wrapper">
+          <div className="counter">
+            <Minus className="counter-icon" onClick={() => setQuantity(q => Math.max(1, q - 1))} />
+            <input type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value))} placeholder="1" />
+            <PlusIcon className="counter-icon" onClick={() => setQuantity(q => q + 1)} />
+          </div>
+          <button
+  className="background-button addtocart"
+  onClick={onAddToCartClick}
+  disabled={loading}
+>
+  {loading ? 'Adding...' : 'Add to Cart'}
+</button>
+        </div>
+        <div className="paymentwrapper">
+          <div className="paymentimages"><Image src={UPI} alt="upi"/><Image src={visa} alt="visa"/><Image src={bank} alt="bank"/><Image src={BankTransfer} alt="bank-transfer"/></div>
+       <button
+  className="background-button addtocart"
+  onClick={() => {
+    if (!userId) {
+      toast.error('Please log in to proceed to checkout.');
+      openSidebar(); // Trigger sidebar login
+      return;
+    }
 
+    router.push('/cart/checkout'); // Redirect to checkout if logged in
+  }}
+>
+  Buy Now
+</button>
+
+        </div>
+      </div>
         <div className="pricesection">
           <div className="pricecontainer">
             {product.offerPrice && (
@@ -201,6 +243,7 @@ const sellerInfo = product.vendor;
             </form>
           </div>
         </div>
+    
 
         {/* Dynamic Details Sections */}
         <div className="productdescription">

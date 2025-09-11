@@ -106,7 +106,13 @@
   background-color: #f3f3f3;
 }
 @media(max-width:768px){
-    .active{
+    /* .active{
         background-color: var(--primary);
+    } */
+    .filter-heading{
+        margin: 0px;;
+    }
+    .filter-heading button{
+        margin: 0px;
     }
 }
