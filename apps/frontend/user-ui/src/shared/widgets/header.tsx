@@ -6,7 +6,7 @@ import Tenanlents from "../../assets/tenanlenst-menu.png";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import './footer&header.css'
-import { CircleUserRound } from 'lucide-react';
+import { CircleUserRound , User} from 'lucide-react';
 import { categories, navItems } from '../../configs/constants';
 
 const Header = () => {
@@ -198,6 +198,22 @@ const fetchCartCount = useCallback(async () => {
         <div className="header-inner">
           <div className='header-left'>
             <a href="/"><span className="logo">Tentalents</span></a>
+            <div className="usersidemobile">
+              <Link href="/myaccount" className="accountbutton" >
+               {profile && profile.profileImage ? (
+  <Image
+    src={profile.profileImage}
+    alt="Profile Image"
+    width={30}
+    height={30}
+    style={{ borderRadius: '50%' }}
+  />
+) : (
+  <CircleUserRound className='usericon' />
+)}
+</Link>
+
+            </div>
             <div className="location">
               <MapPin className="icon5" size={20} />
               <p>Bhandup‑West, Mumbai‑78</p>

@@ -831,17 +831,29 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
       <div className="accountpage-right">
           <div className="menu-left">
             <Image src={Mainimage} alt="User" className="menu-image" />
-           {vendorId ? (
-  <button className="background-button" onClick={() => router.push('/dashboard')}>
-    Switch to Seller
-    <ChevronRight size={20} className="chevron-white" />
-  </button>
-) : (
-  <button className="background-button" onClick={() => router.push('/become-seller')}>
-    Become a Seller
-    <ChevronRight size={20} className="chevron-white" />
-  </button>
-)}
+ <button
+  className="background-button"
+  onClick={() => {
+    const token = localStorage.getItem('token');
+    if (!token || !vendor) {
+      toast.error('Missing token or vendor details!');
+      return;
+    }
+
+    const userId = vendor.userId; // or decode from JWT if needed
+
+    toast.success('Switching to customer...');
+
+    // Use encodeURIComponent for safety
+    const redirectUrl = `https://tentalents-frontend.vercel.app/login?token=${encodeURIComponent(token)}&userId=${encodeURIComponent(userId)}`;
+    
+    window.location.href = redirectUrl;
+  }}
+>
+  Switch to Customer
+</button>
+
+
 
           </div>
           

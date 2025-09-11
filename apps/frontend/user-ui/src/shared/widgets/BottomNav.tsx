@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Home, ShoppingCart, Package, User } from 'lucide-react';
+import { Home, ShoppingCart, Package, User,Box } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import './bottomnav.css';
 
@@ -18,6 +18,10 @@ const BottomNav = () => {
         <Home size={24} />
         <span>Home</span>
       </Link>
+        <Link href="/shop" className={`bottom-nav-item ${isActive('/account') ? 'active' : ''}`}>
+        <Box size={24} />
+        <span>Shop</span>
+      </Link>
 
       <Link href="/cart" className={`bottom-nav-item ${isActive('/cart') ? 'active' : ''}`}>
         <ShoppingCart size={24} />
@@ -29,10 +33,7 @@ const BottomNav = () => {
         <span>Orders</span>
       </Link>
 
-      <Link href="/myaccount" className={`bottom-nav-item ${isActive('/account') ? 'active' : ''}`}>
-        <User size={24} />
-        <span>Account</span>
-      </Link>
+    
     </nav>
   );
 };

@@ -1828,6 +1828,9 @@ width:25%;
   font-weight: 400;
   line-height: 30px;;
 }
+.usersidemobile{
+  display: none;
+}
 .social-icons{
   width:100%;
   display: flex;
@@ -1847,6 +1850,9 @@ width:25%;
 }
 
 @media(max-width:768px){
+  .usersidemobile{
+    display: block;
+  }
   .searchbutton{
   margin-right: 0px !important;
   margin: 0px;;
@@ -1857,6 +1863,15 @@ width:25%;
   .footer-part3 h3,.footer-part4 h3,.footer-part2 h3{
     margin: 0px;
 
+  }
+  .header-left{
+    display: flex;
+    align-items: center;
+    justify-content: space-between !important;
+  }
+  .usersidemobile,.accountbutton{
+    float: right;
+    text-align: right;
   }
   .footer{
     display: flex;
@@ -1887,6 +1902,9 @@ padding-bottom: 10px;
   gap:3px;
   width: 100%;
 }
+.location{
+  display: none;
+}
 .account-button,.cart,.menu{
   display: none !important;
 }
@@ -1900,6 +1918,7 @@ padding-bottom: 10px;
 .logo{
   font-size: 30px;
 }
+
 
 }
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
