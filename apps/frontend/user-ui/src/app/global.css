@@ -276,21 +276,28 @@ button{
   align-items: center;
   justify-content: space-between !important;
 }
-.product-title{
+.product-title {
   display: -webkit-box;
-  -webkit-line-clamp: 2; 
-  padding:10px 0px;/* Limit to 2 lines */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+
   overflow: hidden;
   text-overflow: ellipsis;
+
   font-size: 16px;
-  color:var(--darkgrey);
+  line-height: 1.4;
+  color: var(--darkgrey);
   font-weight: 500;
-  height: 59px;;
-  margin: 0px !important;
-  line-height: 1.4; /* Optional: improves vertical spacing */
- /* 2 lines * line-height */
+  padding: 10px 0;
+
+  margin: 0 !important;
+
+  /* Optional for long unbreakable words */
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
+
 
 /* price section stylings  */
 .rating{
@@ -809,4 +816,7 @@ summary svg {
      padding: 0px 15px  !important;
   }
  
+  .product-title{
+    max-height: calc(1.2em * 3);
+  }
 }

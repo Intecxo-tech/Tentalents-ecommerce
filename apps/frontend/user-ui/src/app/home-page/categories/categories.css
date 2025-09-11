@@ -60,6 +60,9 @@
     /* Hide scrollbar */
     scrollbar-width: none; /* Firefox */
   }
+  .category-list{
+    padding: 0px 0px !important;
+  }
 
 
    .category-section ul::-webkit-scrollbar {

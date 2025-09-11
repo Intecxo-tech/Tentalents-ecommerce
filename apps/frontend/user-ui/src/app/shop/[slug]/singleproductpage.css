@@ -449,8 +449,11 @@ color:var(--secondary);
 .productpage{
     gap:10px;
 }
-.productpage, .category-tab{
+.category-tab{
     display: none;
+}
+.sellername{
+    gap:5px;
 }
 }
 

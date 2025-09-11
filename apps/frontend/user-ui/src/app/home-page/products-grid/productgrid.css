@@ -79,11 +79,24 @@ flex-direction: column;
 @media(max-width:768px){
   .product-grid {
     grid-template-columns: repeat(2, 1fr);
+    padding:0px;
+    gap:5px;
   }
+  .products-grid{
+    padding: 10px;
+  }
+  
   .price-main{
     gap:0px !important;
   }
   .product-title{
     margin:5px 0px;
   }
+  .price-section p{
+    font-size: 15px;;
+  }
+  .rating{
+    gap:0px;
+  }
+  
 }

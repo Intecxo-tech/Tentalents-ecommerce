@@ -53,3 +53,10 @@
 }
 
 /* Product title (truncate if too long) */
+
+
+@media(max-width:768px){
+  .products-lists{
+    padding: 10px;;
+  }
+}
