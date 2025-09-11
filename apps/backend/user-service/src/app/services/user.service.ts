@@ -1,20 +1,20 @@
 import { PrismaClient, UserRole } from '@prisma/client';
-import { hashPassword, comparePassword, generateJWT } from '@shared/auth';
+import { hashPassword, comparePassword, generateJWT, admin } from '@shared/auth';
 import { produceKafkaEvent as publishEvent } from '@shared/kafka';
 import { KAFKA_TOPICS } from '@shared/kafka';
-import {admin} from '@shared/auth';
 import { sendEmail } from '@shared/email';
 import { logger } from '@shared/logger';
-import { response } from 'express';
 import * as crypto from 'crypto';
-import { uploadToCloudinary } from '@shared/auth'; 
+import { uploadToCloudinary } from '@shared/auth';
+import { MinioBuckets, uploadFile } from '@shared/minio';
+
 const prisma = new PrismaClient();
 
 interface RegisterUserParams {
   email: string;
   password: string;
   phone: string;
-  altphone: string;
+  altphone?: string;
   name: string;
   role?: UserRole;
 }
@@ -24,15 +24,29 @@ interface LoginUserParams {
   password: string;
 }
 
+interface AddressInput {
+  name: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  country: string;
+  pinCode: string;
+  addressType: 'home' | 'work';
+}
+
 export const userService = {
-   // Step 1: Send OTP
+  // --------------------------
+  // OTP Registration
+  // --------------------------
   initiateRegistrationOtp: async (email: string) => {
     try {
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) throw new Error('User already exists');
 
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
       await prisma.pendingUserOtp.upsert({
         where: { email },
@@ -49,55 +63,50 @@ export const userService = {
       logger.info(`[UserService] OTP sent to ${email}`);
       return { message: 'OTP sent to email' };
     } catch (err: any) {
-      // response.status(400).json({ error: err.message || 'Something went wrong' });
       logger.error('[UserService] initiateRegistrationOtp error:', err);
       throw err;
     }
   },
-  // resen otp 
-resendRegistrationOtp: async (email: string) => {
-  try {
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) throw new Error('User already exists');
 
-    // Optionally, check if there's a recent OTP request to throttle resends (rate limiting)
-    const recentOtp = await prisma.pendingUserOtp.findUnique({ where: { email } });
-    if (recentOtp && recentOtp.expiresAt > new Date(Date.now() - 1 * 60 * 1000)) {
-      // Prevent resend if OTP was sent less than 1 min ago (example)
-      throw new Error('Please wait before requesting a new OTP');
+  resendRegistrationOtp: async (email: string) => {
+    try {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) throw new Error('User already exists');
+
+      const recentOtp = await prisma.pendingUserOtp.findUnique({ where: { email } });
+      if (recentOtp && recentOtp.expiresAt > new Date(Date.now() - 60 * 1000)) {
+        throw new Error('Please wait before requesting a new OTP');
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+      await prisma.pendingUserOtp.upsert({
+        where: { email },
+        update: { otp, expiresAt },
+        create: { email, otp, expiresAt },
+      });
+
+      await sendEmail({
+        to: email,
+        subject: 'Your OTP Code for Registration (Resent)',
+        html: `<p>Your new OTP is: <strong>${otp}</strong>. It expires in 5 minutes.</p>`,
+      });
+
+      logger.info(`[UserService] OTP resent to ${email}`);
+      return { message: 'OTP resent to email' };
+    } catch (err) {
+      logger.error('[UserService] resendRegistrationOtp error:', err);
+      throw err;
     }
+  },
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
-
-    await prisma.pendingUserOtp.upsert({
-      where: { email },
-      update: { otp, expiresAt },
-      create: { email, otp, expiresAt },
-    });
-
-    await sendEmail({
-      to: email,
-      subject: 'Your OTP Code for Registration (Resent)',
-      html: `<p>Your new OTP is: <strong>${otp}</strong>. It expires in 5 minutes.</p>`,
-    });
-
-    logger.info(`[UserService] OTP resent to ${email}`);
-    return { message: 'OTP resent to email' };
-  } catch (err) {
-    logger.error('[UserService] resendRegistrationOtp error:', err);
-    throw err;
-  }
-},
-
-  // Step 2: Verify OTP
   verifyEmailOtp: async (email: string, otp: string) => {
     try {
       const record = await prisma.pendingUserOtp.findUnique({ where: { email } });
       if (!record || record.otp !== otp || record.expiresAt < new Date()) {
         throw new Error('Invalid or expired OTP');
       }
-
       logger.info(`[UserService] OTP verified for ${email}`);
       return { verified: true };
     } catch (err) {
@@ -106,7 +115,6 @@ resendRegistrationOtp: async (email: string) => {
     }
   },
 
-  // Step 3: Complete registration after OTP verified
   completeRegistration: async ({
     email,
     password,
@@ -114,14 +122,7 @@ resendRegistrationOtp: async (email: string) => {
     phone,
     altphone,
     role = UserRole.buyer,
-  }: {
-    email: string;
-    password: string;
-    name?: string;
-    phone?: string;
-    altphone?:string;
-    role?: UserRole;
-  }) => {
+  }: RegisterUserParams) => {
     try {
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) throw new Error('User already exists');
@@ -130,8 +131,14 @@ resendRegistrationOtp: async (email: string) => {
       if (!otpRecord || otpRecord.expiresAt < new Date()) {
         throw new Error('OTP verification expired or not found');
       }
-const defaultProfileImage = `https://gravatar.com/avatar/${crypto.createHash('md5').update(email).digest('hex')}?d=identicon`;
+
+      const defaultProfileImage = `https://gravatar.com/avatar/${crypto
+        .createHash('md5')
+        .update(email)
+        .digest('hex')}?d=identicon`;
+
       const hashed = await hashPassword(password);
+
       const user = await prisma.user.create({
         data: {
           email,
@@ -140,15 +147,14 @@ const defaultProfileImage = `https://gravatar.com/avatar/${crypto.createHash('md
           phone: phone || '',
           altPhone: altphone || '',
           role,
-           profileImage: defaultProfileImage,
+          profileImage: defaultProfileImage,
         },
       });
-      
-
 
       await prisma.pendingUserOtp.delete({ where: { email } });
 
-       try {
+      // Kafka events
+      try {
         const kafkaPayload = { userId: user.id, email: user.email, role: user.role };
         await publishEvent({
           topic: KAFKA_TOPICS.USER.CREATED,
@@ -177,69 +183,79 @@ const defaultProfileImage = `https://gravatar.com/avatar/${crypto.createHash('md
           });
         }
       } catch (kafkaErr) {
-        // If Kafka fails, we log it as a warning but DO NOT throw the error.
-        // This makes the Kafka integration optional and fault-tolerant.
-        logger.warn('⚠️ [UserService] Kafka event publishing failed but the process will continue.', kafkaErr);
+        logger.warn('⚠️ Kafka publishing failed', kafkaErr);
       }
-      // END: Graceful Kafka Publishing
 
-      logger.info(`[UserService] ✅ OTP-based registration complete for ${email}`);
-      return { id: user.id, email: user.email, role: user.role };
+      logger.info(`[UserService] Registration complete for ${email}`);
+      return { id: user.id, email: user.email, role: user.role };
     } catch (err) {
       logger.error('[UserService] completeRegistration error:', err);
       throw err;
     }
   },
 
-
+  // --------------------------
+  // Login
+  // --------------------------
   loginUser: async ({ email, password }: LoginUserParams) => {
-  try {
-    logger.info('[UserService] 🔑 Login attempt for:', email);
-    const user = await prisma.user.findUnique({ where: { email } });
+    try {
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) throw new Error('Invalid credentials');
+      if (!user.password) throw new Error('OAuth account - use Google login');
+
+      const isValid = await comparePassword(password, user.password);
+      if (!isValid) throw new Error('Invalid credentials');
+
+      const vendor = await prisma.vendor.findUnique({ where: { userId: user.id } });
+
+      return generateJWT({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        vendorId: vendor?.id ?? undefined,
+      });
+    } catch (err) {
+      logger.error('[UserService] loginUser error:', err);
+      throw err;
+    }
+  },
+
+  oauthLogin: async (provider: string, idToken: string) => {
+    if (provider !== 'google') throw new Error('Unsupported provider');
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const { email, name, picture, uid } = decodedToken;
+    if (!email) throw new Error('Email not found in token');
+
+    let user = await prisma.user.findFirst({ where: { firebaseUid: uid } });
+    if (!user) user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      logger.warn('[UserService] ❌ Email not found');
-      throw new Error('Invalid credentials');
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || '',
+          profileImage: picture || '',
+          role: UserRole.buyer,
+          firebaseUid: uid,
+        },
+      });
+
+      await publishEvent({
+        topic: KAFKA_TOPICS.USER.CREATED,
+        messages: [{ value: JSON.stringify({ userId: user.id, email: user.email, role: user.role }) }],
+      });
+    } else if (!user.firebaseUid) {
+      await prisma.user.update({ where: { id: user.id }, data: { firebaseUid: uid } });
     }
 
-    if (!user.password) {
-      logger.warn('[UserService] ❌ User has no password (OAuth account)');
-      throw new Error('This account uses Google Login. Please sign in with Google.');
-    }
+    return generateJWT({ userId: user.id, email: user.email, role: user.role });
+  },
 
-    const isValid = await comparePassword(password, user.password);
-    if (!isValid) {
-      logger.warn('[UserService] ❌ Password mismatch');
-      throw new Error('Invalid credentials');
-    }
-
-    // Fetch vendor linked to user
-    const vendor = await prisma.vendor.findUnique({
-      where: { userId: user.id },
-    });
-
-    logger.info('[UserService] ✅ Authenticated:', user.email);
-
-    // Include vendorId in JWT payload
-    return generateJWT({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-     vendorId: vendor?.id ?? undefined,
-    });
-  } catch (err: any) {
-    logger.error('[UserService] ❌ Login error:', err.message || err);
-    throw err;
-  }
-},
-
-
-getUserProfile: async (userId: string) => {
-  try {
-    if (!userId) throw new Error('User ID is required');
-
-    logger.info('[UserService] 📄 Fetching profile for ID:', userId);
-
+  // --------------------------
+  // Profile
+  // --------------------------
+  getUserProfile: async (userId: string) => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -248,182 +264,58 @@ getUserProfile: async (userId: string) => {
         role: true,
         name: true,
         phone: true,
-        profileImage: true,
         altPhone: true,
-        vendor: {
-          select: { id: true }
-        }
-      }
+        profileImage: true,
+        vendor: { select: { id: true } },
+      },
     });
-
-    if (!user) throw new Error(`User with ID ${userId} not found`);
-
-    // Now safe to access user.vendor
-    const vendorId = user.vendor?.id ?? null;
-
-    // If you want, you can attach vendorId to the user object or return separately
-    return { ...user, vendorId }; // or return user only as you want
-
-  } catch (err: any) {
-    logger.error('[UserService] ❌ getUserProfile error:', err.message || err);
-    throw err;
-  }
-},
-
- updateProfileImage: async (userId: string, imageUrl: string) => {
-  try {
-    if (!userId || !imageUrl) throw new Error('userId and imageUrl are required');
-
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { profileImage: imageUrl },
-    });
-
-    logger.info(`[UserService] 🔄 Updated profile image for user ${userId}`);
-    return updatedUser;
-  } catch (err: any) {
-    logger.error('[UserService] ❌ updateProfileImage error:', err.message || err);
-    throw err;
-  }
-},
-  updateUserRole: async (userId: string, newRole: UserRole) => {
-    try {
-      if (!userId || !newRole) throw new Error('userId and newRole are required');
-
-      logger.info(`[UserService] 🔄 Updating role for ${userId} to ${newRole}`);
-      const updated = await prisma.user.update({
-        where: { id: userId },
-        data: { role: newRole },
-      });
-
-      return updated;
-    } catch (err: any) {
-      logger.error('[UserService] ❌ updateUserRole error:', err.message || err);
-      throw err;
-    }
+    if (!user) throw new Error('User not found');
+    return { ...user, vendorId: user.vendor?.id ?? null };
   },
 
-oauthLogin: async (provider: string, idToken: string) => {
-  try {
-    if (provider !== 'google') throw new Error('Unsupported provider');
-
-    logger.info('[UserService] 🔐 Verifying Firebase ID token...');
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const { email, name, picture, uid } = decodedToken;
-
-    if (!email) throw new Error('Email not found in token');
-
-    logger.info(`[UserService] ✅ Google token verified: ${email}`);
-
-    // Try to find user by firebaseUid first
-let user = await prisma.user.findFirst({ where: { firebaseUid: uid } });
-
-    if (!user) {
-      // If not found by firebaseUid, try finding by email
-      user = await prisma.user.findUnique({ where: { email } });
-    }
-
-    if (!user) {
-      // Create new user if doesn't exist
-      user = await prisma.user.create({
-        data: {
-          email,
-          name: name || '',
-          profileImage: picture || '',
-          role: UserRole.buyer, // default role
-          firebaseUid: uid,
-          // No password needed for OAuth users
-        },
-      });
-
-      logger.info(`[UserService] 🆕 New Google user created: ${email}`);
-
-      // Optionally publish Kafka events on user creation here
-      await publishEvent({
-        topic: KAFKA_TOPICS.USER.CREATED,
-        messages: [{ value: JSON.stringify({ userId: user.id, email: user.email, role: user.role }) }],
-      });
-
-      await publishEvent({
-        topic: KAFKA_TOPICS.EMAIL.USER_CREATED,
-        messages: [{ value: JSON.stringify({ email: user.email }) }],
-      });
-    } else {
-      logger.info(`[UserService] 🔑 Existing user logged in: ${email}`);
-
-      // If user exists but firebaseUid is missing, update it to link accounts
-      if (!user.firebaseUid) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { firebaseUid: uid },
-        });
-      }
-    }
-
-    // Return JWT token
-    return generateJWT({ userId: user.id, email: user.email, role: user.role });
-  } catch (err: any) {
-    logger.error('[UserService] ❌ OAuth login error:', err.message || err);
-    throw err;
-  }
-},
-
-uploadImageAndGetUrl: async (userId: string, file: Express.Multer.File): Promise<string> => {
-  try {
-    if (!userId || !file) throw new Error('User ID and file are required');
-
-    // Upload buffer to Cloudinary
-    const uploadedImageUrl = await uploadToCloudinary(
-      file.buffer,
-      'user_profiles',
-      `user_${userId}`
-    );
-
-    // Update user's profile image URL in DB
-    await prisma.user.update({
+  updateUserProfile: async (userId: string, updates: { name?: string; phone?: string; altPhone?: string }) => {
+    return await prisma.user.update({
       where: { id: userId },
-      data: { profileImage: uploadedImageUrl },
+      data: {
+        ...(updates.name && { name: updates.name }),
+        ...(updates.phone && { phone: updates.phone }),
+        ...(updates.altPhone && { altPhone: updates.altPhone }),
+      },
+      select: { id: true, name: true, phone: true, altPhone: true, email: true, role: true, profileImage: true },
     });
+  },
 
-    logger.info(`[UserService] ✅ Uploaded and saved Cloudinary image for user ${userId}`);
+  updateProfileImage: async (userId: string, imageUrl: string) => {
+    return await prisma.user.update({ where: { id: userId }, data: { profileImage: imageUrl } });
+  },
+
+  uploadImageAndGetUrl: async (userId: string, file: Express.Multer.File) => {
+    const uploadedImageUrl = await uploadToCloudinary(file.buffer, 'user_profiles', `user_${userId}`);
+    await prisma.user.update({ where: { id: userId }, data: { profileImage: uploadedImageUrl } });
     return uploadedImageUrl;
-  } catch (err: any) {
-    logger.error('[UserService] ❌ uploadImageAndGetUrl error:', err.message || err);
-    throw err;
-  }
-},
-
-  updateUserProfile: async (
-    userId: string,
-    updates: { name?: string; phone?: string; altPhone?: string }
-  ) => {
-    try {
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          ...(updates.name && { name: updates.name }),
-          ...(updates.phone && { phone: updates.phone }),
-          ...(updates.altPhone && { altPhone: updates.altPhone }),
-        },
-        select: {
-          id: true,
-          name: true,
-          phone: true,
-          altPhone:true,
-          email: true,
-          role: true,
-          profileImage: true,
-          
-        },
-      });
-
-      logger.info(`[UserService] 🔄 Updated profile info for user ${userId}`);
-      return updatedUser;
-    } catch (err: any) {
-      logger.error('[userService] updateUserProfile error:', err.message || err);
-      throw err;
-    }
   },
 
+  updateUserRole: async (userId: string, newRole: UserRole) => {
+    return await prisma.user.update({ where: { id: userId }, data: { role: newRole } });
+  },
 
+  // --------------------------
+  // Address
+  // --------------------------
+  saveAddress: async (userId: string, input: AddressInput) => {
+    return await prisma.address.create({
+      data: {
+        userId,
+        name: input.name,
+        phone: input.phone,
+        addressLine1: input.line1,
+        addressLine2: input.line2 || '',
+        city: input.city,
+        state: input.state,
+        country: input.country,
+        pinCode: input.pinCode,
+        addressType: input.addressType,
+      },
+    });
+  },
 };

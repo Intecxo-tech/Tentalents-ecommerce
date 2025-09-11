@@ -1,11 +1,7 @@
+// apps/cart-service/src/app/routes/cart.routes.ts
 import { Router } from 'express';
-import {
-  getCart,
-  addToCart,
-  checkoutCart,
-    updateCartItemQuantity, 
-} from '../controllers/cart.controller';
-import { optionalAuthMiddleware } from '@shared/auth'; // ✅ Supports JWT or guest session
+import cartControllerRouter from '../controllers/cart.controller';
+import { optionalAuthMiddleware } from '@shared/auth';
 
 const router = Router();
 
@@ -14,27 +10,9 @@ const router = Router();
  * - Authenticated users: via JWT in Authorization header
  * - Guests: via `sessionId` in query or body
  */
-router.post('/update', updateCartItemQuantity);
 router.use(optionalAuthMiddleware()); // ✅ Call factory
 
-/**
- * @route   GET /api/cart?sessionId=...
- * @desc    Retrieve cart (authenticated or guest)
- */
-router.get('/', getCart);
-
-/**
- * @route   POST /api/cart/add
- * @desc    Add item to cart (authenticated or guest)
- * @body    { sessionId?: string, item: { productId, quantity, ... } }
- */
-router.post('/add', addToCart);
-
-/**
- * @route   POST /api/cart/checkout
- * @desc    Checkout cart (authenticated or guest)
- * @body    { sessionId?: string }
- */
-router.post('/checkout', checkoutCart);
+// Mount all cart controller routes under `/cart`
+router.use('/', cartControllerRouter);
 
 export default router;

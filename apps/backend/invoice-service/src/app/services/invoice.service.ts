@@ -1,91 +1,105 @@
-import PDFDocument from 'pdfkit';
-import { uploadToCloudinary } from '@shared/auth'; // Adjust path to where you have your cloudinary.ts file
-import { PrismaClient } from '@prisma/client'; // Adjust path if you're not using @shared/prisma
-import { Readable } from 'stream';
+import { PDFGenerator, PdfOrder, OrderItem } from '@shared/utils';
+import { uploadToCloudinary } from '@shared/auth';
+import { uploadFileToMinIO } from '@shared/minio';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const bucket = process.env.MINIO_BUCKET || 'invoices';
 
 export const invoiceService = {
+  /**
+   * Generate PDF invoice, upload to Cloudinary and MinIO, save in DB
+   */
   generateInvoicePDF: async (orderData: {
     orderId: string;
     userId: string;
     buyerEmail: string;
-    items: { name: string; price: number; quantity: number }[];
+    buyerName?: string;
+    items: { name: string; price: number; quantity: number; savedForLater?: boolean }[];
     total: number;
-  }): Promise<string> => {
-    const doc = new PDFDocument();
-    const chunks: Buffer[] = [];
+    shippingCost?: number;
+    paymentMethod?: string;
+  }): Promise<{ cloudinaryUrl: string; minioUrl: string }> => {
 
-    return new Promise<string>((resolve, reject) => {
-      doc.text('🧾 MVP Shop Invoice', { align: 'center' });
-      doc.text(`Order ID: ${orderData.orderId}`);
-      doc.text(`Buyer: ${orderData.buyerEmail}`);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`);
-      doc.moveDown();
+    // Map items to OrderItem for PDF
+    const pdfItems: OrderItem[] = orderData.items.map(i => ({
+      productId: '', // optional
+      name: i.name,
+      quantity: i.quantity,
+      price: i.price,
+      savedForLater: i.savedForLater ?? false,
+    }));
 
-      orderData.items.forEach((item) => {
-        doc.text(`${item.name} - ₹${item.price} x ${item.quantity}`);
-      });
+    const pdfOrder: PdfOrder = {
+      id: orderData.orderId,
+      userId: orderData.userId,
+      userName: orderData.buyerName || 'Customer',
+      userEmail: orderData.buyerEmail,
+      items: pdfItems,
+      status: 'PAID',
+      createdAt: new Date(),
+      shippingCost: orderData.shippingCost,
+      paymentMethod: orderData.paymentMethod,
+    };
 
-      doc.text(`\nTotal: ₹${orderData.total}`, { align: 'right' });
+    // Generate PDF
+    const pdfBuffer = await PDFGenerator.generate(pdfOrder);
+    const filename = `tentalents-invoice-${orderData.orderId}.pdf`;
 
-      doc.on('data', (chunk) => chunks.push(chunk));
-      doc.on('end', async () => {
-        try {
-          const buffer = Buffer.concat(chunks);
-          const filename = `invoice-${orderData.orderId}.pdf`;
+    // Upload PDF to Cloudinary
+    const cloudinaryUrl = await uploadToCloudinary(
+      pdfBuffer,
+      'invoices',
+      filename,
+      'application/pdf'
+    );
 
-          // Upload PDF to Cloudinary
-          const pdfUrl = await uploadToCloudinary(buffer, 'invoices', filename, 'application/pdf');
-
-          // Get the vendorId from the database based on the order's items (assuming vendor is stored in orderItem)
-          const orderItems = await prisma.orderItem.findMany({
-            where: { orderId: orderData.orderId },
-            include: { vendor: true }, // Include vendor to get the vendor details
-            take: 1,
-          });
-
-          if (orderItems.length === 0 || !orderItems[0].vendor) {
-            throw new Error('No vendor found for the order');
-          }
-
-          const vendorId = orderItems[0].vendor.id; // Access the vendorId from the vendor relation
-
-          // Store the invoice in the database with Cloudinary URL
-          await prisma.invoice.create({
-            data: {
-              orderId: orderData.orderId,
-              vendorId: vendorId,  // Use vendorId from the related vendor object
-              pdfUrl: pdfUrl,  // Cloudinary URL for the uploaded invoice
-              issuedAt: new Date(),
-            },
-          });
-
-       resolve(pdfUrl); 
-        } catch (err) {
-          console.error('Error generating invoice:', err);
-          reject(err);
-        }
-      });
-
-      doc.end();
-    });
-  },
-
-  // Updated function to return URL as a string instead of Readable stream
-  getInvoiceFile: async (userId: string, orderId: string): Promise<string> => {
-    const invoice = await prisma.invoice.findUnique({
-      where: { orderId },
+    // Upload PDF to MinIO
+    const minioUrl = await uploadFileToMinIO({
+      content: pdfBuffer,
+      objectName: `invoices/${filename}`,
+      bucketName: bucket,
+      contentType: 'application/pdf',
     });
 
-    if (!invoice || !invoice.pdfUrl) {
-      throw new Error('Invoice not found or file URL missing');
+    // Check if invoice exists in DB
+    const existingInvoice = await prisma.invoice.findUnique({
+      where: { orderId: orderData.orderId },
+    });
+
+    if (existingInvoice) {
+      // Update pdfUrl only
+      await prisma.invoice.update({
+        where: { id: existingInvoice.id },
+        data: { pdfUrl: cloudinaryUrl },
+      });
+    } else {
+      // Fetch vendorId from first order item
+      const orderItem = await prisma.orderItem.findFirst({
+        where: { orderId: orderData.orderId },
+        include: { vendor: true },
+      });
+      const vendorId = orderItem?.vendor?.id || '';
+
+      await prisma.invoice.create({
+        data: {
+          orderId: orderData.orderId,
+          vendorId,
+          pdfUrl: cloudinaryUrl,
+          issuedAt: new Date(),
+        },
+      });
     }
 
-    const pdfUrl = invoice.pdfUrl;
+    return { cloudinaryUrl, minioUrl };
+  },
 
-    // Return the Cloudinary URL (directly)
-    return pdfUrl;  // Now returns a string (URL)
+  /**
+   * Get invoice PDF URL from DB
+   */
+  getInvoiceFile: async (orderId: string): Promise<string> => {
+    const invoice = await prisma.invoice.findUnique({ where: { orderId } });
+    if (!invoice || !invoice.pdfUrl) throw new Error('Invoice not found');
+    return invoice.pdfUrl;
   },
 };

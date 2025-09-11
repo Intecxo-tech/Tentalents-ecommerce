@@ -1,35 +1,12 @@
-import { redisClient, setCache, getCache, deleteCache } from '@shared/redis';
+import { setCache, getCache, deleteCache } from '@shared/redis';
 import { connectKafkaProducer, KAFKA_TOPICS } from '@shared/kafka';
 import type { Producer } from 'kafkajs';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-const CART_TTL = 60 * 60 * 2; // 2 hours
+const CART_TTL = 60 * 60 * 2; // 2 hours cache
 
 let kafkaProducer: Producer | null = null;
-async function refreshCartCache(userId: string) {
-  const cart = await prisma.cartItem.findMany({
-    where: { userId },
-    include: includeCartRelations,
-  });
-
-  const cacheKey = `cart:${userId}`;
-
-  if (cart.length === 0) {
-    await deleteCache(cacheKey);
-  } else {
-    await setCache(cacheKey, cart, CART_TTL);
-  }
-
-  return cart;
-}
-
-async function getKafkaProducer(): Promise<Producer> {
-  if (!kafkaProducer) {
-    kafkaProducer = await connectKafkaProducer();
-  }
-  return kafkaProducer;
-}
 
 const includeCartRelations = {
   vendor: { select: { id: true, name: true } },
@@ -50,91 +27,87 @@ const includeCartRelations = {
       stock: true,
       sku: true,
       status: true,
-      dispatchTimeInDays: true,  // add this
-      shippingCost: true,        // add this
+      dispatchTimeInDays: true,
+      shippingCost: true,
     },
   },
 };
 
+async function getKafkaProducer(): Promise<Producer> {
+  if (!kafkaProducer) kafkaProducer = await connectKafkaProducer();
+  return kafkaProducer;
+}
+
+async function refreshCartCache(userId: string) {
+  const cart = await prisma.cartItem.findMany({
+    where: { userId } as any,
+    include: includeCartRelations,
+  });
+
+  const cacheKey = `cart:${userId}`;
+  if (cart.length === 0) await deleteCache(cacheKey);
+  else await setCache(cacheKey, cart, CART_TTL);
+
+  return cart;
+}
 
 export const cartService = {
-getCart: async (userId: string) => {
-  const cacheKey = `cart:${userId}`;
-  try {
-    const cachedCart = await getCache<typeof includeCartRelations[]>(cacheKey);
-    console.log('Cached cart:', cachedCart);
+  getCart: async (userId: string) => {
+    const cacheKey = `cart:${userId}`;
+    try {
+      const cachedCart = await getCache<typeof includeCartRelations[]>(cacheKey);
+      if (cachedCart && Array.isArray(cachedCart)) return cachedCart;
 
-    if (cachedCart !== null && Array.isArray(cachedCart)) {
-      return cachedCart;
+      const cart = await prisma.cartItem.findMany({
+        where: { userId, savedForLater: false } as any,
+        include: includeCartRelations,
+      });
+
+      if (cart.length === 0) await deleteCache(cacheKey);
+      else await setCache(cacheKey, cart, CART_TTL);
+
+      return cart;
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+      throw error;
     }
-
-    // Cache miss or invalid, fetch from DB
-    const cart = await prisma.cartItem.findMany({
-      where: { userId },
-      include: includeCartRelations,
-    });
-
-    if (cart.length === 0) {
-      await deleteCache(cacheKey); // Don't cache empty cart
-    } else {
-      await setCache(cacheKey, cart, CART_TTL);
-    }
-
-    return cart;
-  } catch (error) {
-    console.error('Error fetching cart:', error);
-    throw error;
-  }
-},
-
+  },
 
   addToCart: async (
     userId: string,
     item: { listingId: string; productId: string; quantity: number }
   ) => {
-    const cacheKey = `cart:${userId}`;
     try {
-      // Validate listingId and get vendorId
-      const productListing = await prisma.productListing.findUnique({
+      const listing = await prisma.productListing.findUnique({
         where: { id: item.listingId },
         select: { vendorId: true },
       });
+      if (!listing) throw new Error('Invalid listingId');
 
-      if (!productListing) {
-        throw new Error('Invalid listingId');
-      }
-
-      // Check if cart item exists - if yes, update quantity, else create new
-      const existingCartItem = await prisma.cartItem.findFirst({
-        where: {
-          userId,
-          listingId: item.listingId,
-        },
+      const existingItem = await prisma.cartItem.findFirst({
+        where: { userId, listingId: item.listingId, savedForLater: false } as any,
       });
 
-      if (existingCartItem) {
-        // Update quantity
+      if (existingItem) {
         await prisma.cartItem.update({
-          where: { id: existingCartItem.id },
-          data: { quantity: existingCartItem.quantity + item.quantity },
+          where: { id: existingItem.id },
+          data: { quantity: existingItem.quantity + item.quantity },
         });
       } else {
-        // Create new cart item
         await prisma.cartItem.create({
           data: {
             userId,
             listingId: item.listingId,
             productId: item.productId,
-            vendorId: productListing.vendorId,
+            vendorId: listing.vendorId,
             quantity: item.quantity,
-          },
+            savedForLater: false,
+          } as any,
         });
       }
 
-      // Fetch updated cart with full details
-     const updatedCart = await refreshCartCache(userId);
+      const updatedCart = await refreshCartCache(userId);
 
-      // Send Kafka event
       try {
         const producer = await getKafkaProducer();
         await producer.send({
@@ -152,23 +125,14 @@ getCart: async (userId: string) => {
     }
   },
 
-  updateCartItemQuantity: async (
-    userId: string,
-    listingId: string,
-    quantityChange: number
-  ) => {
-    const cacheKey = `cart:${userId}`;
+  updateCartItemQuantity: async (userId: string, listingId: string, quantityChange: number) => {
     try {
       const existingItem = await prisma.cartItem.findFirst({
-        where: { userId, listingId },
+        where: { userId, listingId } as any,
       });
-
-      if (!existingItem) {
-        throw new Error('Cart item not found');
-      }
+      if (!existingItem) throw new Error('Cart item not found');
 
       const newQuantity = existingItem.quantity + quantityChange;
-
       if (newQuantity <= 0) {
         await prisma.cartItem.delete({ where: { id: existingItem.id } });
       } else {
@@ -178,8 +142,7 @@ getCart: async (userId: string) => {
         });
       }
 
-      // Fetch updated cart with full details (consistent shape)
-     const updatedCart = await refreshCartCache(userId);
+      const updatedCart = await refreshCartCache(userId);
 
       try {
         const producer = await getKafkaProducer();
@@ -199,15 +162,9 @@ getCart: async (userId: string) => {
   },
 
   deleteCartItem: async (userId: string, itemId: string) => {
-    const cacheKey = `cart:${userId}`;
     try {
-      await prisma.cartItem.deleteMany({
-        where: { id: itemId, userId },
-      });
-
-      // Fetch updated cart with full details
-    const updatedCart = await refreshCartCache(userId);
-
+      await prisma.cartItem.deleteMany({ where: { id: itemId, userId } as any });
+      const updatedCart = await refreshCartCache(userId);
 
       try {
         const producer = await getKafkaProducer();
@@ -225,48 +182,37 @@ getCart: async (userId: string) => {
       throw error;
     }
   },
-getWishlist: async (userId: string) => {
-  try {
-    const wishlist = await prisma.cartItem.findMany({
-      where: {
-        userId,
-        savedForLater: true,
-      },
-      include: includeCartRelations,
-    });
 
-    return wishlist;
-  } catch (error) {
-    console.error('Error fetching wishlist:', error);
-    throw error;
-  }
-},
-toggleSaveForLater: async (userId: string, itemId: string, saveForLater: boolean) => {
-  try {
-    const updatedItem = await prisma.cartItem.updateMany({
-      where: {
-        id: itemId,
-        userId,
-      },
-      data: {
-        savedForLater: saveForLater,
-      },
-    });
+  getWishlist: async (userId: string) => {
+    try {
+      return prisma.cartItem.findMany({
+        where: { userId, savedForLater: true } as any,
+        include: includeCartRelations,
+      });
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+      throw error;
+    }
+  },
 
-    const updatedCart = await refreshCartCache(userId);
+  toggleSaveForLater: async (userId: string, itemId: string, saveForLater: boolean) => {
+    try {
+      await prisma.cartItem.updateMany({
+        where: { id: itemId, userId } as any,
+        data: { savedForLater: saveForLater } as any,
+      });
 
-    return updatedItem;
-  } catch (error) {
-    console.error('Error toggling save for later:', error);
-    throw error;
-  }
-},
+      return refreshCartCache(userId);
+    } catch (error) {
+      console.error('Error toggling save for later:', error);
+      throw error;
+    }
+  },
 
   checkout: async (userId: string) => {
-    const cacheKey = `cart:${userId}`;
     try {
       const cart = await prisma.cartItem.findMany({
-        where: { userId },
+        where: { userId, savedForLater: false } as any,
         include: includeCartRelations,
       });
 
@@ -280,8 +226,8 @@ toggleSaveForLater: async (userId: string, itemId: string, saveForLater: boolean
         console.error('Failed to send CART_CHECKED_OUT Kafka message:', kafkaErr);
       }
 
-      await prisma.cartItem.deleteMany({ where: { userId } });
-      await deleteCache(cacheKey);
+      await prisma.cartItem.deleteMany({ where: { userId, savedForLater: false } as any });
+      await deleteCache(`cart:${userId}`);
 
       return { status: 'checked_out', cart };
     } catch (error) {

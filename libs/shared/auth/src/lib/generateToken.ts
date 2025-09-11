@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
-import { AuthPayload, ROLES, UserRole } from '@shared/auth';
-import { signToken } from '@shared/auth';
+import { AuthPayload, ROLES, UserRole } from './types';
+import { signToken } from './jwt';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../../..', '.env') });
 

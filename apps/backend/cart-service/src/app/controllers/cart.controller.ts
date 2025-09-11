@@ -1,118 +1,137 @@
-import { Request, Response, NextFunction } from 'express';
+// apps/cart-service/src/app/cart.controller.ts
+import { Router, Request, Response } from 'express';
 import { cartService } from '../services/cart.service';
-import { sendSuccess } from '@shared/utils';
-import type { AuthPayload } from '@shared/auth';
-import { logger } from '@shared/logger';
-interface AuthedRequest extends Request {
-  user?: AuthPayload;
-}
 
-const extractUserId = (req: AuthedRequest): string | null => {
-  return (
-    req.user?.userId ||
-    req.query.sessionId?.toString() ||
-    req.body.sessionId ||
-    null
-  );
-};
+const router = Router();
 
 /**
- * GET /api/cart
- * Fetch the current cart for an authenticated user or guest
+ * GET /cart
+ * Fetch active cart (excluding saved-for-later items)
  */
-export const getCart = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const userId = extractUserId(req);
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ message: '❌ Missing userId or sessionId' });
-    }
+    const userId = req.query.userId as string;
+    if (!userId) return res.status(400).json({ message: 'userId is required' });
 
     const cart = await cartService.getCart(userId);
-    return sendSuccess(res, '🛒 Cart fetched successfully', cart);
-  } catch (err) {
-    next(err);
+    return res.json({ cart });
+  } catch (error) {
+    console.error('GET /cart error:', error);
+    return res.status(500).json({ message: 'Failed to fetch cart' });
   }
-};
+});
 
 /**
- * POST /api/cart
- * Add an item to the user's or guest's cart
+ * POST /cart/add
+ * Add a product listing to the cart
  */
-export const addToCart = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+router.post('/add', async (req: Request, res: Response) => {
   try {
-    const userId = extractUserId(req);
-
-    logger.info('[CartController] 🧾 Incoming add-to-cart request', {
-      userId,
-      body: req.body,
-    });
-
-    if (!userId) {
-      logger.warn('[CartController] ❌ Missing userId or sessionId');
-      return res
-        .status(400)
-        .json({ message: '❌ Missing userId or sessionId' });
+    const { userId, listingId, productId, quantity } = req.body;
+    if (!userId || !listingId || !productId || !quantity) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    const cart = await cartService.addToCart(userId, req.body.item); // Make sure this is `req.body.item`
-
-    logger.info('[CartController] ✅ Item added successfully', { cart });
-
-    return sendSuccess(res, '✅ Item added to cart', cart);
-  } catch (err) {
-    logger.error('[CartController] ❌ Failed to add item to cart', err);
-    next(err);
+    const updatedCart = await cartService.addToCart(userId, { listingId, productId, quantity });
+    return res.json({ cart: updatedCart });
+  } catch (error) {
+    console.error('POST /cart/add error:', error);
+    return res.status(500).json({ message: 'Failed to add item to cart' });
   }
-};
+});
+
 /**
- * POST /api/cart/checkout
- * Checkout the user's or guest's cart
+ * PATCH /cart/:listingId
+ * Update quantity of a cart item
  */
-export const checkoutCart = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+router.patch('/:listingId', async (req: Request, res: Response) => {
   try {
-    const userId = extractUserId(req);
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ message: '❌ Missing userId or sessionId' });
+    const userId = req.body.userId as string;
+    const quantityChange = Number(req.body.quantityChange);
+    const listingId = req.params.listingId;
+
+    if (!userId || !listingId || isNaN(quantityChange)) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
+
+    const updatedCart = await cartService.updateCartItemQuantity(userId, listingId, quantityChange);
+    return res.json({ cart: updatedCart });
+  } catch (error) {
+    console.error(`PATCH /cart/${req.params.listingId} error:`, error);
+    return res.status(500).json({ message: 'Failed to update cart item' });
+  }
+});
+
+/**
+ * DELETE /cart/:itemId
+ * Delete a cart item
+ */
+router.delete('/:itemId', async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+    const itemId = req.params.itemId;
+    if (!userId || !itemId) return res.status(400).json({ message: 'Missing userId or itemId' });
+
+    const updatedCart = await cartService.deleteCartItem(userId, itemId);
+    return res.json({ cart: updatedCart });
+  } catch (error) {
+    console.error(`DELETE /cart/${req.params.itemId} error:`, error);
+    return res.status(500).json({ message: 'Failed to delete cart item' });
+  }
+});
+
+/**
+ * GET /cart/wishlist
+ * Fetch saved-for-later items
+ */
+router.get('/wishlist', async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+    if (!userId) return res.status(400).json({ message: 'userId is required' });
+
+    const wishlist = await cartService.getWishlist(userId);
+    return res.json({ wishlist });
+  } catch (error) {
+    console.error('GET /cart/wishlist error:', error);
+    return res.status(500).json({ message: 'Failed to fetch wishlist' });
+  }
+});
+
+/**
+ * PATCH /cart/:itemId/save-for-later
+ * Toggle saved-for-later status
+ */
+router.patch('/:itemId/save-for-later', async (req: Request, res: Response) => {
+  try {
+    const userId = req.body.userId as string;
+    const saveForLater = Boolean(req.body.saveForLater);
+    const itemId = req.params.itemId;
+
+    if (!userId || !itemId) return res.status(400).json({ message: 'Missing userId or itemId' });
+
+    const updatedCart = await cartService.toggleSaveForLater(userId, itemId, saveForLater);
+    return res.json({ cart: updatedCart });
+  } catch (error) {
+    console.error(`PATCH /cart/${req.params.itemId}/save-for-later error:`, error);
+    return res.status(500).json({ message: 'Failed to update saved-for-later status' });
+  }
+});
+
+/**
+ * POST /cart/checkout
+ * Checkout all active cart items
+ */
+router.post('/checkout', async (req: Request, res: Response) => {
+  try {
+    const userId = req.body.userId as string;
+    if (!userId) return res.status(400).json({ message: 'userId is required' });
 
     const result = await cartService.checkout(userId);
-    return sendSuccess(res, '✅ Cart checked out successfully', result);
-  } catch (err) {
-    next(err);
+    return res.json({ result });
+  } catch (error) {
+    console.error('POST /cart/checkout error:', error);
+    return res.status(500).json({ message: 'Checkout failed' });
   }
-};
-export const updateCartItemQuantity = async (
-  req: AuthedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const userId = extractUserId(req);
-    if (!userId) {
-      return res.status(400).json({ message: '❌ Missing userId or sessionId' });
-    }
+});
 
-    const { listingId, quantityChange } = req.body;
-    const updatedCart = await cartService.updateCartItemQuantity(userId, listingId, quantityChange);
-
-    return sendSuccess(res, '✅ Cart item quantity updated', updatedCart);
-  } catch (err) {
-    next(err);
-  }
-};
+export default router;
