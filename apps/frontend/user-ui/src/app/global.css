@@ -819,4 +819,10 @@ summary svg {
   .product-title{
     max-height: calc(1.2em * 3);
   }
+  .banner-heading{
+    font-size: 25px;
+  }
+  .content-para p{
+    font-size: 15px;
+  }
 }

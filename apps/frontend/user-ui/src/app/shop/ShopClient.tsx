@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef  } from 'react';
 import './shop.css';
 import Ramesh from "../../assets/ramesh.png";
 import { useSearchParams } from 'next/navigation';
-import { ChevronDown, AlignJustify, LayoutDashboard, StarIcon } from 'lucide-react';
+import { ChevronDown, AlignJustify, LayoutDashboard, StarIcon,FunnelIcon } from 'lucide-react';
 import Products from '../home-page/products-grid/productsgrid';
 import { categories } from '../../configs/constants';
 import { getAllProducts } from '../../services/productService';
@@ -12,6 +12,7 @@ import Image from 'next/image';
 import type { ProductItem } from '../components/productcard/productcard';
 import ProductTabs from '../home-page/productstabs/ProductTabs';
 import ProductCardSkeleton from '../components/productcard/ProductCardSkeleton';
+import MobileFilterDrawer from './MobileFilterDrawer';
 // Define the Category type used in product.category
 type Category = string | { name: string };
 type ProductWithCategories = ProductItem & {
@@ -21,6 +22,7 @@ type ProductWithCategories = ProductItem & {
 type Seller = { name: string; image: string };
 
 export default function ShopClient() {
+  const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showSellerDropdown, setShowSellerDropdown] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -200,6 +202,11 @@ const filteredProducts = useMemo(() => {
         <div className="shop-filter">
           <div className="shop-left">
             <h3>Filter</h3>
+            <div className="mobile-filter-toggle">
+  <button onClick={() => setShowMobileFilter(true)} className='background-button'><FunnelIcon className='filterbutton' /></button>
+</div>
+
+
             <div className="filter-component">
               <h3
                 className="clear-all"
@@ -304,8 +311,34 @@ const filteredProducts = useMemo(() => {
     )}
   </div>
 )}
-          </div>
 
+          </div>
+<MobileFilterDrawer
+  show={showMobileFilter}
+  onClose={() => setShowMobileFilter(false)}
+  selectedCategory={selectedCategory}
+  selectedSeller={selectedSeller}
+  setSelectedCategory={setSelectedCategory}
+  setSelectedSeller={setSelectedSeller}
+  categories={categories}
+  sellers={sellers}
+/>
+{(selectedCategory || selectedSeller) && (
+  <div className="active-filters-bar mobile-active-filters">
+    {selectedCategory && (
+      <div className="active-filter" onClick={() => setSelectedCategory(null)}>
+        {selectedCategory}
+        <button className="close-filter-btn" onClick={() => setSelectedCategory(null)}>&times;</button>
+      </div>
+    )}
+    {selectedSeller && (
+      <div className="active-filter" onClick={() => setSelectedSeller(null)}>
+        {selectedSeller}
+        <button className="close-filter-btn" onClick={() => setSelectedSeller(null)}>&times;</button>
+      </div>
+    )}
+  </div>
+)}
           <div className="shop-right">
             <div className="filter-grid">
               <LayoutDashboard />
