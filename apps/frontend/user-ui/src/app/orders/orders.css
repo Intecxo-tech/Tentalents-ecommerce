@@ -165,7 +165,8 @@ align-items: flex-start;
     width: 100%;
   }
   .flexcontainer{
-    width: 100%;
+    width: 100% !important;
+    gap:10px;
   }
   .yourorder-header{
     display: flex;
@@ -205,5 +206,19 @@ padding-right: 5px;
     gap:10px;
     align-items: flex-start;
     
+  }
+  .review-button-container{
+    align-items: center;
+    display: flex;
+    margin-top: 0px !important;;
+  }
+  .return-refund-button-container{
+    margin-top: 0px !important;;
+  }
+  .review-button-container .bordered-button{
+    margin:0px;
+  }
+  .rating-stars{
+    gap:3px;
   }
 }
