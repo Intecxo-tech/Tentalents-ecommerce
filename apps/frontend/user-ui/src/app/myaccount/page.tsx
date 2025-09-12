@@ -11,247 +11,227 @@ import toast from 'react-hot-toast';
 import Editbutton from '../../assets/editbutton.png'
 
 const AccountPage = () => {
-  const [profile, setProfile] = useState<any>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    altPhone: '',
-    email: '',
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedAddress, setSelectedAddress] = useState<string | null>(null); // state for selected address
-  const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [updatingProfile, setUpdatingProfile] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    altPhone: '',
+    email: '',
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem('token');
-       console.log('Fetched token:', token);
-      if (!token) {
-        router.push('/login');
-        return;
-      }
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
 
-      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (!res.ok) throw new Error('Failed to fetch profile');
+      if (!res.ok) throw new Error('Failed to fetch profile');
 
-      const data = await res.json();
-      setProfile(data.data);
-      setFormData({
-        name: data.data.name || '',
-        phone: data.data.phone || '',
-        altPhone: data.data.altPhone || '',
-        email: data.data.email || '',
-      });
-    } catch (err: any) {
-      setError(err.message || 'Error fetching profile');
-    } finally {
-      setLoading(false);
-    }
-  };
-// In AccountPage.tsx
+      const data = await res.json();
+      setProfile(data.data);
+      setFormData({
+        name: data.data.name || '',
+        phone: data.data.phone || '',
+        altPhone: data.data.altPhone || '',
+        email: data.data.email || '',
+      });
+    } catch (err: any) {
+      setError(err.message || 'Error fetching profile');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-// In AccountPage.tsx
+  const handleBecomeSeller = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
 
-// In AccountPage.tsx
+      if (profile?.isVendor || profile?.vendorId) {
+        // If already a vendor, redirect to the seller login page with the token for auto-login
+        toast.success('Redirecting to your seller dashboard...');
+        router.push(`https://tentalents-ecommerce45-f8sw.onrender.com/login?token=${token}`);
+        return;
+      }
 
-const handleBecomeSeller = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+      if (!profile?.phone || !profile?.name) {
+        toast.error("Please ensure your profile has a name and phone number.");
+        return;
+      }
 
-    if (profile?.isVendor || profile?.vendorId) {
-      toast.success('Redirecting to your seller dashboard...');
-      router.push(`https://tentalents-ecommerce-seller.vercel.app/dashboard`);
-      return;
-    }
+      const res = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/convert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: profile.name,
+          phone: profile.phone,
+          email: profile.email,
+        }),
+      });
 
-    if (!profile?.phone || !profile?.name) { // Also check for name
-      toast.error("Please ensure your profile has a name and phone number.");
-      return;
-    }
+      const data = await res.json();
 
-    // Call backend to convert user to vendor
-  const res = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/convert`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  },
-  // ✅ THIS IS THE FIX: Send the user's profile data
-  body: JSON.stringify({
-    name: profile.name,
-    phone: profile.phone,
-    email: profile.email,
-  }),
-});
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to convert user to vendor');
+      }
 
-    const data = await res.json();
+      setProfile((prev: any) => ({
+        ...prev,
+        isVendor: true,
+        vendorId: data.data?.id,
+      }));
 
-    // Check if the response from the backend is not OK
-    if (!res.ok) {
-      // Use the error message from the backend response if it exists
-      throw new Error(data.error || 'Failed to convert user to vendor');
-    }
+      if (!data.data?.profileComplete) {
+        toast.success('Complete your vendor profile');
+        router.push(
+          `https://tentalents-ecommerce-seller.vercel.app/signup?vendorId=${data.data?.id}&name=${encodeURIComponent(profile.name)}&phone=${profile.phone}&email=${profile.email}&token=${token}`
+        );
+        return;
+      }
 
-    setProfile((prev: any) => ({
-      ...prev,
-      isVendor: true,
-      vendorId: data.data?.id,
-    }));
+      toast.success('You are now a seller! Redirecting to dashboard...');
+      // ✅ CORRECT: Redirect to the seller's login page with the token
+      router.push(`https://tentalents-ecommerce-seller.vercel.app/login?token=${token}`);
 
-    // If profile is incomplete, redirect to vendor profile completion
-    if (!data.data?.profileComplete) {
-      toast.success('Complete your vendor profile');
-      localStorage.setItem('pendingVendorProfile', JSON.stringify({
-        id: data.data?.id,
-        name: profile.name,
-        phone: profile.phone,
-        email: profile.email,
-      }));
-    router.push(
-  `https://tentalents-ecommerce-seller.vercel.app/signup?vendorId=${data.data?.id}&name=${encodeURIComponent(profile.name)}&phone=${profile.phone}&email=${profile.email}&token=${token}`
-);
+    } catch (err: any) {
+      toast.error(err.message || 'Error becoming a seller');
+      console.error(err);
+    }
+  };
 
-      return;
-    }
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.replace('/login');
+      return;
+    }
+    fetchProfile();
+  }, [router]);
 
-    // Otherwise, redirect to seller dashboard
-    toast.success('You are now a seller! Redirecting to dashboard...');
-    router.push(`https://tentalents-ecommerce-seller.vercel.app/dashboard`);
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
-  } catch (err: any) {
-    // This will now display the clear error from your backend
-    toast.error(err.message || 'Error becoming a seller');
-    console.error(err);
-  }
-};
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    router.push('/login');
+  };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.replace('/login');
-      return;
-      
-    }
+  const vendorId = profile?.vendorId || '';
+  const handleUpdateProfile = async () => {
+    setUpdatingProfile(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
 
-    fetchProfile();
-  }, [router]);
+      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          altPhone: formData.altPhone,
+        }),
+      });
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
+      const contentType = res.headers.get('content-type');
 
-  const handleLogout = () => {
-    localStorage.removeItem('token'); // remove JWT
-    router.push('/login'); // redirect to login page
-  };
+      if (!res.ok) {
+        if (contentType && contentType.includes('application/json')) {
+          const errData = await res.json();
+          throw new Error(errData.message || 'Failed to update profile');
+        } else {
+          const text = await res.text();
+          throw new Error(`Failed to update profile: ${text}`);
+        }
+      }
 
-  const vendorId = profile?.vendorId || '';
-const handleUpdateProfile = async () => {
-  setUpdatingProfile(true);
-  setError(null);
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
+      let updatedData;
+      if (contentType && contentType.includes('application/json')) {
+        updatedData = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(`Unexpected response format: ${text}`);
+      }
 
-    const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
-  method: 'PATCH',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  },
-  body: JSON.stringify({
-    name: formData.name,
-    phone: formData.phone,
-    altPhone: formData.altPhone,
-  }),
-});
+      setProfile(updatedData.data);
+      toast.success('Profile updated successfully!');
 
-const contentType = res.headers.get('content-type');
+    } catch (err: any) {
+      setError(err.message || 'Error updating profile');
+      toast.error(err.message || 'Error updating profile');
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
 
-if (!res.ok) {
-  if (contentType && contentType.includes('application/json')) {
-    const errData = await res.json();
-    throw new Error(errData.message || 'Failed to update profile');
-  } else {
-    const text = await res.text();  // get raw response
-    throw new Error(`Failed to update profile: ${text}`);
-  }
-}
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-let updatedData;
-if (contentType && contentType.includes('application/json')) {
-  updatedData = await res.json();
-} else {
-  const text = await res.text();
-  throw new Error(`Unexpected response format: ${text}`);
-}
+    setUploadingImage(true);
 
-setProfile(updatedData.data);
-toast.success('Profile updated successfully!');
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
 
-  } catch (err: any) {
-    setError(err.message || 'Error updating profile');
-    toast.error(err.message || 'Error updating profile');
-  } finally {
-    setUpdatingProfile(false);
-  }
-};
+      const formData = new FormData();
+      formData.append('avatar', file);
 
-const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile/image`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
-  setUploadingImage(true);
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to upload image');
+      }
 
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-
-    const formData = new FormData();
-  formData.append('avatar', file);
-
-    const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile/image`, {
-     method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.message || 'Failed to upload image');
-    }
-
-    const data = await res.json();
-   setProfile((prev: any) => ({ ...prev, profileImage: data.data.profileImage }));
-    toast.success('Profile image updated');
-  } catch (err: any) {
-    console.error(err);
-    toast.error(err.message || 'Error uploading image');
-  } finally {
-    setUploadingImage(false);
-  }
-};
+      const data = await res.json();
+      setProfile((prev: any) => ({ ...prev, profileImage: data.data.profileImage }));
+      toast.success('Profile image updated');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Error uploading image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   return (
     <div className="accountpage">
