@@ -1,14 +1,17 @@
 import { Router } from 'express';
-import { generateInvoiceAutomatically, downloadInvoice } from '../controllers/invoice.controller';
+import {
+  generateInvoiceAutomatically,
+  downloadInvoice,
+} from '../controllers/invoice.controller';
 import { authMiddleware } from '@shared/auth';
 import { UserRole } from '@shared/types';
 
 const router = Router();
 
 /**
- * @route POST /invoice/generate/:orderId
- * @desc Generate invoice automatically for an order
- * @access Admin only
+ * Generate invoice automatically for an order
+ * POST /api/invoices/generate/:orderId
+ * Access: Admin only
  */
 router.post(
   '/generate/:orderId',
@@ -17,9 +20,9 @@ router.post(
 );
 
 /**
- * @route GET /invoice/download/:orderId
- * @desc Download invoice PDF for an order
- * @access Authenticated users
+ * Download invoice PDF for an order
+ * GET /api/invoices/download/:orderId
+ * Access: Authenticated users
  */
 router.get(
   '/download/:orderId',
