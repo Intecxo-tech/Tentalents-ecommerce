@@ -1,4 +1,4 @@
-import { PDFGenerator, PdfOrder, OrderItem } from '@shared/utils';
+import { generateInvoicePDFBuffer, InvoiceItem, InvoiceData } from '@shared/utils';
 import { uploadToCloudinary } from '@shared/auth';
 import { uploadFileToMinIO } from '@shared/minio';
 import { PrismaClient } from '@prisma/client';
@@ -8,45 +8,51 @@ const bucket = process.env.MINIO_BUCKET || 'invoices';
 
 export const invoiceService = {
   /**
-   * Generate PDF invoice, upload to Cloudinary and MinIO, save in DB
+   * 🧾 Generate invoice PDF, upload to Cloudinary & MinIO, and save in DB.
    */
-  generateInvoicePDF: async (orderData: {
-    orderId: string;
-    userId: string;
-    buyerEmail: string;
-    buyerName?: string;
-    items: { name: string; price: number; quantity: number; savedForLater?: boolean }[];
-    total: number;
-    shippingCost?: number;
-    paymentMethod?: string;
-  }): Promise<{ cloudinaryUrl: string; minioUrl: string }> => {
+  generateInvoice: async (
+    orderId: string
+  ): Promise<{ cloudinaryUrl: string; minioUrl: string }> => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        items: { include: { vendor: true, product: true } },
+        buyer: true,
+      },
+    });
 
-    // Map items to OrderItem for PDF
-    const pdfItems: OrderItem[] = orderData.items.map(i => ({
-      productId: '', // optional
-      name: i.name,
-      quantity: i.quantity,
-      price: i.price,
-      savedForLater: i.savedForLater ?? false,
+    if (!order) throw new Error('Order not found');
+
+    const user = order.buyer;
+    const vendor = order.items[0]?.vendor;
+
+    // Map order items to InvoiceItem[]
+    const items: InvoiceItem[] = order.items.map((item) => ({
+      description: item.product.title,
+      unitPrice: item.unitPrice.toNumber(), // Decimal -> number
+      quantity: item.quantity,
+      taxRate: 0, // default since not in DB
     }));
 
-    const pdfOrder: PdfOrder = {
-      id: orderData.orderId,
-      userId: orderData.userId,
-      userName: orderData.buyerName || 'Customer',
-      userEmail: orderData.buyerEmail,
-      items: pdfItems,
-      status: 'PAID',
-      createdAt: new Date(),
-      shippingCost: orderData.shippingCost,
-      paymentMethod: orderData.paymentMethod,
+    // Prepare invoice data
+    const invoiceData: InvoiceData = {
+      orderId: order.id,
+      customerName: user.name || 'Customer',
+      customerEmail: user.email,
+      billingAddress: user.address || '',
+      shippingAddress: user.address || '',
+      gstNumber: vendor?.gstNumber ?? '',
+      panNumber: vendor?.panNumber ?? '',
+      vendorName: vendor?.name,
+      items,
+      date: order.placedAt.toISOString().split('T')[0],
     };
 
     // Generate PDF
-    const pdfBuffer = await PDFGenerator.generate(pdfOrder);
-    const filename = `tentalents-invoice-${orderData.orderId}.pdf`;
+    const pdfBuffer = await generateInvoicePDFBuffer(invoiceData);
+    const filename = `tentalents-invoice-${order.id}.pdf`;
 
-    // Upload PDF to Cloudinary
+    // Upload to Cloudinary
     const cloudinaryUrl = await uploadToCloudinary(
       pdfBuffer,
       'invoices',
@@ -54,7 +60,7 @@ export const invoiceService = {
       'application/pdf'
     );
 
-    // Upload PDF to MinIO
+    // Upload to MinIO
     const minioUrl = await uploadFileToMinIO({
       content: pdfBuffer,
       objectName: `invoices/${filename}`,
@@ -62,29 +68,18 @@ export const invoiceService = {
       contentType: 'application/pdf',
     });
 
-    // Check if invoice exists in DB
-    const existingInvoice = await prisma.invoice.findUnique({
-      where: { orderId: orderData.orderId },
-    });
-
+    // Save invoice in DB
+    const existingInvoice = await prisma.invoice.findUnique({ where: { orderId: order.id } });
     if (existingInvoice) {
-      // Update pdfUrl only
       await prisma.invoice.update({
         where: { id: existingInvoice.id },
         data: { pdfUrl: cloudinaryUrl },
       });
     } else {
-      // Fetch vendorId from first order item
-      const orderItem = await prisma.orderItem.findFirst({
-        where: { orderId: orderData.orderId },
-        include: { vendor: true },
-      });
-      const vendorId = orderItem?.vendor?.id || '';
-
       await prisma.invoice.create({
         data: {
-          orderId: orderData.orderId,
-          vendorId,
+          orderId: order.id,
+          vendorId: vendor?.id,
           pdfUrl: cloudinaryUrl,
           issuedAt: new Date(),
         },
@@ -95,7 +90,7 @@ export const invoiceService = {
   },
 
   /**
-   * Get invoice PDF URL from DB
+   * 📄 Get invoice PDF URL from DB
    */
   getInvoiceFile: async (orderId: string): Promise<string> => {
     const invoice = await prisma.invoice.findUnique({ where: { orderId } });
