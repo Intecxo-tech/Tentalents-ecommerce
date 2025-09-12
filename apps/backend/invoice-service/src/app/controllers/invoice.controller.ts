@@ -10,14 +10,14 @@ const prisma = new PrismaClient();
 
 /**
  * 📄 Generate invoice automatically for an order
- * Supports regeneration, uploads to Cloudinary & MinIO, saves DB, emails buyer
+ * Fetches order, buyer, vendor info and generates professional PDF
  */
 export async function generateInvoiceAutomatically(req: Request, res: Response) {
   const { orderId } = req.params;
   const regenerate = req.query.regenerate === 'true';
 
   try {
-    // Check if invoice already exists
+    // Check existing invoice
     let existingInvoice = await prisma.invoice.findUnique({ where: { orderId } });
     if (existingInvoice && !regenerate) {
       return res.status(200).json({
@@ -27,11 +27,11 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       });
     }
 
-    // Fetch order with buyer and vendor info
+    // Fetch order, buyer, vendor, and items
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        items: { include: { vendor: true, product: true } },
+        items: { include: { product: true, vendor: true } },
         buyer: true,
       },
     });
@@ -40,46 +40,41 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
     if (!order.items?.length) return res.status(400).json({ error: 'Order has no items' });
 
     const buyer = order.buyer;
-    if (!buyer || !buyer.email) return res.status(400).json({ error: 'Buyer email not found' });
+    if (!buyer?.email) return res.status(400).json({ error: 'Buyer email missing' });
 
     const vendor = order.items[0].vendor;
     if (!vendor) return res.status(400).json({ error: 'Vendor info missing' });
 
-    // Use buyer address (schema only has buyer.address)
-    const userAddress = buyer.address || 'Address not provided';
-    const vendorAddress = vendor.address || 'Address not provided';
-
-    // Prepare InvoiceData for PDF generation
+    // Prepare invoice data
     const invoiceItems: InvoiceItem[] = order.items.map((i) => ({
       description: i.product?.title || 'Product',
       unitPrice: Number(i.unitPrice),
       quantity: i.quantity,
-      taxRate: 0, // adjust if you have tax
+      taxRate: 0,
     }));
 
     const invoiceData: InvoiceData = {
       orderId: order.id,
       customerName: buyer.name || 'Customer',
       customerEmail: buyer.email,
-      billingAddress: userAddress,
-      shippingAddress: userAddress,
+      billingAddress: buyer.address || 'Address not provided',
+      shippingAddress: buyer.address || 'Address not provided',
       vendorName: vendor.name,
-      vendorAddress: vendorAddress,
+      vendorAddress: vendor.address || 'Address not provided',
       gstNumber: vendor.gstNumber || '',
       panNumber: vendor.panNumber || '',
       items: invoiceItems,
       date: new Date().toISOString().split('T')[0],
     };
 
-    // Generate PDF buffer
+    // Generate PDF
     const pdfBuffer = await generateInvoicePDFBuffer(invoiceData);
-
     const uniqueFilename = `invoice-${orderId}-${Date.now()}.pdf`;
 
-    // Upload PDF to Cloudinary
+    // Upload to Cloudinary
     const cloudinaryUrl = await uploadToCloudinary(pdfBuffer, 'invoices', uniqueFilename, 'application/pdf');
 
-    // Upload PDF to MinIO
+    // Upload to MinIO
     const minioUrl = await uploadFileToMinIO({
       content: pdfBuffer,
       objectName: `invoices/${uniqueFilename}`,
@@ -87,7 +82,7 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
       contentType: 'application/pdf',
     });
 
-    // Save or update invoice in DB (no filename field)
+    // Save or update DB invoice
     if (existingInvoice && regenerate) {
       existingInvoice = await prisma.invoice.update({
         where: { id: existingInvoice.id },
@@ -133,7 +128,8 @@ export async function generateInvoiceAutomatically(req: Request, res: Response) 
 }
 
 /**
- * 📥 Download invoice by orderId (MinIO primary, Cloudinary fallback)
+ * 📥 Download invoice PDF
+ * MinIO primary, Cloudinary fallback
  */
 export async function downloadInvoice(req: Request, res: Response) {
   const { orderId } = req.params;
