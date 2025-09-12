@@ -29,7 +29,7 @@
     
 }
 .accountpage-right .menu-left button{
-    padding:10px 45px;
+    padding:10px 50px;
     justify-content: space-between;
   
    
@@ -41,14 +41,17 @@
     justify-content: center;
     flex-direction: column;
  background-color: #D2CDFF;
+ gap:10px;
  margin:20px;
 }
 .menu-left .background-button{
 
     margin: 15px 5px;
        margin-top: 0px ;
+     padding: 10px 50px;
 
 }
+
 .bankheading{
     display: flex;
     align-items: center;

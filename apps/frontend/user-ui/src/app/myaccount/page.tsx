@@ -69,7 +69,7 @@ const AccountPage = () => {
       if (profile?.isVendor || profile?.vendorId) {
         // If already a vendor, redirect to the seller login page with the token for auto-login
         toast.success('Redirecting to your seller dashboard...');
-        router.push(`https://tentalents-ecommerce45-f8sw.onrender.com/login?token=${token}`);
+        router.push(`http://localhost:3000/login?token=${token}`);
         return;
       }
 
