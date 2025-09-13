@@ -1,0 +1,64 @@
+.vendordeatil{
+    display:flex;
+    align-items: flex-start;
+    justify-content:flex-start;
+    gap:10px;
+}
+.stars{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap:5px;
+}
+.head{
+color:#797979;
+}
+.vendorname{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:15px;
+}
+.catrgoies{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.catrgoryname{
+    color: #12009D;
+    background-color: #F3F2FF;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 13px;
+}
+.first-column{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.leftsidetext{
+    color:#222222;
+    /* font-size: 18px;; */
+    padding-right: 5px;;
+}
+.first-column p,.vendorbottom p{
+    color: #AFAFAF;
+    font-size: 16px;
+    ;
+
+}
+.productslist{
+    color: grey;
+    font-size: 13px;
+    ;
+}
+.vendorleft img{
+    border-radius: 10px !important;
+    width: 90px;
+    height:90px;}
+    .cardstyles{
+        border: 1px solid #D8D8D8;
+        background-color: white;
+        padding: 10px;;
+        border-radius: 10px;
+    }

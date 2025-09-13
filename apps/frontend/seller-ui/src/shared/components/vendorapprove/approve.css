@@ -1,0 +1,26 @@
+.details {
+  padding: 10px;
+  border: 1px solid grey;
+  border-radius: 10px;
+}
+.info-table{
+    width: 100%;
+}
+.info-table tr .rightsidebar {
+    color: #797979;
+  text-align: right;  /* ✅ Aligns content to the right inside the cell */
+}
+.personalbox{
+    margin-bottom: 15px;;
+}
+.buttons{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap:10px;
+}
+.approvalcontainer{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

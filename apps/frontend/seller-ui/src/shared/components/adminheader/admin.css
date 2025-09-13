@@ -1,0 +1,26 @@
+.swicthtab{
+    display:flex;
+    align-items: center;
+    justify-content: space-around;
+    gap:10px;
+}
+
+.switch{
+    border: 1px solid var(--primary);
+    border-radius: 10px;
+    ;
+}
+.swicthtab p{
+    padding: 10px 20px;
+}
+.adminheader{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.leftside{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:10px;
+}

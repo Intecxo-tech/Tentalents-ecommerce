@@ -28,6 +28,12 @@
       "static/chunks/main-app.js",
       "static/css/app/(routes)/dashboard/myaccount/page.css",
       "static/chunks/app/(routes)/dashboard/myaccount/page.js"
+    ],
+    "/(routes)/dashboard/home/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(routes)/dashboard/home/page.css",
+      "static/chunks/app/(routes)/dashboard/home/page.js"
     ]
   }
 }
