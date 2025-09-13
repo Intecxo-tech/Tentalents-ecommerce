@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { generateInvoicePDFBuffer, InvoiceData, InvoiceItem } from '@shared/utils';
-import { minioClient, uploadFileToMinIO, MinioBuckets, MinioFolderPaths } from '@shared/minio';
+import { minioClient, uploadFileToMinIO, MinioBuckets } from '@shared/minio';
 import { uploadToCloudinary } from '@shared/auth';
 import nodemailer from 'nodemailer';
 import { env } from '@shared/config';
-import { AuthPayload, isAdmin, ROLES } from '@shared/auth';
+import { AuthPayload, isAdmin } from '@shared/auth';
 
 const prisma = new PrismaClient();
 
@@ -154,11 +154,9 @@ export async function downloadInvoice(req: AuthRequest, res: Response) {
       return res.status(403).json({ error: 'Forbidden: You cannot download this invoice' });
     }
 
-    // MinIO path
-    const objectName = `${MinioFolderPaths.INVOICE_PDFS}${userId}/${orderId}.pdf`;
-
+    // Try MinIO first
     try {
-      const minioStream = await minioClient.getObject(MinioBuckets.INVOICE, objectName);
+      const minioStream = await minioClient.getObject(MinioBuckets.INVOICE, `invoices/invoice-${orderId}.pdf`);
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=invoice-${orderId}.pdf`);
       return minioStream.pipe(res);
