@@ -10,6 +10,7 @@ export interface InvoiceItem {
 }
 
 export interface InvoiceData {
+  invoiceNumber: string; // required unique invoice number
   orderId: string;
   customerName: string;
   customerEmail: string;
@@ -21,6 +22,7 @@ export interface InvoiceData {
   panNumber: string;
   items: InvoiceItem[];
   date: string;
+  logoUrl?: string; // optional company logo
 }
 
 export async function generateInvoicePDFBuffer(invoice: InvoiceData): Promise<Buffer> {
@@ -32,7 +34,17 @@ export async function generateInvoicePDFBuffer(invoice: InvoiceData): Promise<Bu
       doc.on('end', () => resolve(Buffer.concat(buffers)));
 
       // ---- HEADER ----
-      doc.fontSize(22).font('Helvetica-Bold').text('Tentalents', { align: 'center' });
+      if (invoice.logoUrl) {
+        try {
+          const arrayBuffer = await fetch(invoice.logoUrl).then(res => res.arrayBuffer());
+          const logoBuffer = Buffer.from(arrayBuffer); // convert ArrayBuffer to Buffer
+          doc.image(logoBuffer, 50, 45, { width: 100 });
+        } catch {
+          console.warn('⚠️ Logo fetch failed');
+        }
+      }
+
+      doc.fontSize(22).font('Helvetica-Bold').text('Tentalents', 0, 50, { align: 'center' });
       doc.fontSize(10).text('Empowering E-Commerce Solutions Worldwide', { align: 'center' });
       doc.moveDown(0.5);
       doc.fontSize(14).font('Helvetica-Bold')
@@ -49,7 +61,6 @@ export async function generateInvoicePDFBuffer(invoice: InvoiceData): Promise<Bu
           includetext: true,
           textxalign: 'center',
         });
-        // Top-right corner
         doc.image(barcodePng, doc.page.width - 180, 50, { width: 150, height: 50 });
       } catch (err) {
         console.warn('⚠️ Barcode generation failed:', err);
@@ -57,15 +68,18 @@ export async function generateInvoicePDFBuffer(invoice: InvoiceData): Promise<Bu
 
       // ---- CUSTOMER & VENDOR INFO ----
       const colWidth = 250;
-      doc.fontSize(12).font('Helvetica-Bold').text('Billing Address:');
-      doc.fontSize(10).font('Helvetica').text(`${invoice.customerName}\n${invoice.billingAddress}`, { width: colWidth });
+      doc.fontSize(12).font('Helvetica-Bold').text('Billing Address:', 50, 150);
+      doc.fontSize(10).font('Helvetica')
+        .text(`${invoice.customerName}\n${invoice.billingAddress}`, 50, doc.y, { width: colWidth });
       doc.moveDown(0.5);
-      doc.fontSize(12).font('Helvetica-Bold').text('Shipping Address:');
-      doc.fontSize(10).font('Helvetica').text(`${invoice.customerName}\n${invoice.shippingAddress}`, { width: colWidth });
+
+      doc.fontSize(12).font('Helvetica-Bold').text('Shipping Address:', 350, 150);
+      doc.fontSize(10).font('Helvetica')
+        .text(`${invoice.customerName}\n${invoice.shippingAddress}`, 350, doc.y, { width: colWidth });
       doc.moveDown(1);
 
       if (invoice.vendorName || invoice.vendorAddress || invoice.gstNumber || invoice.panNumber) {
-        doc.fontSize(12).font('Helvetica-Bold').text('Sold By / Vendor Information:');
+        doc.fontSize(12).font('Helvetica-Bold').text('Vendor Information:', 50);
         if (invoice.vendorName) doc.fontSize(10).text(`Name: ${invoice.vendorName}`);
         if (invoice.vendorAddress) doc.text(`Address: ${invoice.vendorAddress}`, { width: colWidth });
         if (invoice.gstNumber) doc.text(`GSTIN: ${invoice.gstNumber}`);
@@ -74,7 +88,8 @@ export async function generateInvoicePDFBuffer(invoice: InvoiceData): Promise<Bu
       }
 
       // ---- INVOICE META ----
-      doc.fontSize(10).text(`Invoice Date: ${invoice.date}`);
+      doc.fontSize(10).text(`Invoice Number: ${invoice.invoiceNumber}`, 50);
+      doc.text(`Invoice Date: ${invoice.date}`);
       doc.text(`Order ID: ${invoice.orderId}`);
       doc.moveDown(1);
 
@@ -89,6 +104,7 @@ export async function generateInvoicePDFBuffer(invoice: InvoiceData): Promise<Bu
         .text('Net Amt', itemCol.net, tableTop, { width: 40, align: 'right' })
         .text('Tax', itemCol.tax, tableTop, { width: 50, align: 'right' })
         .text('Total', itemCol.total, tableTop, { width: 60, align: 'right' });
+
       doc.moveTo(50, tableTop + 15).lineTo(doc.page.width - 50, tableTop + 15).stroke();
 
       // ---- TABLE ROWS ----
@@ -101,6 +117,12 @@ export async function generateInvoicePDFBuffer(invoice: InvoiceData): Promise<Bu
         grandTotal += total;
 
         if (y + 20 > 750) { doc.addPage(); y = 50; }
+
+        // Alternating row colors
+        if (i % 2 === 0) {
+          doc.rect(50, y - 2, doc.page.width - 100, 20).fillOpacity(0.1).fillAndStroke('#f2f2f2', '#f2f2f2');
+          doc.fillColor('black');
+        }
 
         doc.fontSize(10).font('Helvetica')
           .text((i + 1).toString(), itemCol.sl, y)
@@ -115,18 +137,37 @@ export async function generateInvoicePDFBuffer(invoice: InvoiceData): Promise<Bu
       });
 
       // ---- GRAND TOTAL ----
+      const subtotal = invoice.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+      const totalTax = grandTotal - subtotal;
+
       doc.moveTo(50, y + 5).lineTo(doc.page.width - 50, y + 5).stroke();
+      doc.fontSize(10).font('Helvetica-Bold')
+        .text('Subtotal:', 460, y + 15)
+        .text(subtotal.toFixed(2), 550, y + 15, { width: 60, align: 'right' });
+      doc.text('Total Tax:', 460, y + 30)
+        .text(totalTax.toFixed(2), 550, y + 30, { width: 60, align: 'right' });
       doc.fontSize(12).font('Helvetica-Bold')
-        .text('Grand Total:', 430, y + 15)
-        .text(grandTotal.toFixed(2), 550, y + 15, { width: 60, align: 'right' });
+        .text('Grand Total:', 460, y + 50)
+        .text(grandTotal.toFixed(2), 550, y + 50, { width: 60, align: 'right' });
 
       // ---- AMOUNT IN WORDS ----
       const amountWords = toWords(Math.floor(grandTotal)).replace(/^\w/, (c) => c.toUpperCase());
-      doc.moveDown(2).fontSize(10).font('Helvetica-Bold').text(`Amount in words: ${amountWords} only`, { align: 'center' });
+      doc.moveDown(2).fontSize(10).font('Helvetica-Bold')
+        .text(`Amount in words: ${amountWords} only`, { align: 'center' });
 
       // ---- FOOTER ----
-      doc.moveDown(2).fontSize(10).font('Helvetica-Oblique')
-        .text('This is a computer-generated invoice and does not require a physical signature. Thank you for choosing Tentalents.', { align: 'center' });
+      const footerY = doc.page.height - 50;
+      doc.fontSize(10).font('Helvetica-Oblique')
+        .text('Thank you for choosing Tentalents! We appreciate your business.', 0, footerY, { align: 'center' });
+
+      // ---- PAGE NUMBER ----
+      let pageNumber = 1;
+      doc.fontSize(8).text(`Page ${pageNumber}`, 50, doc.page.height - 30, { align: 'center' });
+
+      doc.on('pageAdded', () => {
+        pageNumber++;
+        doc.fontSize(8).text(`Page ${pageNumber}`, 50, doc.page.height - 30, { align: 'center' });
+      });
 
       doc.end();
     } catch (err) {

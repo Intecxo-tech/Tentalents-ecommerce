@@ -34,17 +34,19 @@ export const invoiceService = {
     }));
 
     const invoiceData: InvoiceData = {
-      orderId: order.id,
-      customerName: user.name || 'Customer',
-      customerEmail: user.email,
-      billingAddress: user.address || '',
-      shippingAddress: user.address || '',
-      gstNumber: vendor?.gstNumber ?? '',
-      panNumber: vendor?.panNumber ?? '',
-      vendorName: vendor?.name,
-      items,
-      date: order.placedAt.toISOString().split('T')[0],
-    };
+  invoiceNumber: `INV-${Date.now()}`, // <-- add this line
+  orderId: order.id,
+  customerName: user.name || 'Customer',
+  customerEmail: user.email,
+  billingAddress: user.address || '',
+  shippingAddress: user.address || '',
+  gstNumber: vendor?.gstNumber ?? '',
+  panNumber: vendor?.panNumber ?? '',
+  vendorName: vendor?.name,
+  items,
+  date: order.placedAt.toISOString().split('T')[0],
+};
+
 
     // Generate PDF
     const pdfBuffer = await generateInvoicePDFBuffer(invoiceData);
