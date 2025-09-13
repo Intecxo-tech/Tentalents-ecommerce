@@ -8,10 +8,10 @@ declare module 'express' {
   }
 }
 
-export function authMiddleware(
-  allowedRoles?: UserRole | UserRole[],
-  secret: string = process.env['JWT_SECRET']!
-) {
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) throw new Error('JWT_SECRET not set');
+
+export function authMiddleware(allowedRoles?: UserRole | UserRole[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
@@ -22,16 +22,14 @@ export function authMiddleware(
     const token = authHeader.split(' ')[1];
 
     try {
-      const decoded = verifyToken(token, secret) as AuthPayload;
+      const decoded = verifyToken(token, JWT_SECRET);
       req.user = decoded;
 
       if (allowedRoles) {
         const allowed = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
         const userRoles = Array.isArray(req.user.role) ? req.user.role : [req.user.role];
 
-        // No VENDOR/SELLER mapping needed, just use UserRole
         const hasAccess = userRoles.some(r => allowed.includes(r as UserRole));
-
         if (!hasAccess) {
           return res.status(403).json({
             message: 'Forbidden',
@@ -43,7 +41,8 @@ export function authMiddleware(
       next();
     } catch (err: any) {
       console.error('Token verification failed', err);
-      return res.status(403).json({ message: 'Invalid or expired token' });
+      if (err.name === 'TokenExpiredError') return res.status(401).json({ message: 'Token expired' });
+      return res.status(403).json({ message: 'Invalid token' });
     }
   };
 }
