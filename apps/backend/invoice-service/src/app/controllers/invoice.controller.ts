@@ -79,15 +79,16 @@ export async function generateInvoiceAutomatically(req: AuthRequest, res: Respon
 
     // Generate PDF
     const pdfBuffer = await generateInvoicePDFBuffer(invoiceData);
-    const uniqueFilename = `invoice-${orderId}-${Date.now()}.pdf`;
+    const filename = `invoice-${orderId}.pdf`;
+    const minioObjectName = `invoices/${filename}`;
 
     // Upload to Cloudinary
-    const cloudinaryUrl = await uploadToCloudinary(pdfBuffer, 'invoices', uniqueFilename, 'application/pdf');
+    const cloudinaryUrl = await uploadToCloudinary(pdfBuffer, 'invoices', filename, 'application/pdf');
 
     // Upload to MinIO
     const minioUrl = await uploadFileToMinIO({
       content: pdfBuffer,
-      objectName: `invoices/${uniqueFilename}`,
+      objectName: minioObjectName,
       bucketName: MinioBuckets.INVOICE,
       contentType: 'application/pdf',
     });
@@ -115,7 +116,7 @@ export async function generateInvoiceAutomatically(req: AuthRequest, res: Respon
       to: buyer.email,
       subject: `Invoice for Order ${order.id}`,
       html: `<p>Dear ${buyer.name || 'Customer'},</p><p>Please find your invoice attached.</p>`,
-      attachments: [{ filename: uniqueFilename, content: pdfBuffer, contentType: 'application/pdf' }],
+      attachments: [{ filename, content: pdfBuffer, contentType: 'application/pdf' }],
     });
 
     return res.status(201).json({
@@ -154,17 +155,20 @@ export async function downloadInvoice(req: AuthRequest, res: Response) {
       return res.status(403).json({ error: 'Forbidden: You cannot download this invoice' });
     }
 
+    const filename = `invoice-${orderId}.pdf`;
+    const minioObjectName = `invoices/${filename}`;
+
     // Try MinIO first
     try {
-      const minioStream = await minioClient.getObject(MinioBuckets.INVOICE, `invoices/invoice-${orderId}.pdf`);
+      const minioStream = await minioClient.getObject(MinioBuckets.INVOICE, minioObjectName);
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=invoice-${orderId}.pdf`);
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
       return minioStream.pipe(res);
     } catch (minioErr) {
       console.warn('⚠️ MinIO fetch failed, falling back to Cloudinary:', minioErr);
 
       if (invoice.pdfUrl) {
-        const cloudinaryUrl = `${invoice.pdfUrl}?response-content-disposition=attachment;filename=invoice-${orderId}.pdf`;
+        const cloudinaryUrl = `${invoice.pdfUrl}?response-content-disposition=attachment;filename=${filename}`;
         return res.redirect(cloudinaryUrl);
       }
 
