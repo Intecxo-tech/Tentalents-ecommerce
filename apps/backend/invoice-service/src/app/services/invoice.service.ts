@@ -12,7 +12,7 @@ export const invoiceService = {
    */
   generateInvoice: async (
     orderId: string
-  ): Promise<{ cloudinaryUrl: string; minioUrl: string }> => {
+  ): Promise<{ cloudinaryUrl: string; minioUrl: string; pdfBuffer: Buffer }> => {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -26,15 +26,13 @@ export const invoiceService = {
     const user = order.buyer;
     const vendor = order.items[0]?.vendor;
 
-    // Map order items to InvoiceItem[]
     const items: InvoiceItem[] = order.items.map((item) => ({
       description: item.product.title,
-      unitPrice: item.unitPrice.toNumber(), // Decimal -> number
+      unitPrice: item.unitPrice.toNumber(),
       quantity: item.quantity,
-      taxRate: 0, // default since not in DB
+      taxRate: 0,
     }));
 
-    // Prepare invoice data
     const invoiceData: InvoiceData = {
       orderId: order.id,
       customerName: user.name || 'Customer',
@@ -86,7 +84,7 @@ export const invoiceService = {
       });
     }
 
-    return { cloudinaryUrl, minioUrl };
+    return { cloudinaryUrl, minioUrl, pdfBuffer };
   },
 
   /**

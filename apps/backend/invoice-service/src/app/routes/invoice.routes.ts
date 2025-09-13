@@ -12,6 +12,9 @@ const router = Router();
  * Generate invoice automatically for an order
  * POST /api/invoices/generate/:orderId
  * Access: Admin only
+ * - Admin triggers invoice generation
+ * - Generates PDF, uploads to MinIO & Cloudinary
+ * - Stores invoice in DB and emails buyer
  */
 router.post(
   '/generate/:orderId',
@@ -24,6 +27,8 @@ router.post(
  * GET /api/invoices/download/:orderId
  * Access: Buyer or Admin
  * - Buyers can only download their own invoices
+ * - Admin can download any invoice
+ * - Streams PDF from MinIO, or fallback to Cloudinary
  */
 router.get(
   '/download/:orderId',
