@@ -214,10 +214,10 @@ const fetchCartCount = useCallback(async () => {
 </Link>
 
             </div>
-            <div className="location">
+            {/* <div className="location">
               <MapPin className="icon5" size={20} />
               <p>Bhandup‑West, Mumbai‑78</p>
-            </div>
+            </div> */}
           </div>
 
           <div className='header-right'>
@@ -351,10 +351,11 @@ const fetchCartCount = useCallback(async () => {
                 <div className="menu-dropdown" style={{ position: 'absolute', top: '30px', right: 0, zIndex: 1000 }}>
                   <div className="menu-left">
                     <Image src={Tenanlents} alt="User" className="menu-image" />
-                    <button className="seller-button">
+                  <Link href="https://tentalents-ecommerce-seller.vercel.app/login"><button className="seller-button">
                       Become a Seller
                       <ChevronRight size={20} className="chevron-white" />
                     </button>
+                    </Link>  
                   </div>
 
                   <div className="menu-right">

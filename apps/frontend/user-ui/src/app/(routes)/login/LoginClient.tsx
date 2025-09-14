@@ -42,7 +42,7 @@ const LoginClient = () => {
         const decoded: any = jwtDecode(token);
         const isExpired = decoded.exp * 1000 < Date.now();
         if (!isExpired) {
-          router.replace('/myaccount');
+          router.replace('/shop');
         } else {
           localStorage.removeItem('token'); // remove expired token
         }
