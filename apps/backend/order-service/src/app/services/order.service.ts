@@ -379,6 +379,30 @@ console.log(`🛒 Cart cleared for user: ${buyerId}`);
   },
 
   // ...existing methods
+getAllOrdersAdmin: async () => {
+  return prisma.order.findMany({
+    include: {
+      items: {
+        include: {
+          product: true,
+          vendor: true,
+        },
+      },
+      buyer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profileImage: true, 
+        },
+      },
+      shippingAddress: true,
+    },
+    orderBy: {
+      placedAt: 'desc',
+    },
+  });
+},
 
 cancelOrder: async (orderId: string, buyerId: string) => {
   const order = await prisma.order.findUnique({

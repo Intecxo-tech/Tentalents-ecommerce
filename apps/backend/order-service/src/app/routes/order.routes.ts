@@ -13,7 +13,8 @@ import {
   createReturnRequest,
   getReturnRequestsByUser,
   updateReturnRequestStatus,
-   cancelOrder
+   cancelOrder,
+   getAllOrdersAdmin
  
 } from '../controllers/order.controller';
 import { authMiddleware, requireRole } from '@shared/auth';
@@ -28,12 +29,14 @@ const upload = multer({
     cb(null, true);
   },
 });
+
 const router = Router();
 router.get(
   '/addresses',
   authMiddleware(['buyer', 'buyer_seller']),  // Ensure the user is authenticated
   getUserAddresses  // Fetch all addresses for the authenticated user
 );
+router.get('/order', getAllOrdersAdmin);
 router.post(
   '/return-request',
   authMiddleware(['buyer', 'buyer_seller']),  // ✅ Add this

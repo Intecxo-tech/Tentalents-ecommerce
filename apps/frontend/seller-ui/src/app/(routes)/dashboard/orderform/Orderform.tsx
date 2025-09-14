@@ -103,7 +103,7 @@ const FullOrderPage = ({ selectedOrderId, onClose, selectedOrderGroup }: FullOrd
                   Close
                 </button>
               </div>
-<div className="ordercomponent">
+        <div className="ordercomponent">
               <div className="ordercard">
                 <div className="orderpage-headerleft">
                   <p className="ordervalue border-grey">

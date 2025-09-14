@@ -24,6 +24,7 @@ const nextConfig = {
       'encrypted-tbn0.gstatic.com',
       'images.meesho.com',
       'gravatar.com',
+      'ui-avatars.com',
       'example.com',
       'image.made-in-china.com',
       'cdn.moglix.com',

@@ -7,6 +7,7 @@ import {
   updateVendor,
   getVendorById,
     updateBankDetailsController,
+
   getAllVendors,
   deleteVendor,
   uploadVendorDocuments,
@@ -77,6 +78,7 @@ router.post(
   upload.array('documents'),
   uploadVendorDocuments
 );
+
 
 router.patch('/:id/approve', authMiddleware(UserRole.ADMIN), approveVendor);
 router.patch('/:id/reject', authMiddleware(UserRole.ADMIN), rejectVendor);

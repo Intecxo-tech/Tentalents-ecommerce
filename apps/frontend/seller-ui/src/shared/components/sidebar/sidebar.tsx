@@ -13,6 +13,7 @@ import { jwtDecode } from 'jwt-decode';
 interface SideBarWrapperProps {
   isMobileMenuOpen: boolean;
   onCloseMobileMenu: () => void;
+    userRole: string | null; 
 }
 type Vendor = {
   id: string;
@@ -20,7 +21,7 @@ type Vendor = {
   email: string;
   profileImage: string | null;
 };
-const SideBarWrapper = ({ isMobileMenuOpen, onCloseMobileMenu }: SideBarWrapperProps) => {
+const SideBarWrapper = ({ isMobileMenuOpen, onCloseMobileMenu, userRole }: SideBarWrapperProps) => {
   const { activeSidebar, setActiveSidebar } = useSidebar();
   const [vendor, setVendor] = useState<Vendor | null>(null);
 const [error, setError] = useState<string | null>(null);
@@ -72,60 +73,91 @@ const [error, setError] = useState<string | null>(null);
 }, []);
 
   const SidebarContent = () => (
-    <>
-      {/* LOGO + Close Button (visible on mobile) */}
-      <div className="sidebar-header">
-        <Link href="/">
-          <span className="logo">Tentalents</span>
-        </Link>
-        <button className="close-button" onClick={onCloseMobileMenu}>
-          <X size={24} />
-        </button>
-      </div>
+  <>
+    <div className="sidebar-header">
+      <Link href="/">
+        <span className="logo">Tentalents</span>
+      </Link>
+      <button className="close-button" onClick={onCloseMobileMenu}>
+        <X size={24} />
+      </button>
+    </div>
 
-      <div className="main">
-        <Link href="/dashboard">
-        <div className="itemsec">
-          <Home color={getIconColor('/')} />
-          Home
-        </div>
-        </Link>
-        <Link href="/dashboard/store">
-        <div className="itemsec">
-          <BoxIcon color={getIconColor('/store')} />
-          Store
-        </div>
-        </Link>
-        <Link href='/dashboard/myaccount'>
-        <div className="itemsec">
-          <CircleUser color={getIconColor('/account')} />
-          Account
-        </div>
-        </Link>
-        <Link href="/dashboard/support">
-        <div className="itemsec">
-          <RiCustomerService2Line className="customer-support" color={getIconColor('/support')} />
-          Support
-        </div>
-        </Link>
-      </div>
+    <div className="main">
+      {userRole === 'admin' ? (
+        <>
+          <Link href="/dashboard">
+            <div className="itemsec">
+              <Home color={getIconColor('/admin/dashboard')} />
+              Home
+            </div>
+          </Link>
+          <Link href="/dashboard/orders">
+            <div className="itemsec">
+              <BoxIcon color={getIconColor('/admin/orders')} />
+              Orders
+            </div>
+          </Link>
+          <Link href="/dashboard/approve">
+            <div className="itemsec">
+              <BoxIcon color={getIconColor('/admin/approvals')} />
+              Approvals
+            </div>
+          </Link>
+          <Link href="/dashboard/myaccount">
+            <div className="itemsec">
+              <CircleUser color={getIconColor('/admin/myaccount')} />
+              My Account
+            </div>
+          </Link>
+        </>
+      ) : (
+        <>
+          <Link href="/dashboard">
+            <div className="itemsec">
+              <Home color={getIconColor('/dashboard')} />
+              Home
+            </div>
+          </Link>
+          <Link href="/dashboard/store">
+            <div className="itemsec">
+              <BoxIcon color={getIconColor('/dashboard/store')} />
+              Store
+            </div>
+          </Link>
+          <Link href="/dashboard/myaccount">
+            <div className="itemsec">
+              <CircleUser color={getIconColor('/dashboard/myaccount')} />
+              My Account
+            </div>
+          </Link>
+          <Link href="/dashboard/support">
+            <div className="itemsec">
+              <RiCustomerService2Line color={getIconColor('/dashboard/support')} />
+              Support
+            </div>
+          </Link>
+        </>
+      )}
+    </div>
 
+    {userRole === 'vendor' && vendor && (
       <div className="sellerinfo">
-  <div className="sellerimage">
-    <Image
-      src={vendor?.profileImage || Seller}
-      alt="Seller Profile"
-      width={40}
-      height={40}
-    />
-  </div>
-  <div className="seller-info">
-    <h1 className="sellerheading">{vendor?.name || 'Loading...'}</h1>
-    <p className="selleremail">{vendor?.email || ''}</p>
-  </div>
-</div>
-
-    </>
+        <div className="sellerimage">
+          <Image
+            src={vendor.profileImage || Seller}
+            alt="Seller Profile"
+            width={40}
+            height={40}
+          />
+        </div>
+        <div className="seller-info">
+          <h1 className="sellerheading">{vendor.name}</h1>
+          <p className="selleremail">{vendor.email}</p>
+        </div>
+      </div>
+    )}
+  </>
   );
 
   return (

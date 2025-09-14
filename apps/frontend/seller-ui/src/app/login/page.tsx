@@ -37,26 +37,35 @@ const Login = () => {
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
-    if (urlToken) {
-      try {
-        const decoded: any = jwtDecode(urlToken);
-        const isExpired = decoded.exp * 1000 < Date.now();
-        if (!isExpired) {
-          localStorage.setItem('token', urlToken);
-          if (decoded.vendorId) {
-            localStorage.setItem('vendorId', decoded.vendorId);
-          }
-          toast.success('Login successful!');
-          router.push('/dashboard/myaccount');
-          return;
-        } else {
-          toast.error('Session expired. Please log in again.');
-        }
-      } catch (err) {
-        console.error('Error decoding token from URL:', err);
-        toast.error('Invalid token. Please log in.');
-      }
-    }
+   if (urlToken) {
+  try {
+    const decoded: any = jwtDecode(urlToken);
+    const isExpired = decoded.exp * 1000 < Date.now();
+    if (!isExpired) {
+      localStorage.setItem('token', urlToken);
+      if (decoded.vendorId) {
+        localStorage.setItem('vendorId', decoded.vendorId);
+      }
+      if (decoded.role) {
+        localStorage.setItem('role', decoded.role);
+      }
+      toast.success('Login successful!');
+      // Redirect based on role:
+      if (decoded.role === 'admin') {
+        router.push('/dashboard/home');
+      } else {
+        router.push('/dashboard/myaccount');
+      }
+      return;
+    } else {
+      toast.error('Session expired. Please log in again.');
+    }
+  } catch (err) {
+    console.error('Error decoding token from URL:', err);
+    toast.error('Invalid token. Please log in.');
+  }
+}
+
 
     // If no URL token, check for a token in local storage
     const token = localStorage.getItem('token');
@@ -78,7 +87,7 @@ const Login = () => {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/login`, {
+      const response = await fetch(`http://localhost:3010/api/vendor/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

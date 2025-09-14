@@ -164,8 +164,6 @@ await prisma.bankDetail.create({
 },
 
 
-
-
   async updateStatus(id: string, status: PrismaVendorStatus) {
     const vendor = await prisma.vendor.update({
       where: { id },

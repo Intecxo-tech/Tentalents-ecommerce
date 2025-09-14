@@ -5,6 +5,7 @@ import {
   getPendingSellers,
   approveSeller,
   getAdminDashboard,
+  createAdminHandler,
   getAllVendors
 } from '../controllers/admin.controller';
 
@@ -14,6 +15,7 @@ const router = Router();
  * @route GET /admin/users
  * @desc Get all users
  */
+router.post('/create-admin', createAdminHandler);
 router.get('/users', getAllUsers);
 
 /**

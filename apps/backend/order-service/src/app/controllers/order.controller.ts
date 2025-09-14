@@ -33,7 +33,16 @@ export const placeOrder = async (
   }
 };
 
-
+export const getAllOrdersAdmin = async ( req: AuthedRequest,
+  res: Response,) => {
+  try {
+    const orders = await orderService.getAllOrdersAdmin();
+    res.json({ success: true, orders });
+  } catch (error) {
+    console.error('Failed to fetch all orders:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch orders' });
+  }
+};
 export const getUserOrders = async (
   req: AuthedRequest,
   res: Response,

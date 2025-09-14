@@ -60,6 +60,7 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
+
 export const initiateVendorRegistrationOtp = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;

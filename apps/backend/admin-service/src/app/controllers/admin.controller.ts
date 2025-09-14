@@ -6,16 +6,31 @@ import { sendSuccess, sendError } from '@shared/utils';
  * GET /api/admin/users
  * Fetch all users
  */
-export const getAllUsers = async (
-  _: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await adminService.getAllUsers();
-    return sendSuccess(res, '✅ All users fetched successfully', users);
-  } catch (err) {
-    return next(err);
+
+    res.status(200).json({
+      success: true,
+      message: 'Fetched all users with full details successfully',
+      data: users,
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch users',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+};
+
+export const createAdminHandler = async (req: Request, res: Response) => {
+  try {
+    const { user, vendor } = await adminService.createAdminWithVendor();
+    res.status(201).json({ user, vendor });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
   }
 };
 export const getAllVendors = async (req: Request, res: Response) => {

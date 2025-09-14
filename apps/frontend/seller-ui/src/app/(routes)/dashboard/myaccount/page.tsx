@@ -29,11 +29,14 @@ type Vendor = {
   panNumber: string | null;
   gstNumber: string | null;
   kycDocsUrl: string[];
+  cancelledChequeUrl:string;
   bankDetails?: {
     accountHolder: string;
     accountNumber: string;
     ifscCode: string;
     bankName: string;
+    cancelledChequeUrl:string;
+    
   };
   createdAt: string;
   updatedAt: string;
@@ -96,7 +99,7 @@ const handleBankSave = async () => {
   try {
     setSaving(true);
     const response = await fetch(
-      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/vendors/${vendorId}/bank-details`,
+      `http://localhost:3010/api/vendor/vendors/${vendorId}/bank-details`,
       {
         method: 'PUT',
         headers: {
@@ -145,7 +148,7 @@ useEffect(() => {
 
       console.log(`📦 Fetching vendor details for ID: ${vendorId}`);  // Logs the vendorId for which you're fetching details
 
-      const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
+      const response = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
         headers: {
           Authorization: `Bearer ${token}`,  // Send the token with the request
           'Content-Type': 'application/json',
@@ -392,6 +395,62 @@ const handleBankDetailsSave = async (e: FormEvent) => {
     toast.error(`Error: ${err.message}`);
   } finally {
     setSaving(false);
+  }
+};
+const handleCancelledChequeUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+  // 1. Guard against missing file or vendorId
+  if (!e.target.files || !vendorId || !vendor) {
+    toast.error('Cannot upload cheque without vendor details.');
+    return;
+  }
+
+  const file = e.target.files[0];
+  const formData = new FormData();
+  formData.append('file', file); // 'file' must match the key expected by Multer on the backend
+
+  try {
+    setSaving(true); // Or a new state like setUploadingCheque(true)
+    toast.loading('Uploading cancelled cheque...');
+
+    const response = await fetch(`http://localhost:3010/api/vendor/${vendorId}/upload-cancelled-cheque/`, {
+      method: 'POST',
+      headers: {
+        // DO NOT set 'Content-Type': 'multipart/form-data'. The browser handles it.
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+      body: formData,
+    });
+
+    toast.dismiss(); // Dismiss the loading toast
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Upload failed');
+    }
+
+    const data = await response.json();
+    toast.success('Cancelled cheque uploaded successfully!');
+    
+    // 2. Type-safe state update
+    // The error is fixed here. We know `vendor` is not null due to the guard clause.
+    // We also correctly use `data.url` from the backend response.
+    setVendor({
+      ...vendor,
+      bankDetails: {
+        ...vendor.bankDetails!,
+        cancelledChequeUrl: data.url, // Correctly update the nested property
+      },
+    });
+
+  } catch (err: any) {
+    toast.dismiss(); // Dismiss loading toast on error
+    console.error('Cheque Upload Error:', err.message);
+    toast.error(`Upload error: ${err.message}`);
+  } finally {
+    setSaving(false); // Or setUploadingCheque(false)
+     if (e.target) {
+      e.target.value = ''; // Reset file input
+    }
   }
 };
 
@@ -816,6 +875,23 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
  
    
   </div>
+<div className="upload-container">
+  <span className="upload-label">
+    {vendor?.cancelledChequeUrl ? 'Cheque uploaded!' : 'Upload Cancelled Cheque'}
+  </span>
+
+  <label htmlFor="cheque-upload" className="upload-icon">
+    <FaUpload size={15} />
+  </label>
+
+  <input
+    type="file"
+    id="cheque-upload"
+    accept=".pdf,.jpg,.jpeg,.png"
+    onChange={handleCancelledChequeUpload}
+    style={{ display: 'none' }}
+  />
+</div>
   </form>
 </div>
 
