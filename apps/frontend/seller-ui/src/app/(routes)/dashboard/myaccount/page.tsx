@@ -50,6 +50,7 @@ const Page: React.FC = () => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 console.log('🔑 JWT Token:', token);
   const [vendorId, setVendorId] = useState<string | null>(null);
+  const [chequeFileName, setChequeFileName] = useState<string>('');
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -185,7 +186,11 @@ useEffect(() => {
       } else {
         console.warn('⚠️ No bank details found for this vendor');
       }
-
+if (data.vendor.bankDetails && data.vendor.bankDetails.cancelledcheque) {
+      const fullUrl = data.vendor.bankDetails.cancelledcheque;
+      const fileNameFromUrl = fullUrl.split('/').pop()?.split('?')[0] || 'Cancelled Cheque';
+      setChequeFileName(decodeURIComponent(fileNameFromUrl));
+    }
       // Check if KYC docs URL is present
       if (data.vendor.kycDocsUrl && data.vendor.kycDocsUrl.length > 0) {
         const fullUrl = data.vendor.kycDocsUrl[0];
@@ -407,6 +412,7 @@ const handleCancelledChequeUpload = async (e: ChangeEvent<HTMLInputElement>) => 
   }
 
   const file = e.target.files[0];
+    setChequeFileName(file.name); 
   const formData = new FormData();
   formData.append('file', file); // 'file' must match the key expected by Multer on the backend
 
@@ -414,7 +420,7 @@ const handleCancelledChequeUpload = async (e: ChangeEvent<HTMLInputElement>) => 
     setSaving(true); // Or a new state like setUploadingCheque(true)
     toast.loading('Uploading cancelled cheque...');
 
-    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/${vendorId}/upload-cancelled-cheque/`, {
+    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/cancelled-cheque/${vendorId}`, {
       method: 'POST',
       headers: {
         // DO NOT set 'Content-Type': 'multipart/form-data'. The browser handles it.
@@ -877,13 +883,12 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
   </div>
 <div className="upload-container">
   <span className="upload-label">
-    {vendor?.cancelledChequeUrl ? 'Cheque uploaded!' : 'Upload Cancelled Cheque'}
+    {/* ✅ CORRECTED LOGIC HERE */}
+    {chequeFileName || 'Upload Cancelled Cheque'}
   </span>
-
   <label htmlFor="cheque-upload" className="upload-icon">
     <FaUpload size={15} />
   </label>
-
   <input
     type="file"
     id="cheque-upload"
