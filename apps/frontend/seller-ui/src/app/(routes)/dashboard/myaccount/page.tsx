@@ -614,9 +614,7 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
       </div>
       <div className="headerright">
 
-      <button type="button" className='bordered-button' onClick={handleLogout}>
-  Logout
-</button>
+      
       </div>
       </div>
      
@@ -932,6 +930,9 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
 
 
           </div>
+          <button type="button" className='bordered-button' onClick={handleLogout}>
+  Logout
+</button>
           
         </div>
     </div>
