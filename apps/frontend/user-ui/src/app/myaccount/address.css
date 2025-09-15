@@ -16,13 +16,22 @@
     display: flex;
     align-items:center;
     justify-content: flex-end;
+    flex-direction: column;
     /* width:20%; */
     border-radius: 10px;
+    gap:15px;
     
 }
+
 .accountpage-right .menu-left{
     width: 300px;
     
+}
+.accountpage-right .background-button,.accountpage-right .logout-btn{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content:center;
 }
 .accountpage-right .menu-left button{
     padding:10px 45px;
@@ -33,6 +42,7 @@
 .accountpage-right .menu-left .background-button{
     justify-content: space-between;
     display: flex;
+  
     
 }
 .accountpage-right img{

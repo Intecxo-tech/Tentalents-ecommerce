@@ -9,6 +9,7 @@ import ProfileIcn from '../../assets/profileicon.png';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Editbutton from '../../assets/editbutton.png'
+import AccountPageSkeleton from './AccountPageSkeleton';
 
 const AccountPage = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -130,7 +131,7 @@ const AccountPage = () => {
     fetchProfile();
   }, [router]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <AccountPageSkeleton />;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
   const handleLogout = () => {

@@ -4,6 +4,7 @@ import AddAddress from '../addaddresspopup/addaddress';
 import './address.css';
 import toast from 'react-hot-toast';
 import { getAllAddresses, addAddress, editAddress, deleteAddress } from '../../../services/productService';
+import AddressSkeleton from './AddressSkeleton';
 
 type AddressProps = {
   showLocate: boolean;
@@ -122,7 +123,7 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
       </div>
       <div className="address-container">
         {loading ? (
-          <p>Loading addresses...</p>
+         <AddressSkeleton />
         ) : (
           addresses.length > 0 ? (
             addresses.map((item) => (
