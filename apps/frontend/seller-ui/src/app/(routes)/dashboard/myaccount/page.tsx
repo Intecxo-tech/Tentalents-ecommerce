@@ -99,7 +99,7 @@ const handleBankSave = async () => {
   try {
     setSaving(true);
     const response = await fetch(
-      `http://localhost:3010/api/vendor/vendors/${vendorId}/bank-details`,
+      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/vendors/${vendorId}/bank-details`,
       {
         method: 'PUT',
         headers: {
@@ -148,7 +148,7 @@ useEffect(() => {
 
       console.log(`📦 Fetching vendor details for ID: ${vendorId}`);  // Logs the vendorId for which you're fetching details
 
-      const response = await fetch(`http://localhost:3010/api/vendor/profile/${vendorId}`, {
+      const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
         headers: {
           Authorization: `Bearer ${token}`,  // Send the token with the request
           'Content-Type': 'application/json',
@@ -412,7 +412,7 @@ const handleCancelledChequeUpload = async (e: ChangeEvent<HTMLInputElement>) => 
     setSaving(true); // Or a new state like setUploadingCheque(true)
     toast.loading('Uploading cancelled cheque...');
 
-    const response = await fetch(`http://localhost:3010/api/vendor/${vendorId}/upload-cancelled-cheque/`, {
+    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/${vendorId}/upload-cancelled-cheque/`, {
       method: 'POST',
       headers: {
         // DO NOT set 'Content-Type': 'multipart/form-data'. The browser handles it.
