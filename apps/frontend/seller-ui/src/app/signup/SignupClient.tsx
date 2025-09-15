@@ -14,5 +14,5 @@ export default function SignUpPage() {
   });
 
   // Render your main form component with the clean props
-  return <SignUpForm searchParams={queryObject} />;
+  return <SignUpForm  />;
 }

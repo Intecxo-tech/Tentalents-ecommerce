@@ -52,20 +52,22 @@ type FormData = {
   bankName: string;
   branchName?: string;
   upiId?: string;
+cancelledCheque?: FileList;
 };
 
 // Define the props for your UI component.
 // It now expects a simple object, not the complex Next.js type.
-type SignUpFormProps = {
-  searchParams: Record<string, string>;
-};
+// type SignUpFormProps = {
+//   searchParams: Record<string, string>;
+// };
 
 
 // ========================================================================
 // 1. YOUR MAIN SIGNUP COMPONENT (RENAMED TO SignUpForm)
 // This component contains all your original UI and logic.
 // ========================================================================
-const SignUpForm = ({ searchParams }: SignUpFormProps) => {
+const SignUpForm = () => {
+  const searchParams = useSearchParams(); 
   // All your existing state, hooks, and functions go here...
   const [passwordVisible, setPasswordVisible] = useState({ password: false, confirmPassword: false });
   const [rememberMe, setRememberMe] = useState(true);
@@ -93,8 +95,12 @@ const SignUpForm = ({ searchParams }: SignUpFormProps) => {
 
   // Your useEffect hook no longer needs the getQueryParam helper
   // because the wrapper provides simple string values.
-  useEffect(() => {
-    const { vendorId, name, phone, email: emailParam, token } = searchParams;
+   useEffect(() => {
+    const vendorId = searchParams.get('vendorId');
+    const name = searchParams.get('name');
+    const phone = searchParams.get('phone');
+    const emailParam = searchParams.get('email');
+    const token = searchParams.get('token');
 
     if (vendorId) {
       setPendingVendorId(vendorId);
@@ -235,78 +241,90 @@ useEffect(() => {
   };
 
 const handleBankDetailsSubmit = async (data: FormData) => {
-  const isValid = await trigger(['accountNumber', 'ifscCode', 'bankName']);
-  if (!isValid) return;
+  const isValid = await trigger(['accountNumber', 'ifscCode', 'bankName']);
+  if (!isValid) return;
 
-  setLoading(true);
-  try {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
-    if (!userId || !token) throw new Error("User ID or token not found in storage");
+  setLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    if (!userId || !token) throw new Error("User ID or token not found in storage");
 
-    const allData = getValues();
-    const kycFiles: string[] = [];
-    const kycFilenames: string[] = [];
+    const allData = getValues();
+    const kycFiles: string[] = [];
+    const kycFilenames: string[] = [];
 
-    const toBase64 = (file: File): Promise<string> =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
-      });
+    // Helper function to convert a file to a Base64 string
+    const toBase64 = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
 
-    if (data.kycDocsUrl && data.kycDocsUrl.length > 0) {
-      for (let i = 0; i < data.kycDocsUrl.length; i++) {
-        const file = data.kycDocsUrl[i];
-        const base64 = await toBase64(file);
-        kycFiles.push(base64);
-        kycFilenames.push(file.name);
-      }
-    }
-   const payload = {
-    userId,
-    vendorId: pendingVendorId || undefined,
-    vendorDetails: {
-      name: allData.name,
-      businessName: allData.businessName,
-      panNumber: allData.panNumber,
-      AadharNumber: allData.aadharNumber,
-      gstNumber: allData.gstNumber,
-      email,
-      phone: allData.phone || '',
-      address: allData.address,
-    },
-    bankDetails: {
-      accountHolder: allData.name,
-      accountNumber: allData.accountNumber,
-      ifscCode: allData.ifscCode,
-      bankName: allData.bankName,
-      branchName: allData.branchName || '',
-      upiId: allData.upiId || '',
-    },
-    kycFiles,
-    kycFilenames,
-  };
-    const response = await axios.post(
-      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/profile`,
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    // Handle KYC documents
+    if (data.kycDocsUrl && data.kycDocsUrl.length > 0) {
+      for (let i = 0; i < data.kycDocsUrl.length; i++) {
+        const file = data.kycDocsUrl[i];
+        const base64 = await toBase64(file);
+        kycFiles.push(base64);
+        kycFilenames.push(file.name);
+      }
+    }
 
-    const completeToken = response.data?.token;
-    if (!completeToken) throw new Error('Final login token not received from server.');
+    // Handle cancelled cheque
+    let cancelledChequeFile = undefined;
+    if (data.cancelledCheque && data.cancelledCheque.length > 0) {
+      cancelledChequeFile = await toBase64(data.cancelledCheque[0]);
+    }
+    
+    // Construct the payload with the new `cancelledCheque` field
+    const payload = {
+      userId,
+      vendorId: pendingVendorId || undefined,
+      vendorDetails: {
+        name: allData.name,
+        businessName: allData.businessName,
+        panNumber: allData.panNumber,
+        AadharNumber: allData.aadharNumber,
+        gstNumber: allData.gstNumber,
+        email,
+        phone: allData.phone || '',
+        address: allData.address,
+      },
+      bankDetails: {
+        accountHolder: allData.name,
+        accountNumber: allData.accountNumber,
+        ifscCode: allData.ifscCode,
+        bankName: allData.bankName,
+        branchName: allData.branchName || '',
+        upiId: allData.upiId || '',
+      },
+      kycFiles,
+      kycFilenames,
+      cancelledChequeFile, // <-- Add this line
+    };
 
-    localStorage.setItem('token', completeToken);
-    toast.success('Vendor profile completed successfully!');
-    router.push('/dashboard/myaccount');
+    const response = await axios.post(
+      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/profile`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-  } catch (err: any) {
-    console.error('Profile submission failed:', err);
-    toast.error(err?.response?.data?.message || 'Failed to complete profile.');
-  } finally {
-    setLoading(false);
-  }
+    const completeToken = response.data?.token;
+    if (!completeToken) throw new Error('Final login token not received from server.');
+
+    localStorage.setItem('token', completeToken);
+    toast.success('Vendor profile completed successfully!');
+    router.push('/dashboard/myaccount');
+
+  } catch (err: any) {
+    console.error('Profile submission failed:', err);
+    toast.error(err?.response?.data?.message || 'Failed to complete profile.');
+  } finally {
+    setLoading(false);
+  }
 };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -783,6 +801,22 @@ const handleBack = () => {
                 <div className="form-group">
                   <input type="text" placeholder="UPI ID (Optional)" {...register('upiId')} />
                 </div>
+                <div className="form-group">
+      <div className='upload-field' onClick={() => document.getElementById('cancelledChequeInput')?.click()}>
+        <h2>Upload Cancelled Cheque</h2>
+        <Upload className='signup-cion' size={35} />
+      </div>
+      <input
+        type="file"
+        id="cancelledChequeInput"
+        {...register('cancelledCheque')}
+        style={{ display: 'none' }}
+      />
+      {/* Optional: Show selected file name */}
+      {getValues('cancelledCheque')?.[0] && (
+        <p className="file-name">{getValues('cancelledCheque')?.[0].name}</p>
+      )}
+    </div>
               </div>
               <button type="submit" className="background-buttonver" disabled={loading}>
                 {loading ? 'Submitting...' : 'Complete Registration'}
