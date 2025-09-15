@@ -3,7 +3,8 @@ import {
   getCart,
   addToCart,
   checkoutCart,
-    updateCartItemQuantity, 
+    updateCartItemQuantity,
+    toggleSaveForLater,  
 } from '../controllers/cart.controller';
 import { optionalAuthMiddleware } from '@shared/auth'; // ✅ Supports JWT or guest session
 
@@ -16,7 +17,7 @@ const router = Router();
  */
 router.post('/update', updateCartItemQuantity);
 router.use(optionalAuthMiddleware()); // ✅ Call factory
-
+router.patch('/save-for-later', toggleSaveForLater);
 /**
  * @route   GET /api/cart?sessionId=...
  * @desc    Retrieve cart (authenticated or guest)

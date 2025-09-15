@@ -243,6 +243,7 @@ getWishlist: async (userId: string) => {
 },
 toggleSaveForLater: async (userId: string, itemId: string, saveForLater: boolean) => {
   try {
+    // Update savedForLater flag in DB
     const updatedItem = await prisma.cartItem.updateMany({
       where: {
         id: itemId,
@@ -253,7 +254,8 @@ toggleSaveForLater: async (userId: string, itemId: string, saveForLater: boolean
       },
     });
 
-    const updatedCart = await refreshCartCache(userId);
+    // Removed refreshCartCache(userId) and Redis cache update calls here
+    // So no Redis access, avoiding NOAUTH errors
 
     return updatedItem;
   } catch (error) {

@@ -44,6 +44,30 @@ export const getCart = async (
  * POST /api/cart
  * Add an item to the user's or guest's cart
  */
+export const toggleSaveForLater = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = extractUserId(req);
+    if (!userId) {
+      return res.status(400).json({ message: '❌ Missing userId or sessionId' });
+    }
+
+    const { itemId, saveForLater } = req.body;
+
+    if (typeof saveForLater !== 'boolean' || !itemId) {
+      return res.status(400).json({ message: '❌ Invalid request body' });
+    }
+
+    const updatedItem = await cartService.toggleSaveForLater(userId, itemId, saveForLater);
+
+    return sendSuccess(res, '✅ Item save-for-later status updated', updatedItem);
+  } catch (err) {
+    next(err);
+  }
+};
 export const addToCart = async (
   req: AuthedRequest,
   res: Response,

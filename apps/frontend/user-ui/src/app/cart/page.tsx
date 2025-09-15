@@ -15,6 +15,7 @@ type CartItem = {
   productId: string;
   quantity: number;
   vendor: { id: string; name: string };
+  savedForLater:boolean
   product?: {
     id: string;
     title: string;
@@ -41,6 +42,38 @@ const Cart = () => {
   const CART_API_BASE_URL =  `https://cart-service-kona.onrender.com`;
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+async function saveForLater(itemId: string) {
+  const token = localStorage.getItem('token');
+
+  try {
+    const res = await fetch(`http://localhost:3020/api/cart/save-for-later`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        itemId,
+        saveForLater: true,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(await res.text());
+    }
+
+    toast.success('Moved to Save for Later ✨');
+
+    // Option 1: Re-fetch the cart from server
+    await fetchCart();
+
+    // Option 2: Remove the item from local cart immediately (if you want optimistic UI)
+    // setCartItems(prev => prev.filter(item => item.id !== itemId));
+  } catch (error) {
+    console.error('Failed to save for later:', error);
+    toast.error('Failed to move item to Save for Later ❌');
+  }
+}
 
 
   useEffect(() => {
@@ -77,8 +110,8 @@ async function fetchCart() {
     
     // Check if data is null or undefined after clearing
     const itemsToFilter = responseData.data || [];
-
-   const filtered = itemsToFilter
+const filtered = itemsToFilter
+  .filter((item: CartItem) => !item.savedForLater) // specify type here
   .map((item: CartItem) => {
     if (item.productListing && typeof item.productListing.price === 'string') {
       item.productListing.price = parseFloat(item.productListing.price);
@@ -86,6 +119,8 @@ async function fetchCart() {
     return item;
   })
   .filter(Boolean) as CartItem[];
+
+
 
     setCartItems(filtered);
   } catch (error) {
@@ -234,9 +269,16 @@ const total = subtotal + shippingFee + platformFee;
                         <div className="price-section">
                           <p>${listing.price.toFixed(2)}</p>
                         </div>
-                        <div className="saveforlater">
-                          <button type="button">Save for later</button>
-                        </div>
+                       <div className="saveforlater2">
+  <button
+    type="button"
+    onClick={() => saveForLater(item.id)}
+    className="bordered-button "
+  >
+    Save for later
+  </button>
+</div>
+
                       </div>
                     </div>
                      </div>
