@@ -87,7 +87,7 @@ const Login = () => {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3010/api/vendor/login`, {
+      const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
