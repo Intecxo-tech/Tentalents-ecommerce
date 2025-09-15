@@ -1,89 +1,52 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { generateInvoiceAndUpload } from '@shared/utils'; // Assuming this returns pdfUrl
-import { getPresignedUrl } from '@shared/minio'; // ✅ Corrected import
+import { invoiceService } from '../services/invoice.service';
+import { AuthPayload, isAdmin } from '@shared/auth';
+import { logger } from '@shared/logger';
 
-const prisma = new PrismaClient();
+export interface AuthRequest extends Request {
+  user?: AuthPayload;
+}
 
-/**
- * Generate an invoice and upload PDF to MinIO.
- * Associates it with the order and vendor.
- */
-export async function manualInvoiceGeneration(req: Request, res: Response) {
+export async function generateInvoiceAutomatically(req: AuthRequest, res: Response) {
   const { orderId } = req.params;
 
-  console.log(`🔎 [manualInvoiceGeneration] Received request for orderId: ${orderId}`);
+  if (!isAdmin(req.user)) return res.status(403).json({ error: 'Forbidden: Admins only' });
 
   try {
-    // Fetch order details including items and associated vendor
-    console.log(`📦 Fetching order details for orderId: ${orderId}`);
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        items: {
-          include: {
-            vendor: true,
-          },
-        },
-        invoice: true,
-      },
-    });
-
-    if (!order) {
-      console.log(`❌ Order with id ${orderId} not found`);
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    if (order.invoice) {
-      console.log(`❌ Invoice already exists for orderId: ${orderId}`);
-      return res.status(409).json({ error: 'Invoice already exists for this order' });
-    }
-
-    const vendorId = order.items[0]?.vendor.id;
-    if (!vendorId) {
-      return res.status(400).json({ error: 'No vendor associated with order items' });
-    }
-
-    // ✅ Generate invoice and upload
-    const pdfUrl = await generateInvoiceAndUpload(orderId);
-
-    if (!pdfUrl) {
-      return res.status(500).json({ error: 'Failed to generate invoice PDF' });
-    }
-
-    console.log(`✅ Invoice generated and uploaded. URL: ${pdfUrl}`);
+    const result = await invoiceService.generateInvoice(orderId);
+    logger.info(`Invoice generated for order ${orderId}`, { result });
 
     return res.status(201).json({
-      message: 'Invoice generated successfully',
-      pdfUrl,
+      message: 'Invoice generated, uploaded successfully',
+      cloudinaryUrl: result.cloudinaryUrl,
+      minioUrl: result.minioUrl,
     });
-  } catch (err) {
-    console.error('❌ Error generating invoice:', err);
-    return res.status(500).json({ error: 'Failed to generate invoice' });
+  } catch (err: any) {
+    logger.error(`Error generating invoice for order ${orderId}`, err);
+    return res.status(500).json({ error: 'Failed to generate invoice', details: err.message || err });
   }
 }
 
-
-/**
- * Get signed URL from MinIO for invoice PDF download.
- */
-export async function getInvoiceDownloadUrl(req: Request, res: Response) {
+export async function downloadInvoice(req: AuthRequest, res: Response) {
   const { orderId } = req.params;
+  const userId = req.user?.userId;
+
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
   try {
-    const invoice = await prisma.invoice.findUnique({
-      where: { orderId },
-    });
+    const { streamUrl, filename } = await invoiceService.getInvoiceFile(orderId);
 
-    if (!invoice) {
-      return res.status(404).json({ error: 'Invoice not found' });
-    }
+    // Stream PDF from MinIO to frontend
+    const axios = await import('axios').then((mod) => mod.default);
+    const response = await axios.get(streamUrl, { responseType: 'stream' });
 
-    if (!invoice.pdfUrl) {
-      return res.status(404).json({ error: 'Invoice PDF URL missing' });
-    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    response.data.pipe(res);
 
-    return res.json({ signedUrl: invoice.pdfUrl });
-  } catch (err) {
-    return res.status(500).json({ error: 'Failed to get download URL' });
+    logger.info(`Invoice ${orderId} downloaded by user ${userId}`);
+  } catch (err: any) {
+    logger.error(`Error downloading invoice ${orderId}`, err);
+    return res.status(500).json({ error: 'Failed to download invoice', details: err.message || err });
   }
 }

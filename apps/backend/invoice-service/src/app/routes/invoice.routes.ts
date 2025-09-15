@@ -1,12 +1,29 @@
 import { Router } from 'express';
-import {
-  manualInvoiceGeneration,
-  getInvoiceDownloadUrl,
-} from '../controllers/invoice.controller';
+import { generateInvoiceAutomatically, downloadInvoice } from '../controllers/invoice.controller';
+import { authMiddleware } from '@shared/auth';
 
 const router = Router();
 
-router.post('/generate/:orderId', manualInvoiceGeneration);
-router.get('/download/:orderId', getInvoiceDownloadUrl);
+/**
+ * 🧾 POST /api/invoices/:orderId/generate
+ * Admin-only: Generate invoice for a given order
+ * Frontend button can call this endpoint
+ */
+router.post(
+  '/:orderId/generate',
+  authMiddleware(['admin']), // Only admins can access
+  generateInvoiceAutomatically
+);
+
+/**
+ * 📄 GET /api/invoices/:orderId/download
+ * Admin or Buyer: Download invoice PDF
+ * Frontend button can call this endpoint
+ */
+router.get(
+  '/:orderId/download',
+  authMiddleware(['admin', 'buyer']), // Admins or buyers can access
+  downloadInvoice
+);
 
 export default router;
