@@ -9,6 +9,7 @@ import {
     updateBankDetailsController,
 
   getAllVendors,
+  uploadCancelledCheque,
   deleteVendor,
   uploadVendorDocuments,
   approveVendor,
@@ -93,7 +94,12 @@ router.post(
   authMiddleware(UserRole.SELLER),
   uploadVendorProfileImageController
 );
-
+router.post(
+  '/cancelled-cheque/:vendorId',
+  authMiddleware(UserRole.SELLER),
+  upload.single('file'), // ✅ This is where the middleware should be
+  uploadCancelledCheque // ✅ This is the corrected, single handler function
+);
 // Route expects 'files' for KYC docs multiple files
 router.post(
   '/kyc-docs/:vendorId',
