@@ -261,9 +261,7 @@ const AccountPage = () => {
   >
     {updatingProfile ? 'Updating...' : 'Update Profile'}
   </button>
-              <button className="background-button logout-btn" onClick={handleLogout}>
-                Logout
-              </button>
+      
               </div>
             </div>
 
@@ -341,6 +339,9 @@ const AccountPage = () => {
           </button>
 
           </div>
+                  <button className="background-button logout-btn" onClick={handleLogout}>
+                Logout
+              </button>
         </div>
       </div>
     </div>
