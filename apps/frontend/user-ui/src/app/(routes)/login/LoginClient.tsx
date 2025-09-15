@@ -100,7 +100,7 @@ const LoginClient = () => {
       
       localStorage.setItem('token', token);
       toast.success('Login successful!');
-      router.push('/myaccount');
+      router.push('/shop');
     } catch (err: any) {
       console.error('Login error:', err);
       toast.error(err.message);
@@ -156,7 +156,7 @@ const LoginClient = () => {
       if (!token) throw new Error('Token missing in response');
       localStorage.setItem('token', token);
       toast.success('Logged in successfully!');
-      router.push('/myaccount');
+      router.push('/shop');
     } catch (error) {
       console.error(error);
       toast.error('Google login failed.');
