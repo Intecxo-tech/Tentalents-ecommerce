@@ -127,24 +127,24 @@ const gravatarUrl = `https://gravatar.com/avatar/${crypto.createHash('md5').upda
   const vendor = await prisma.vendor.create({
     data: vendorCreateData,
   });
-  let chequeUrl: string | undefined;
-if (cancelledChequeFile) {
-  chequeUrl = await uploadToCloudinary(
-    cancelledChequeFile,
-    'vendor_bank_cheques',
-    `cheque_${vendor.id}`
-  );
-  bankData.cancelledcheque = chequeUrl; // also update bankData
-}
+  // let chequeUrl: string | undefined;
+ const finalBankData = { ...bankData };
+  if (cancelledChequeFile) {
+    const chequeUrl = await uploadToCloudinary(
+      cancelledChequeFile,
+      'vendor_bank_cheques',
+      `cheque_${vendor.id}`
+    );
+    finalBankData.cancelledcheque = chequeUrl;
+  }
 
-await prisma.bankDetail.create({
-  data: {
-    ...bankData,
-    vendor: { connect: { id: vendor.id } },
-  },
-});
-
-
+  // ✅ This is the correct and only Prisma create call for bank details
+  await prisma.bankDetail.create({
+    data: {
+      ...finalBankData,
+      vendor: { connect: { id: vendor.id } },
+    },
+  });
 
   logger.info(`[VendorService] Vendor profile created for user: ${userId}`);
    const tokenPayload = {
@@ -393,6 +393,46 @@ loginVendorUser: async (email: string, password: string) => {
       throw err;
     }
   },
+ uploadCancelledCheque: async (
+  vendorId: string,
+  file: Express.Multer.File
+): Promise<string> => {
+  try {
+    if (!vendorId || !file) {
+      throw new Error('Vendor ID and file are required');
+    }
+
+    logger.info(`[VendorService] Uploading cancelled cheque for vendorId: ${vendorId}`);
+
+    const chequeUrl = await uploadToCloudinary(
+      file.buffer,
+      'vendor_bank_cheques',
+      `cheque_${vendorId}_${Date.now()}`
+    );
+
+    // ✅ Only update if BankDetails already exist
+    const existingBankDetail = await prisma.bankDetail.findUnique({
+      where: { vendorId },
+    });
+
+    if (!existingBankDetail) {
+      throw new Error('Bank details must be submitted before uploading a cancelled cheque');
+    }
+
+    await prisma.bankDetail.update({
+      where: { vendorId },
+      data: { cancelledcheque: chequeUrl },
+    });
+
+    logger.info(`[VendorService] Cancelled cheque uploaded for vendorId: ${vendorId}`);
+    return chequeUrl;
+  } catch (error) {
+    logger.error('[VendorService] uploadCancelledCheque error:', error);
+    throw error;
+  }
+},
+
+
 // Get Vendor Details Including Bank Details
 getByVendorId: async (vendorId: string) => {
   try {
