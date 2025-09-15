@@ -803,7 +803,7 @@ const handleBack = () => {
                 </div>
                 <div className="form-group">
       <div className='upload-field' onClick={() => document.getElementById('cancelledChequeInput')?.click()}>
-        <h2>Upload Cancelled Cheque</h2>
+         {getValues('cancelledCheque')?.[0]?.name || 'Upload Cancelled Cheque'}
         <Upload className='signup-cion' size={35} />
       </div>
       <input
@@ -812,10 +812,7 @@ const handleBack = () => {
         {...register('cancelledCheque')}
         style={{ display: 'none' }}
       />
-      {/* Optional: Show selected file name */}
-      {getValues('cancelledCheque')?.[0] && (
-        <p className="file-name">{getValues('cancelledCheque')?.[0].name}</p>
-      )}
+     
     </div>
               </div>
               <button type="submit" className="background-buttonver" disabled={loading}>

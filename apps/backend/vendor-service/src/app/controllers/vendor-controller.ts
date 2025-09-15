@@ -238,43 +238,63 @@ export const updateVendorProfile = async (req: Request, res: Response) => {
  * Step 4: Complete vendor profile registration
  */
 export const completeVendorProfileRegistration = async (req: Request, res: Response) => {
-    try {
-      logger.info('Starting completeVendorProfileRegistration controller');
-      const { userId, bankDetails, vendorDetails, kycFiles, kycFilenames } = req.body;
-  
-      if (!userId || !bankDetails || !vendorDetails) {
-        return res.status(400).json({ error: 'User ID, bankDetails, and vendorDetails are required' });
-      }
-      
-      let kycBuffers: Buffer[] | undefined = undefined;
-      if (kycFiles && Array.isArray(kycFiles) && kycFiles.length > 0) {
-          kycBuffers = kycFiles.map(base64String => Buffer.from(base64String.split(',')[1], 'base64'));
-      }
-  
-      // 1. Call the service. It will return an object: { vendor, token }
-      const result = await vendorService.completeVendorProfileRegistration(
-        userId,
-        vendorDetails,
-        bankDetails,
-        kycBuffers,
-        kycFilenames
-      );
-  
-      logger.info(`[Controller] Service call successful. Result contains token: ${!!result.token}`);
-  
-      // 2. Send the ENTIRE result object back to the frontend.
-      return res.status(201).json(result);
-  
-    } catch (err: any) {
-      logger.error('Error completing vendor profile registration', err);
-      // Check for specific Prisma unique constraint error
-      if (err.code === 'P2002') {
-          return res.status(409).json({ error: 'A vendor with this email or user ID already exists.' });
-      }
-      return res.status(500).json({ error: err.message || 'Failed to complete vendor profile' });
-    }
-};
+    try {
+      logger.info('Starting completeVendorProfileRegistration controller');
 
+      // STEP 1: Read ALL necessary fields from the request body
+      const { 
+        userId, 
+        bankDetails, 
+        vendorDetails, 
+        kycFiles, 
+        kycFilenames,
+        cancelledChequeFile, // <-- Now reading the cheque file
+        cancelledChequeFilename // <-- And its name (optional but good practice)
+      } = req.body;
+  
+      if (!userId || !bankDetails || !vendorDetails) {
+        return res.status(400).json({ error: 'User ID, bankDetails, and vendorDetails are required' });
+      }
+      
+      // This part for KYC files is correct
+      let kycBuffers: Buffer[] | undefined = undefined;
+      if (kycFiles && Array.isArray(kycFiles) && kycFiles.length > 0) {
+          kycBuffers = kycFiles.map(base64String => Buffer.from(base64String.split(',')[1], 'base64'));
+      }
+
+      // STEP 2: Add logic to convert the cancelled cheque to a Buffer
+      let chequeBuffer: Buffer | undefined = undefined;
+      if (cancelledChequeFile && typeof cancelledChequeFile === 'string') {
+          const base64Data = cancelledChequeFile.split(',')[1];
+          if (base64Data) {
+              chequeBuffer = Buffer.from(base64Data, 'base64');
+          }
+      }
+  
+      // STEP 3: Call the service with ALL the required arguments
+      const result = await vendorService.completeVendorProfileRegistration(
+        userId,
+        vendorDetails,
+        bankDetails,
+        kycBuffers,
+        kycFilenames,
+        chequeBuffer, // <-- Pass the converted cheque buffer
+        cancelledChequeFilename // <-- Pass the cheque filename
+      );
+  
+      logger.info(`[Controller] Service call successful. Result contains token: ${!!result.token}`);
+  
+      // Send the entire result object back to the frontend.
+      return res.status(201).json(result);
+  
+    } catch (err: any) {
+      logger.error('Error completing vendor profile registration', err);
+      if (err.code === 'P2002') {
+          return res.status(409).json({ error: 'A vendor with this email or user ID already exists.' });
+      }
+      return res.status(500).json({ error: err.message || 'Failed to complete vendor profile' });
+    }
+};
 
 export const updateBankDetailsController = async (req: Request, res: Response) => {
   try {
