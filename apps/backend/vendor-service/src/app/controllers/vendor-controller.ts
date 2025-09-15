@@ -34,9 +34,11 @@ import type {
 import { VendorStatus as SharedVendorStatus } from '@shared/types';
 import { produceKafkaEvent } from '@shared/kafka';
 import { KAFKA_TOPICS } from '@shared/kafka';
+import multer from 'multer';
 
 const prisma = new PrismaClient();
-
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 function toPrismaStatus(status: SharedVendorStatus): PrismaVendorStatus {
   return status.toLowerCase() as PrismaVendorStatus;
 }
@@ -76,7 +78,32 @@ export const initiateVendorRegistrationOtp = async (req: Request, res: Response)
     return res.status(500).json({ error: 'Failed to send OTP' });
   }
 };
+export const uploadCancelledCheque = async (req: Request, res: Response) => {
+  try {
+    const { vendorId } = req.params;
+    const file = req.file;
 
+    if (!vendorId) {
+      return res.status(400).json({ error: 'Vendor ID is required' });
+    }
+
+    if (!file) {
+      // Multer will usually handle this, but it's good practice to check
+      return res.status(400).json({ error: 'Cancelled cheque file is required' });
+    }
+
+    // Now, call the service to handle the upload logic
+    const chequeUrl = await vendorService.uploadCancelledCheque(vendorId, file);
+
+    return res.status(200).json({
+      message: 'Cancelled cheque uploaded successfully',
+      url: chequeUrl,
+    });
+  } catch (error: any) {
+    logger.error('[Controller] Upload Cancelled Cheque Error:', error);
+    return res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+};
 /**
  * Step 2: Verify vendor email OTP
  */
