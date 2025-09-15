@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
 import './vendor.css';
+import VendorSkeleton from './VendorSkeleton';
 
 interface VendorData {
   id: string;
@@ -63,7 +64,7 @@ function Vendor() {
     fetchVendors();
   }, []);
 
-  if (loading) return <div>Loading vendor details...</div>;
+  if (loading) return <VendorSkeleton />; 
   if (error) return <div>Error: {error}</div>;
   if (vendors.length === 0) return <div>No vendor data available</div>;
 

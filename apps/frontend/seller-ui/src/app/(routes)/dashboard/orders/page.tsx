@@ -7,6 +7,7 @@ import { Search } from 'lucide-react';
 import axios from 'axios';
 import '../order/order.css';
 import Orderforms from '../Orderforms/Orderforms';
+import OrderSkeleton from './OrderSkeleton';
 
 export interface Product {
   id: string;
@@ -162,7 +163,7 @@ useEffect(() => {
     setSelectedOrderId(orderId);
   };
 
-  if (loading) return <div className="ordersempty"><p>Loading...</p></div>;
+if (loading) return <OrderSkeleton />;
 if (filteredOrders.length === 0) return <div className="ordersempty"><p>No orders found.</p></div>;
 
 

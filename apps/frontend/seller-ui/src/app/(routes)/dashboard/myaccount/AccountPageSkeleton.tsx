@@ -91,12 +91,7 @@ const AccountPageSkeleton = () => {
         </div>
 
         {/* Right Menu Section */}
-        <div className="accountpage-right">
-          <div className="menu-left">
-            <Skeleton circle height={90} width={90} />
-            <Skeleton height={36} width={180} />
-          </div>
-        </div>
+       
       </div>
     </div>
   );

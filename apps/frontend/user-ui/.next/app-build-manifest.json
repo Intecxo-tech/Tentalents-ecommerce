@@ -12,11 +12,11 @@
       "static/css/app/page.css",
       "static/chunks/app/page.js"
     ],
-    "/shop/page": [
+    "/(routes)/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/shop/page.css",
-      "static/chunks/app/shop/page.js"
+      "static/css/app/(routes)/login/page.css",
+      "static/chunks/app/(routes)/login/page.js"
     ]
   }
 }

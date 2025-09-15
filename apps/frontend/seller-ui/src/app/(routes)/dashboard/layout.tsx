@@ -50,9 +50,9 @@ const [activeTab, setActiveTab] = useState<'vendors' | 'customers'>('vendors');
     getUserRoleFromToken();
   }, []);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
 
   console.log('Rendering layout, userRole:', userRole);
 

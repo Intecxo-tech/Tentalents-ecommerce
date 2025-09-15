@@ -8,6 +8,7 @@ import './orderforms.css'
 import { Star } from 'lucide-react';
 import OrderTracking from '../orderform/orderTrackign';
 import { RiCustomerService2Line } from 'react-icons/ri';
+import OrderFormSkeleton from './OrderFormSkeleton';
 
 interface Product {
   id: string;
@@ -114,15 +115,7 @@ const uniqueVendors = order
   if (!selectedOrderId) return null;
 
   if (loading)
-    return (
-      <div className="sidebar-overlay" onClick={onClose}>
-        <div className="sidebar-drawer" onClick={(e) => e.stopPropagation()}>
-          <div className="sidebar-content" style={{ padding: 20 }}>
-            <p>Loading order details...</p>
-          </div>
-        </div>
-      </div>
-    );
+   if (loading) return <OrderFormSkeleton />;
 
   if (error)
     return (

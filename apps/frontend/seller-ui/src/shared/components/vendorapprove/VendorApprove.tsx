@@ -5,6 +5,7 @@ import { Star } from 'lucide-react';
 import Ramesh from '../../../assets/ramesh.png'; // fallback image
 import '../vendors/vendor.css';
 import './approve.css';
+import VendorApproveSkeleton from './VendorApproveSkeleton';
 
 interface BankDetails {
   accountNumber: string | null;
@@ -102,7 +103,7 @@ const updateStatus = async (vendorId: string, approve: boolean) => {
   }
 };
 
-  if (loading) return <div>Loading pending vendors...</div>;
+  if (loading) return <div><VendorApproveSkeleton /></div>;
   if (error) return <div>Error: {error}</div>;
   if (vendors.length === 0) return <div>No pending vendors</div>;
 

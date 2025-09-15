@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
 import '../vendors/vendor.css';
+import CustomerSkeleton from './CustomerSkeleton';
 
 interface CustomerData {
   name: string;
@@ -82,7 +83,7 @@ function Customer() {
     fetchUsers();
   }, []);
 
-  if (loading) return <div>Loading customer details...</div>;
+  if (loading) return <div><CustomerSkeleton /></div>;
   if (error) return <div>Error: {error}</div>;
   if (users.length === 0) return <div>No customer data available</div>;
 

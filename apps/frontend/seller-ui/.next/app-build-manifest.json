@@ -46,12 +46,6 @@
       "static/chunks/main-app.js",
       "static/css/app/(routes)/dashboard/orders/page.css",
       "static/chunks/app/(routes)/dashboard/orders/page.js"
-    ],
-    "/(routes)/dashboard/store/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(routes)/dashboard/store/page.css",
-      "static/chunks/app/(routes)/dashboard/store/page.js"
     ]
   }
 }

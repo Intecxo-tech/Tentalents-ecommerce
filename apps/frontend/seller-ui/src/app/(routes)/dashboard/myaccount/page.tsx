@@ -11,6 +11,7 @@ import { FaUpload } from 'react-icons/fa';
 // import { Menu } from 'lucide-react';
 import Menu from '../../../../shared/components/menu/menu';
 import { ChevronRight } from 'lucide-react';
+import AccountPageSkeleton from './AccountPageSkeleton';
 type Vendor = {
   id: string;
   userId: string;
@@ -595,7 +596,7 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
 
 
 
-  if (loading) return <p>Loading vendor details...</p>;
+  if (loading) return <AccountPageSkeleton />;
   if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
   if (!vendor) return <p>No vendor data found.</p>;
 
