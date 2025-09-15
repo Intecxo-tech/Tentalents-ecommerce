@@ -28,24 +28,6 @@
       "static/chunks/main-app.js",
       "static/css/app/(routes)/dashboard/myaccount/page.css",
       "static/chunks/app/(routes)/dashboard/myaccount/page.js"
-    ],
-    "/(routes)/dashboard/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(routes)/dashboard/page.css",
-      "static/chunks/app/(routes)/dashboard/page.js"
-    ],
-    "/(routes)/dashboard/approve/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(routes)/dashboard/approve/page.css",
-      "static/chunks/app/(routes)/dashboard/approve/page.js"
-    ],
-    "/(routes)/dashboard/orders/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(routes)/dashboard/orders/page.css",
-      "static/chunks/app/(routes)/dashboard/orders/page.js"
     ]
   }
 }

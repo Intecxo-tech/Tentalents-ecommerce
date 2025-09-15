@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
-import Ramesh from '../../../assets/ramesh.png'; // fallback image
+import Default from '../../../assets/defaultprofile.png'; // fallback image
 import '../vendors/vendor.css';
 import './approve.css';
 import VendorApproveSkeleton from './VendorApproveSkeleton';
@@ -115,7 +115,7 @@ const updateStatus = async (vendorId: string, approve: boolean) => {
             <div className="vendordeatil">
               <div className="vendorleft">
                 <Image
-                  src={vendor.profileImage || Ramesh}
+                  src={vendor.profileImage || Default}
                   alt={vendor.name}
                   width={90}
                   height={90}

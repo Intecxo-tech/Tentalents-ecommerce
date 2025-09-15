@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Star } from 'lucide-react';
 import './vendor.css';
 import VendorSkeleton from './VendorSkeleton';
-
+import Default from '../../../assets/defaultprofile.png'
 interface VendorData {
   id: string;
   name: string;
@@ -77,7 +77,7 @@ function Vendor() {
             <div className="vendordeatil">
               <div className="vendorleft">
                 <Image
-                  src={vendor.profileImage || '/fallback-profile.png'}
+                  src={vendor.profileImage || Default}
                   alt={vendor.name}
                   width={100}
                   height={100}

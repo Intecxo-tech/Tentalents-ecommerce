@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Star } from 'lucide-react';
 import '../vendors/vendor.css';
 import CustomerSkeleton from './CustomerSkeleton';
+import Default from '../../../assets/defaultprofile.png';
 
 interface CustomerData {
   name: string;
@@ -96,7 +97,7 @@ function Customer() {
               <div className="vendordeatil">
                 <div className="vendorleft">
                   <Image
-                    src={user.profileImage}
+                    src={user.profileImage || Default}
                     alt={user.name}
                     width={96}
                     height={96}
