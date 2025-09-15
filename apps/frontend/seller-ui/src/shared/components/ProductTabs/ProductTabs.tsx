@@ -101,7 +101,7 @@ const ProductTabs = () => {
 
   const filteredOrders = filterOrders(activeTab);
 
-  if (loading) return <div>Loading all orders...</div>;
+
   if (error) return <div>Error: {error}</div>;
 
   return (
@@ -123,7 +123,11 @@ const ProductTabs = () => {
           ))}
         </div>
       </div>
-      <ProductAccept orders={filteredOrders} />
+      {error ? (
+      <div className="error-message">Error: {error}</div>
+    ) : (
+      <ProductAccept orders={loading ? undefined : filteredOrders} />
+    )}
     </div>
   );
 };

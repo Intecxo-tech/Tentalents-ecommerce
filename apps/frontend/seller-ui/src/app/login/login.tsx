@@ -113,9 +113,11 @@ const Login = () => {
       } else {
         console.warn("vendorId missing in token payload");
       }
+toast.success('Login successful!');
 
-      toast.success('Login successful!');
-      router.push('/dashboard/myaccount');
+setTimeout(() => {
+  router.push('/dashboard/myaccount');
+}, 800);
 
     } catch (err: any) {
       console.error('Login error:', err);

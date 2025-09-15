@@ -3,6 +3,7 @@
 import React from 'react';
 import './productaccept.css';
 import Image from 'next/image';
+import ProductAcceptSkeleton from './ProductAcceptSkeleton'; 
 import { ShoppingCart } from 'lucide-react';
 // --- Interfaces for props ---
 
@@ -31,12 +32,18 @@ interface VendorOrder {
 }
 
 interface ProductAcceptProps {
-  orders: VendorOrder[];
+  orders?: VendorOrder[];
   limit?: number;
+  
 }
 
 const ProductAccept = ({ orders, limit }: ProductAcceptProps) => {
   // Event handlers
+   if (!orders) {
+    return <ProductAcceptSkeleton count={limit || 5} />;
+  }
+
+
   const handleConfirm = (id: string) => console.log('Confirmed product ID:', id);
   const handleDeny = (id: string) => console.log('Denied product ID:', id);
   const handleViewStatus = (id: string) => console.log('Viewing status for ID:', id);
@@ -53,9 +60,14 @@ const ProductAccept = ({ orders, limit }: ProductAcceptProps) => {
   };
 
   const limitedOrders = limit ? orders.slice(0, limit) : orders;
-  if (limitedOrders.length === 0) return <div className='ordersempty'>
-    <ShoppingCart className='ordericon' size={80} />
-    <p>No Orders Yet</p></div>;
+ if (limitedOrders.length === 0) {
+    return (
+      <div className='ordersempty'>
+        <ShoppingCart className='ordericon' size={80} />
+        <p>No Orders Yet</p>
+      </div>
+    );
+  }
 
   return (
     <div className="productsection">
