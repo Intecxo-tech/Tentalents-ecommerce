@@ -219,7 +219,7 @@ setTimeout(() => {
 
           <div className="bottom-links">
             <p>
-              Are You A New User? <Link href="/signup/page">Sign Up Here</Link>
+              Are You A New User? <Link href="/signup">Sign Up Here</Link>
             </p>
             <p style={{ marginTop: '8px' }}>
               <Link href="/forgot-password">Forgot Password ?</Link>
