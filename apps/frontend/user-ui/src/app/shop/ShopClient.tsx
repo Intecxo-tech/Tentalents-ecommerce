@@ -164,8 +164,10 @@ const discountRanges = [
 const filteredProducts = useMemo(() => {
   return products.filter((product) => {
     const matchCategory = selectedCategory
-      ? product.categoryNames.includes(selectedCategory)
-      : true;
+  ? product.categoryNames.some(
+      (c) => c.toLowerCase() === selectedCategory.toLowerCase()
+    )
+  : true;
 
     const matchSeller = selectedSeller
       ? product.vendor?.name === selectedSeller

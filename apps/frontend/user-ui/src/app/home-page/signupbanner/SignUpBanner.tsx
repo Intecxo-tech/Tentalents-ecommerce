@@ -3,6 +3,7 @@ import './SignUpBanner.css';
 import { Headphones, TruckIcon,ShieldCheck, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import BannerImage from '../../../assets/signupimage.png'
+import Link from 'next/link';
 const SignUpBanner = () => {
   return (
     <div className="delivery">
@@ -43,7 +44,7 @@ const SignUpBanner = () => {
         <div className="banner-content">
             <h3 className="banner-heading">Get Signed-up On Tentalents and Get amazing offers</h3>
             <p className="content-para">Discover top deals on appliances, electronics & more all in one place.</p>
-            <button className="background-button buttnosection">Explore Now  <ChevronRight /></button>
+           <Link href="/signup"><button className="background-button buttnosection">Explore Now  <ChevronRight /></button></Link> 
             </div>
       </div>
     </div>

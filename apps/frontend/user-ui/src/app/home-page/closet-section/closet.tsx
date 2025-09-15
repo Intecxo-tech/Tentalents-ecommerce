@@ -14,9 +14,9 @@ const Closet = () => {
           <p className="content-para">
             From bold layers to everyday essentials discover <br/>styles that fit your vibe.
           </p>
-          <button className="background-button">
+        <Link href="/shop"><button className="background-button">
             Explore Now <ChevronRight />
-          </button>
+          </button></Link>  
         </div>
         <div className="closet-right">
           <Image src={closet} alt="closet-img" />
