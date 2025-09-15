@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import Image from 'next/image';
 import './account.css'
 import toast from 'react-hot-toast';
+import Default from '../../../../assets/defaultprofile.png'
 import Mainimage from '../../../../assets/tenanlenst-menu.png';
 import Editbutton from '../../../../assets/editbutton.png'
 import { FaUpload } from 'react-icons/fa'; 
@@ -640,7 +641,7 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
   >
   {vendor.profileImage && (
   <Image
-  src={vendor.profileImage || '/path/to/fallback-image.png'}
+  src={vendor.profileImage || Default}
   alt="Profile"
   className="profile-img"
   width={90}
