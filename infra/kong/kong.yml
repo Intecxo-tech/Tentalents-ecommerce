@@ -1,134 +1,116 @@
 _format_version: "3.0"
-_transform: true
-
-# ────────────────────────────────
-# 🚀 Microservices Configuration
-# ────────────────────────────────
 
 services:
+  # 🧑 User Service
   - name: user-service
-    url: http://user-service:3000
+    url: http://user-service:3012
     routes:
-      - name: user-route
-        paths: ["/user"]
-        plugins:
-          - name: cors
-            config:
-              origins: ["https://your-vercel-app.vercel.app"]
-              methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-              headers: ["Authorization", "Content-Type"]
-              credentials: true
+      - name: user-api
+        paths: ["/api/user"]
+      - name: user-auth
+        paths: ["/api/auth"]
+      - name: user-swagger
+        paths: ["/api/docs/user"]
+        strip_path: false
 
+  # 📦 Product Service
   - name: product-service
     url: http://product-service:3001
     routes:
-      - name: product-route
-        paths: ["/product"]
-        plugins:
-          - name: rate-limiting
-            config: { minute: 60 }
-          - name: cors
-            config: { origins: ["*"] }
+      - name: product-api
+        paths: ["/api/product"]
+      - name: product-swagger
+        paths: ["/api/docs/product"]
+        strip_path: false
 
+  # 🛒 Order Service
   - name: order-service
     url: http://order-service:3002
     routes:
-      - name: order-route
-        paths: ["/order"]
-        plugins:
-          - name: cors
-            config: { origins: ["*"] }
+      - name: order-api
+        paths: ["/api/orders"]
+      - name: order-swagger
+        paths: ["/api/docs/order"]
+        strip_path: false
 
+  # ⭐ Rating Service
   - name: rating-service
     url: http://rating-service:3003
     routes:
-      - name: rating-route
-        paths: ["/rating"]
+      - name: rating-api
+        paths: ["/api/rating"]
+      - name: rating-swagger
+        paths: ["/api/docs/rating"]
+        strip_path: false
 
+  # 📧 Email Service
   - name: email-service
     url: http://email-service:3004
     routes:
-      - name: email-route
-        paths: ["/email"]
+      - name: email-api
+        paths: ["/api/email"]
+      - name: email-swagger
+        paths: ["/api/docs/email"]
+        strip_path: false
 
+  # 💳 Payment Service
   - name: payment-service
     url: http://payment-service:3005
     routes:
-      - name: payment-route
-        paths: ["/payment"]
+      - name: payment-api
+        paths: ["/api/payments"]
+      - name: payment-stripe-webhook
+        paths: ["/api/payments/stripe/webhook"]
+      - name: payment-swagger
+        paths: ["/api/docs/payment"]
+        strip_path: false
 
+  # 🔍 Search Service
   - name: search-service
     url: http://search-service:3006
     routes:
-      - name: search-route
-        paths: ["/search"]
-        plugins:
-          - name: rate-limiting
-            config: { minute: 100 }
-          - name: cors
-            config: { origins: ["*"] }
+      - name: search-api
+        paths: ["/api/search"]
+      - name: search-swagger
+        paths: ["/api/docs/search"]
+        strip_path: false
 
-  - name: cart-service
-    url: http://cart-service:3007
-    routes:
-      - name: cart-route
-        paths: ["/cart"]
-        plugins:
-          - name: rate-limiting
-            config: { minute: 30 }
-          - name: cors
-            config: { origins: ["*"] }
-
+  # 🛠️ Admin Service
   - name: admin-service
     url: http://admin-service:3008
     routes:
-      - name: admin-route
-        paths: ["/admin"]
-        plugins:
-          - name: jwt
-          - name: cors
-            config:
-              origins: ["https://your-vercel-app.vercel.app"]
+      - name: admin-api
+        paths: ["/api/admin"]
+      - name: admin-swagger
+        paths: ["/api/docs/admin"]
+        strip_path: false
 
+  # 🧾 Invoice Service
   - name: invoice-service
     url: http://invoice-service:3009
     routes:
-      - name: invoice-route
-        paths: ["/invoice"]
-        plugins:
-          - name: cors
-            config: { origins: ["*"] }
+      - name: invoice-api
+        paths: ["/api/invoices"]
+      - name: invoice-swagger
+        paths: ["/api/docs/invoice"]
+        strip_path: false
 
+  # 📊 Analytics Service
   - name: analytics-service
     url: http://analytics-service:3010
     routes:
-      - name: analytics-route
-        paths: ["/analytics"]
+      - name: analytics-api
+        paths: ["/api/secure"]
+      - name: analytics-swagger
+        paths: ["/api/docs"]
+        strip_path: false
 
+  # 🏬 Vendor Service
   - name: vendor-service
     url: http://vendor-service:3011
     routes:
-      - name: vendor-route
-        paths: ["/vendor"]
-        plugins:
-          - name: jwt
-          - name: cors
-            config:
-              origins: ["https://your-vercel-app.vercel.app"]
-
-# ────────────────────────────────
-# 👤 Consumers (Clients using JWT)
-# ────────────────────────────────
-
-consumers:
-  - username: admin-app
-    custom_id: admin-001
-    jwt_secrets:
-      - key: admin-key
-        secret: admin-secret
-
-  - username: vendor-app
-    custom_id: vendor-001
-    jwt_secrets:
-      - key: vendor-key
-        secret: vendor-secret
+      - name: vendor-api
+        paths: ["/api/vendor"]
+      - name: vendor-swagger
+        paths: ["/api/docs/vendor"]
+        strip_path: false
