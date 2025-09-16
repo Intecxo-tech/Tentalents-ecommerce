@@ -1,7 +1,7 @@
-import { connectKafkaConsumer } from '@shared/middlewares/kafka/src/lib/kafka-consumer';
-import { KafkaConsumerConfig } from '@shared/middlewares/kafka/src/lib/kafka-consumer';
+import { connectKafkaConsumer } from '@shared/kafka';
+import { KafkaConsumerConfig } from '@shared/kafka';
 import { EachMessagePayload } from 'kafkajs';
-import { generateInvoiceAndUpload } from '../../../../../libs/shared/utils/src/lib/invoice-generator';
+import { generateInvoiceAndUpload } from '@shared/utils';
 import { PrismaClient } from '@prisma/client';
 import { MinioBuckets } from '@shared/minio';
 import { logger } from '@shared/logger';
