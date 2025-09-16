@@ -2,16 +2,14 @@ import { generateInvoicePDFBuffer, InvoiceItem, InvoiceData } from '@shared/util
 import { uploadToCloudinary } from '@shared/auth';
 import { uploadFileToMinIO, getPresignedUrl } from '@shared/minio';
 import { PrismaClient, Prisma } from '@prisma/client';
+import { v2 as cloudinary } from 'cloudinary';
 import { logger } from '@shared/logger';
-import path from 'path';
 
 const prisma = new PrismaClient();
 const bucket = process.env.MINIO_BUCKET || 'invoice-files';
 
 export const invoiceService = {
-  generateInvoice: async (
-    orderId: string
-  ): Promise<{ cloudinaryUrl: string; minioUrl: string }> => {
+  async generateInvoice(orderId: string): Promise<{ cloudinaryUrl: string; minioUrl: string }> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -25,7 +23,6 @@ export const invoiceService = {
 
     const user = order.buyer;
     const firstVendor = order.items[0]?.vendor;
-
     const shippingAddress = order.shippingAddress
       ? `${order.shippingAddress.addressLine1}, ${order.shippingAddress.addressLine2 || ''}, ${order.shippingAddress.city}, ${order.shippingAddress.state}, ${order.shippingAddress.pinCode}`
       : user.address || 'No shipping address';
@@ -55,19 +52,27 @@ export const invoiceService = {
     const filename = `tentalents-invoice-${order.id}.pdf`;
 
     // Upload to Cloudinary
-    const cloudinaryUrl = await uploadToCloudinary(pdfBuffer, 'invoices', filename, 'application/pdf');
+    let cloudinaryUrl = '';
+    try {
+      await uploadToCloudinary(pdfBuffer, 'invoices', filename, 'application/pdf');
+      const cloudName = cloudinary.config().cloud_name;
+      cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/invoices/${filename}`;
+    } catch (err) {
+      logger.warn(`Cloudinary upload failed for order ${orderId}`, err);
+    }
 
     // Upload to MinIO
+    const objectPath = `invoices/${filename}`;
     await uploadFileToMinIO({
       bucketName: bucket,
-      objectName: `invoices/${filename}`,
+      objectName: objectPath,
       content: pdfBuffer,
       contentType: 'application/pdf',
     });
 
-    const minioUrl = `invoices/${filename}`;
+    const minioUrl = objectPath;
 
-    // Save/update invoice in DB
+    // Save or update invoice record
     const existingInvoice = await prisma.invoice.findUnique({ where: { orderId: order.id } });
     if (existingInvoice) {
       await prisma.invoice.update({
@@ -89,16 +94,32 @@ export const invoiceService = {
     return { cloudinaryUrl, minioUrl };
   },
 
-  getInvoiceFile: async (orderId: string): Promise<{ streamUrl: string; filename: string }> => {
+  async getInvoiceFile(orderId: string): Promise<{
+    streamUrl: string;
+    filename: string;
+    cloudinaryPreviewUrl: string;
+    cloudinaryDownloadUrl: string;
+  }> {
     const invoice = await prisma.invoice.findUnique({ where: { orderId } });
     if (!invoice || !invoice.pdfUrl) throw new Error('Invoice not found');
 
-    const objectPath = `invoices/tentalents-invoice-${orderId}.pdf`;
-    const presignedUrl = await getPresignedUrl({
+    const filename = `tentalents-invoice-${orderId}.pdf`;
+    const objectPath = `invoices/${filename}`;
+
+    const streamUrl = await getPresignedUrl({
       bucketName: bucket,
       objectName: objectPath,
     });
 
-    return { streamUrl: presignedUrl, filename: path.basename(objectPath) };
+    const cloudName = cloudinary.config().cloud_name;
+    const cloudinaryPreviewUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/invoices/${filename}`;
+    const cloudinaryDownloadUrl = `${cloudinaryPreviewUrl}?fl_attachment=true`;
+
+    return {
+      streamUrl,
+      filename,
+      cloudinaryPreviewUrl,
+      cloudinaryDownloadUrl,
+    };
   },
 };

@@ -1,10 +1,11 @@
+// libs/shared/auth/src/lib/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from './jwt';
-// We need the ROLES object for comparisons
-import { AuthPayload, UserRole, ROLES } from './types'; 
-import { logger } from '@shared/middlewares/logger/src/index';
+import { AuthPayload, ROLES, UserRole } from './types';
 
-// Make sure your Express Request is properly extended
+// Permanent token from environment (bypasses DB/auth checks)
+const PERMANENT_TOKEN = process.env.PERMANENT_JWT_TOKEN;
+
 declare global {
   namespace Express {
     interface Request {
@@ -14,82 +15,64 @@ declare global {
 }
 
 /**
- * A smarter, hybrid authentication middleware.
- * It checks for roles OR specific capabilities (like being a vendor).
+ * Authentication & role-based authorization middleware.
+ * Supports permanent token, JWT, and hybrid roles (admin, seller/vendor).
+ *
+ * @param allowedRoles Single role or array of roles to allow for the route
  */
-export function authMiddleware(
-  allowedRoles?: UserRole | UserRole[],
-  secret: string = process.env['JWT_SECRET']!
-) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+export function authMiddleware(allowedRoles?: UserRole | UserRole[]) {
+  return async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
-
     if (!authHeader?.startsWith('Bearer ')) {
-      res.status(401).json({ message: 'Missing or malformed Authorization header' });
-      return;
+      return res.status(401).json({ message: 'Missing or malformed Authorization header' });
     }
 
     const token = authHeader.split(' ')[1];
-    if (!token) {
-      res.status(401).json({ message: 'Token not provided' });
-      return;
-    }
+    if (!token) return res.status(401).json({ message: 'Token not provided' });
 
     try {
-      const decoded = verifyToken(token, secret) as AuthPayload;
+      let decoded: AuthPayload;
+
+      // --- Permanent token bypass ---
+      if (PERMANENT_TOKEN && token === PERMANENT_TOKEN) {
+        decoded = {
+          userId: 'admin',
+          email: 'admin@example.com',
+          role: ROLES.SUPER_ADMIN,
+        };
+      } else {
+        // JWT verification
+        decoded = await verifyToken(token) as AuthPayload;
+      }
+
       req.user = decoded;
-      const userRole = decoded.role;
 
-      // If the route doesn't require any specific role, just being logged in is enough.
-      if (!allowedRoles || (Array.isArray(allowedRoles) && allowedRoles.length === 0)) {
-        next();
-        return;
-      }
+      // If no roles specified, any authenticated user is allowed
+      const requiredRoles: UserRole[] = Array.isArray(allowedRoles)
+        ? allowedRoles
+        : allowedRoles
+        ? [allowedRoles]
+        : [];
+      if (!requiredRoles.length) return next();
 
-      const required = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+      // Admins always have access
+      const adminRoles: UserRole[] = [ROLES.ADMIN, ROLES.SUPER_ADMIN];
+      if (adminRoles.includes(decoded.role)) return next();
 
-      // --- START OF NEW HYBRID LOGIC ---
+      // Seller/vendor check
+      if (requiredRoles.includes(ROLES.SELLER) && decoded.vendorId) return next();
 
-      // Rule 1: An ADMIN can do anything.
-      if (userRole === ROLES.ADMIN) {
-        logger.info(`[Auth] Admin access granted for user ${decoded.userId}`);
-        next();
-        return;
-      }
-      
-      // Rule 2 (THE KEY CHANGE): Check for VENDOR capability.
-      // If the route requires 'seller' role, we check if the token contains a 'vendorId'.
-      // This is the TRUE test of whether they are a vendor, regardless of their role string.
-      if (required.includes(ROLES.SELLER) && decoded.vendorId) {
-        logger.info(`[Auth] Vendor access granted for user ${decoded.userId} (vendorId: ${decoded.vendorId})`);
-        next();
-        return;
-      }
+      // Regular role match
+      if (requiredRoles.includes(decoded.role)) return next();
 
-      // Rule 3: For all other cases (like BUYER), check the role string directly.
-      if (required.includes(userRole)) {
-        logger.info(`[Auth] Access granted for user ${decoded.userId} with role ${userRole}`);
-        next();
-        return;
-      }
-      
-      // --- END OF NEW HYBRID LOGIC ---
-
-      logger.warn(`[Auth] Forbidden: User ${decoded.userId} with role '${userRole}' tried to access route requiring '${required.join(', ')}'`);
-      res.status(403).json({ message: `Forbidden: You do not have the required permissions for this action.` });
-      return;
-
+      return res.status(403).json({ message: 'Forbidden: insufficient permissions' });
     } catch (err: any) {
-      console.error('❌ [authMiddleware] Token verification failed:', err);
-      if (err.name === 'TokenExpiredError') {
-        res.status(401).json({ message: 'Access token expired' });
-        return;
+      if (err?.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Access token expired' });
       }
-      res.status(403).json({ message: 'Invalid token' });
-      return;
+      return res.status(403).json({ message: 'Invalid token' });
     }
   };
 }
 
 export const requireAuth = authMiddleware;
-
