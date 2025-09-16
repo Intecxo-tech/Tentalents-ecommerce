@@ -52,9 +52,9 @@ const Login = () => {
       toast.success('Login successful!');
       // Redirect based on role:
       if (decoded.role === 'admin') {
-        router.push('/dashboard/home');
+        router.push('/dashboard/');
       } else {
-        router.push('/dashboard/myaccount');
+        router.push('/dashboard/');
       }
       return;
     } else {
@@ -74,7 +74,7 @@ const Login = () => {
         const decoded: any = jwtDecode(token);
         const isExpired = decoded.exp * 1000 < Date.now();
         if (!isExpired) {
-          router.push('/dashboard/myaccount');
+          router.push('/dashboard/');
         } else {
           localStorage.removeItem('token');
         }
@@ -116,7 +116,7 @@ const Login = () => {
 toast.success('Login successful!');
 
 setTimeout(() => {
-  router.push('/dashboard/myaccount');
+  router.push('/dashboard/');
 }, 800);
 
     } catch (err: any) {
@@ -142,7 +142,7 @@ setTimeout(() => {
       if (!token) throw new Error('Token missing in response');
       localStorage.setItem('token', token);
       toast.success('Logged in successfully!');
-      router.push('/dashboard/myaccount');
+      router.push('/dashboard/');
     } catch (error) {
       console.error(error);
       toast.error('Google login failed.');
