@@ -1,37 +1,31 @@
+// libs/shared/email/src/lib/send.ts
 import nodemailer from 'nodemailer';
-import { env } from '@shared/middlewares/config/src/lib/env';
-import { logger } from '@shared/middlewares/logger/src/lib/logger';
+import { emailEnv } from './env';
+import { emailLogger } from './logger';
+import { EmailPayload } from './types';
 
 const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: false,
+  host: emailEnv.SMTP_HOST,
+  port: emailEnv.SMTP_PORT,
+  secure: emailEnv.SMTP_PORT === 465, // TLS for port 465
   auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
+    user: emailEnv.SMTP_USER,
+    pass: emailEnv.SMTP_PASS,
   },
 });
 
-export interface EmailPayload {
-  to: string;
-  subject: string;
-  html: string;
-}
-
-export const sendEmail = async ({
-  to,
-  subject,
-  html,
-}: EmailPayload): Promise<void> => {
-  const from = env.EMAIL_FROM;
+export const sendEmail = async ({ to, subject, html }: EmailPayload) => {
   try {
-    const info = await transporter.sendMail({ from, to, subject, html });
-    logger.info(`📧 Email sent: ${info.messageId}`);
+    const info = await transporter.sendMail({
+      from: `"MVP E-Commerce" <${emailEnv.EMAIL_FROM}>`,
+      to,
+      subject,
+      html,
+    });
+    emailLogger.info(`📧 Email sent: ${info.messageId}`);
+    return { messageId: info.messageId };
   } catch (err) {
-    logger.error('❌ Failed to send email', err);
+    emailLogger.error('❌ Failed to send email', err);
     throw err;
   }
 };
-
-// npm install -D @types/nodemailer
-// npm install nodemailer

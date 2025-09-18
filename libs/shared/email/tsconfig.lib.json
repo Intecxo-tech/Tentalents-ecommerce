@@ -1,11 +1,27 @@
+// {
+//   "extends": "./tsconfig.json",
+//   "compilerOptions": {
+//     "baseUrl": ".",
+//     "rootDir": "src/lib",
+//     "outDir": "../../../dist/out-tsc/libs/shared/email",
+//     "composite": true,
+//     "declaration": true,
+//     "declarationMap": true
+//   }
+// }
+
+
+
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "outDir": "../../../dist/libs/shared/email", // Node-friendly
     "rootDir": "src/lib",
-    "outDir": "../../../dist/out-tsc/libs/shared/email",
-    "composite": true,
     "declaration": true,
-    "declarationMap": true
-  }
+    "declarationMap": true,
+    "module": "commonjs",
+    "target": "es2020",
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*.ts"]
 }
