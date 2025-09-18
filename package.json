@@ -124,6 +124,7 @@
     "styled-components": "^6.1.19",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "tweetsodium": "^0.0.4",
     "winston": "^3.17.0",
     "zod": "^3.22.4"
   },

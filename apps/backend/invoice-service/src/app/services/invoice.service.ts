@@ -4,9 +4,10 @@ import { uploadFileToMinIO, getPresignedUrl } from '@shared/minio';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { v2 as cloudinary } from 'cloudinary';
 import { logger } from '@shared/logger';
+import { sendEmail } from '@shared/email';
 
 const prisma = new PrismaClient();
-const bucket = process.env.MINIO_BUCKET || 'invoice-files';
+const bucket = process.env.MINIO_BUCKET || 'invoices';
 
 export const invoiceService = {
   async generateInvoice(orderId: string): Promise<{ cloudinaryUrl: string; minioUrl: string }> {
@@ -88,6 +89,50 @@ export const invoiceService = {
           issuedAt: new Date(),
         },
       });
+    }
+
+    // --- Email invoice to buyer ---
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: `Your Invoice for Order #${order.id}`,
+        html: `<p>Dear ${user.name || 'Customer'},</p>
+               <p>Please find your invoice attached for your recent purchase.</p>
+               <p>Thank you for shopping with us!</p>`,
+        attachments: [
+          {
+            filename,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          },
+        ],
+      });
+      logger.info(`✅ Invoice emailed to buyer: ${user.email}`);
+    } catch (err) {
+      logger.warn(`Failed to send invoice email to buyer ${user.email}`, err);
+    }
+
+    // --- Email invoice to vendor ---
+    if (firstVendor?.email) {
+      try {
+        await sendEmail({
+          to: firstVendor.email,
+          subject: `New Order Invoice #${order.id}`,
+          html: `<p>Dear ${firstVendor.name || 'Vendor'},</p>
+                 <p>A new order has been placed. Please find the invoice attached.</p>
+                 <p>Regards,</p>`,
+          attachments: [
+            {
+              filename,
+              content: pdfBuffer,
+              contentType: 'application/pdf',
+            },
+          ],
+        });
+        logger.info(`✅ Invoice emailed to vendor: ${firstVendor.email}`);
+      } catch (err) {
+        logger.warn(`Failed to send invoice email to vendor ${firstVendor.email}`, err);
+      }
     }
 
     logger.info(`✅ Invoice generated for order ${orderId}`);

@@ -1,47 +1,49 @@
 // test-email.js
 
-// Load environment variables from .env
-require('dotenv').config();
+// Load environment variables from .env.sendgrid
+require('dotenv').config({ path: '.env.sendgrid' });
 
-// Import the sendEmail function from your shared email library
-const { sendEmail } = require('./dist/libs/shared/email');
+const nodemailer = require('nodemailer');
 
-// Change this to your email for testing
+// Recipient email for testing
 const TEST_RECIPIENT = 'swapnaadhav123@gmail.com';
 
-// Choose which account to use: 'TEAM' or 'SWAPNA'
-const ACCOUNT = 'SWAPNA'; // or 'TEAM'
+// Create SMTP transporter using SendGrid credentials
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: process.env.SMTP_PORT === '465', // true for port 465, false otherwise
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
-// Select credentials dynamically
-const SMTP_CONFIG =
-  ACCOUNT === 'SWAPNA'
-    ? {
-        host: process.env.SWAPNA_SMTP_HOST,
-        port: Number(process.env.SWAPNA_SMTP_PORT),
-        user: process.env.SWAPNA_SMTP_USER,
-        pass: process.env.SWAPNA_SMTP_PASS,
-        from: process.env.SWAPNA_EMAIL_FROM,
-      }
-    : {
-        host: process.env.TEAM_SMTP_HOST,
-        port: Number(process.env.TEAM_SMTP_PORT),
-        user: process.env.TEAM_SMTP_USER,
-        pass: process.env.TEAM_SMTP_PASS,
-        from: process.env.TEAM_EMAIL_FROM,
-      };
+// HTML email content
+const htmlContent = `
+<html>
+  <body>
+    <h1 style="color: #4CAF50;">SendGrid SMTP Test ✅</h1>
+    <p>This is a <strong>test email</strong> sent via <em>SendGrid SMTP</em> using Node.js.</p>
+    <p style="color: #888;">Have a nice day! 🌟</p>
+  </body>
+</html>
+`;
 
+// Email options
+const mailOptions = {
+  from: process.env.EMAIL_FROM,
+  to: TEST_RECIPIENT,
+  subject: '✅ SendGrid HTML Test Email',
+  html: htmlContent,
+};
+
+// Send the email
 (async () => {
   try {
-    const result = await sendEmail({
-      to: TEST_RECIPIENT,
-      from: SMTP_CONFIG.from,
-      subject: `✅ Test Email from shared/email (${ACCOUNT})`,
-      html: '<h3>It works! 🎉</h3>',
-      smtp: SMTP_CONFIG, // Pass SMTP config dynamically
-    });
-
-    console.log('📧 Email sent successfully:', result);
-  } catch (err) {
-    console.error('❌ Failed to send email:', err);
+    const info = await transporter.sendMail(mailOptions);
+    console.log('📧 Email sent successfully:', info.messageId);
+  } catch (error) {
+    console.error('❌ Failed to send email:', error);
   }
 })();
