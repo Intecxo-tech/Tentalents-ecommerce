@@ -46,7 +46,7 @@ async function saveForLater(itemId: string) {
   const token = localStorage.getItem('token');
 
   try {
-    const res = await fetch(`http://localhost:3020/api/cart/save-for-later`, {
+    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart/save-for-later`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -388,5 +388,6 @@ const total = subtotal + shippingFee + platformFee;
 };
 
 export default Cart;
+
 
 
