@@ -5,6 +5,7 @@ import {
   checkoutCart,
     updateCartItemQuantity,
     toggleSaveForLater,  
+   deleteCartItem
 } from '../controllers/cart.controller';
 import { optionalAuthMiddleware } from '@shared/auth'; // ✅ Supports JWT or guest session
 
@@ -23,7 +24,7 @@ router.patch('/save-for-later', toggleSaveForLater);
  * @desc    Retrieve cart (authenticated or guest)
  */
 router.get('/', getCart);
-
+router.delete('/:itemId', deleteCartItem);
 /**
  * @route   POST /api/cart/add
  * @desc    Add item to cart (authenticated or guest)
