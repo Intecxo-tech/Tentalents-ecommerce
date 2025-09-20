@@ -1,5 +1,5 @@
 import { generateInvoicePDFBuffer, InvoiceItem, InvoiceData } from '@shared/utils';
-import { uploadFileToMinIO, getPresignedUrl } from '@shared/minio';
+import { uploadFileToMinIO } from '@shared/minio';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { logger } from '@shared/logger';
 import { uploadToCloudinary } from '@shared/auth';
@@ -7,6 +7,7 @@ import { sendEmail } from '@shared/email';
 
 const prisma = new PrismaClient();
 const bucket = process.env.MINIO_BUCKET || 'invoices';
+const minioEndpoint = 'http://localhost:9000'; // S3 endpoint
 
 export const invoiceService = {
   /**
@@ -56,13 +57,13 @@ export const invoiceService = {
 
     // Generate PDF buffer
     const pdfBuffer = await generateInvoicePDFBuffer(invoiceData);
-    const publicId = `invoice-${order.id}`;
-    const filename = `${publicId}.pdf`;
+    const filename = `invoice-${order.id}.pdf`;
+    const objectPath = `invoices/${filename}`;
 
-    // --- Upload to Cloudinary (direct download link) ---
+    // --- Upload to Cloudinary ---
     let cloudinaryUrl = '';
     try {
-      cloudinaryUrl = await uploadToCloudinary(pdfBuffer, 'invoices', publicId, 'application/pdf');
+      cloudinaryUrl = await uploadToCloudinary(pdfBuffer, 'invoices', `invoice-${order.id}`, 'application/pdf');
       logger.info(`✅ Invoice uploaded to Cloudinary: ${cloudinaryUrl}`);
     } catch (err) {
       logger.warn(`Cloudinary upload failed for order ${orderId}`, err);
@@ -71,14 +72,15 @@ export const invoiceService = {
     // --- Upload to MinIO ---
     let minioUrl = '';
     try {
-      const objectPath = `invoices/${filename}`;
       await uploadFileToMinIO({
         bucketName: bucket,
         objectName: objectPath,
         content: pdfBuffer,
         contentType: 'application/pdf',
       });
-      minioUrl = await getPresignedUrl({ bucketName: bucket, objectName: objectPath });
+
+      // Permanent public MinIO URL
+      minioUrl = `${minioEndpoint}/${bucket}/${objectPath}`;
       logger.info(`✅ Invoice uploaded to MinIO: ${minioUrl}`);
     } catch (err) {
       logger.warn(`MinIO upload failed for order ${orderId}`, err);
@@ -102,7 +104,7 @@ export const invoiceService = {
       });
     }
 
-    // --- Send email to buyer (MinIO download link + PDF attachment) ---
+    // --- Send email to buyer ---
     try {
       await sendEmail({
         to: user.email,
@@ -126,7 +128,7 @@ export const invoiceService = {
       logger.warn(`Failed to send invoice email to buyer ${user.email}`, err);
     }
 
-    // --- Send email to vendor (Cloudinary direct download link) ---
+    // --- Send email to vendor ---
     if (firstVendor?.email) {
       try {
         await sendEmail({
@@ -154,11 +156,10 @@ export const invoiceService = {
     const invoice = await prisma.invoice.findUnique({ where: { orderId } });
     if (!invoice || !invoice.pdfUrl) throw new Error('Invoice not found');
 
-    const filename = `tentalents-invoice-${orderId}.pdf`;
+    const filename = `invoice-${orderId}.pdf`;
     const objectPath = `invoices/${filename}`;
-    const streamUrl = await getPresignedUrl({ bucketName: bucket, objectName: objectPath });
+    const minioUrl = `${minioEndpoint}/${bucket}/${objectPath}`;
 
-    // Cloudinary download link is already direct-download
-    return { streamUrl, filename, cloudinaryUrl: invoice.pdfUrl };
+    return { streamUrl: minioUrl, filename, cloudinaryUrl: invoice.pdfUrl };
   },
 };

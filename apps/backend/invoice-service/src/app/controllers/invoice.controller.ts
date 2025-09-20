@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { invoiceService } from '../services/invoice.service';
 import { AuthPayload, isAdmin } from '@shared/auth';
 import { logger } from '@shared/logger';
-import axios from 'axios';
 
 export interface AuthRequest extends Request {
   user?: AuthPayload;
@@ -19,8 +18,8 @@ export async function generateInvoiceAutomatically(req: AuthRequest, res: Respon
     const result = await invoiceService.generateInvoice(orderId);
     return res.status(201).json({
       message: 'Invoice generated and uploaded successfully',
-      cloudinaryUrl: result.cloudinaryUrl, // only one URL
-      minioUrl: result.minioUrl,
+      cloudinaryUrl: result.cloudinaryUrl,
+      minioUrl: result.minioUrl, // permanent public MinIO link
     });
   } catch (err: any) {
     logger.error(`Error generating invoice for order ${orderId}`, err);
@@ -47,11 +46,8 @@ export async function downloadInvoice(req: AuthRequest, res: Response) {
       });
     }
 
-    // Default: download PDF from MinIO
-    const response = await axios.get(streamUrl, { responseType: 'stream' });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    response.data.pipe(res);
+    // Redirect to permanent public MinIO URL
+    return res.redirect(streamUrl);
   } catch (err: any) {
     logger.error(`Error downloading invoice ${orderId}`, err);
     return res.status(500).json({ error: 'Failed to download invoice', details: err.message || err });
