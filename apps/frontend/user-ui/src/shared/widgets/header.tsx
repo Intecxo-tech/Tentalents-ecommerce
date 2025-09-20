@@ -8,8 +8,9 @@ import { useRouter } from 'next/navigation';
 import './footer&header.css'
 import { CircleUserRound , User} from 'lucide-react';
 import { categories, navItems } from '../../configs/constants';
-
+import { useAuth } from '../../app/auth/callback/AuthContext';
 const Header = () => {
+  const {user} = useAuth();
    const [cartCount, setCartCount] = useState(0);
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +22,8 @@ const [showSearchCategories, setShowSearchCategories] = useState(false);
   const [searchBrand, setSearchBrand] = useState('');
 
  const [profile, setProfile] = useState<any>(null);
+ 
+  const token = user?.token;
   // ref for menu container to detect outside clicks
   const menuRef = useRef<HTMLDivElement>(null);
 const router = useRouter();
@@ -82,7 +85,6 @@ const router = useRouter();
   // This allows us to use the same function in multiple places without recreating it.
 const fetchCartCount = useCallback(async () => {
   try {
-    const token = localStorage.getItem('token');
     if (!token) {
       setCartCount(0);
       return;
@@ -105,7 +107,6 @@ const fetchCartCount = useCallback(async () => {
 
     const data = await res.json();
 
-    // ✅ Explicitly type item to avoid implicit 'any'
     const totalItems = Array.isArray(data.data)
       ? data.data
           .filter((item: { productId?: string }) => item && item.productId)
@@ -118,7 +119,8 @@ const fetchCartCount = useCallback(async () => {
     console.error('Failed to fetch cart count:', error);
     setCartCount(0);
   }
-}, []);
+}, [token]); // <-- Make sure to add 'token' as a dependency
+
 
 
   useEffect(() => {
@@ -140,36 +142,34 @@ const fetchCartCount = useCallback(async () => {
       window.removeEventListener('focus', handleFocus);
     };
   }, [fetchCartCount]);
- useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setProfile(null);
-          return;
-        }
+  const fetchProfile = async () => {
+    if (!token) {
+      setProfile(null);
+      return;
+    }
 
-        const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+    try {
+      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-        if (!res.ok) {
-          setProfile(null);
-          return;
-        }
-
-        const data = await res.json();
-        setProfile(data.data);
-      } catch (err) {
+      if (!res.ok) {
         setProfile(null);
+        return;
       }
-    };
 
+      const data = await res.json();
+      setProfile(data.data);
+    } catch (err) {
+      setProfile(null);
+    }
+  };
+   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [token]);
   // Debounce the search input to avoid too many API calls
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -362,11 +362,21 @@ const fetchCartCount = useCallback(async () => {
                     <div className="account-categories">
                       <div className="account-section">
                         <h3 className='heading-menu'>My Account</h3>
-                        {navItems.map((i, index) => (
-                          <Link href={i.href} key={index} className="account-link">
-                            <span>{i.title}</span>
-                          </Link>
-                        ))}
+                        {navItems
+  .filter(item => {
+    // Only show "Sign In" if user is NOT logged in
+    if (item.title === "Sign In") {
+      return !profile;
+    }
+    // Otherwise show all other items
+    return true;
+  })
+  .map((i, index) => (
+    <Link href={i.href} key={index} className="account-link">
+      <span>{i.title}</span>
+    </Link>
+))}
+
                       </div>
 
                       <div className="category-section8">

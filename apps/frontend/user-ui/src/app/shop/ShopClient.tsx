@@ -341,14 +341,14 @@ const filteredProducts = useMemo(() => {
     )}
   </div>
 )}
-          <div className="shop-right">
+          {/* <div className="shop-right">
             <div className="filter-grid">
               <LayoutDashboard />
             </div>
             <div className="filter-List">
               <AlignJustify />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

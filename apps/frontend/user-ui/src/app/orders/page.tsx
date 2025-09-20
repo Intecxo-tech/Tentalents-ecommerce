@@ -5,6 +5,7 @@ import OrderCard from '../components/orderssec/ordercard';
 import YourOrder from '../components/yourorder/yourorder';
 import OrderPlaced from '../components/orderplaced/orderplaced';
 import './orders.css';
+import OrderPlacedSkeleton from '../components/orderplaced/OrderPlacedSkeleton';
 import Link from 'next/link';
 import Closet from '../home-page/closet-section/closet';
 import Products from '../home-page/products-grid/productsgrid';
@@ -387,7 +388,7 @@ const handleCancelOrder = async (order: OrderData) => {
     <div className="productpageright">
       <div className="popularproductcard">
         <h2 className="sectiontitle">Popular Products</h2>
-        {loadingProducts && <p>Loading products...</p>}
+        {loadingProducts && <OrderPlacedSkeleton />}
         {productError && <p>Error: {productError}</p>}
         {!loadingProducts &&
           !productError &&

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-// 1. IMPORT useSearchParams
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,9 +10,9 @@ import './login.css';
 import axios from 'axios';
 import { ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { jwtDecode } from 'jwt-decode';
-import { auth, provider } from '../../../services/firebase'; // adjust path accordingly
-import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from '../../../services/firebase';
+import { signInWithPopup } from 'firebase/auth';
+import { useAuth } from '../../auth/callback/AuthContext'; // ✅ import
 
 type FormData = {
   email: string;
@@ -25,8 +24,8 @@ const LoginClient = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  // 2. INITIALIZE the searchParams hook
   const searchParams = useSearchParams();
+  const { login } = useAuth(); // ✅ use login function from context
 
   const {
     register,
@@ -34,45 +33,19 @@ const LoginClient = () => {
     formState: { errors },
   } = useForm<FormData>();
 
-  // ✅ This useEffect is for checking if a user is ALREADY logged in
+  // ✅ Auto-login from token in URL
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    const tokenFromUrl = searchParams.get('token');
+    if (tokenFromUrl) {
       try {
-        const decoded: any = jwtDecode(token);
-        const isExpired = decoded.exp * 1000 < Date.now();
-        if (!isExpired) {
-          router.replace('/shop');
-        } else {
-          localStorage.removeItem('token'); // remove expired token
-        }
+        login({ token: tokenFromUrl }); // ✅ login via context
+        toast.success('Switched to customer account!');
+        router.push('/myaccount');
       } catch (err) {
-        localStorage.removeItem('token'); // if invalid token
+        toast.error('Invalid login token.');
       }
     }
-  }, [router]);
-
-
-  // --- ✅ THIS IS THE NEW LOGIC YOU NEED TO ADD ---
-  // This useEffect handles the automatic login when redirected from the seller app
-  useEffect(() => {
-    // 3. Get the token from the URL (e.g., /login?token=...)
-    const tokenFromUrl = searchParams.get('token');
-
-    // 4. If a token exists in the URL, log the user in
-    if (tokenFromUrl) {
-      console.log('✅ Token found in URL, proceeding with auto-login.');
-      
-      // 5. Save the token to localStorage
-      localStorage.setItem('token', tokenFromUrl);
-      
-      // 6. Show a success message and redirect
-      toast.success('Switched to customer account!');
-      router.push('/myaccount');
-    }
-  }, [searchParams, router]); // Dependencies for the hook
-  // --------------------------------------------------
-
+  }, [searchParams, login, router]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -88,57 +61,21 @@ const LoginClient = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Incorrect email or password.');
-        } else {
-          throw new Error(result.message || 'Login failed');
-        }
+        throw new Error(result.message || 'Login failed');
       }
 
       const token = result?.data?.token;
       if (!token) throw new Error('Token missing in response');
-      
-      localStorage.setItem('token', token);
+
+      login({ token }); // ✅ use context login
       toast.success('Login successful!');
       router.push('/shop');
     } catch (err: any) {
       console.error('Login error:', err);
-      toast.error(err.message);
+      toast.error(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
-  };
-
-  // This Google login logic using GSI seems unused because your button calls handleFirebaseGoogleSignIn.
-  // You can probably remove this useEffect and the handleGoogleCallback function for cleaner code.
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-
-    script.onload = () => {
-        console.log('Google Client ID:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID);
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-        callback: handleGoogleCallback,
-      });
-
-      window.google.accounts.id.renderButton(
-        document.getElementById('googleSignInDiv')!,
-        { theme: 'outline', size: 'large' }
-      );
-    };
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  const handleGoogleCallback = async (response: any) => {
-    // This function is likely not being used.
-    // ...
   };
 
   const handleFirebaseGoogleSignIn = async () => {
@@ -154,7 +91,8 @@ const LoginClient = () => {
 
       const token = res.data?.data?.token;
       if (!token) throw new Error('Token missing in response');
-      localStorage.setItem('token', token);
+
+      login({ token }); // ✅ context login
       toast.success('Logged in successfully!');
       router.push('/shop');
     } catch (error) {
@@ -165,11 +103,9 @@ const LoginClient = () => {
     }
   };
 
-  // If the page is just processing the token from the URL, show a loading message
   if (searchParams.get('token')) {
     return <div>Switching to your customer account...</div>;
   }
-
   return (
     <div className="login-page">
       <div className="logincontainer">
