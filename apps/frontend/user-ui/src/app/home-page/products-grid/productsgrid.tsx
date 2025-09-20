@@ -6,6 +6,7 @@ import ProductCard from '../../components/productcard/productcard';
 import type { ProductItem } from '../../components/productcard/productcard';
 import { getAllProducts } from '../../../services/productService';
 import './productgrid.css';
+import Link from 'next/link';
 import ProductCardSkeleton from '../../components/productcard/ProductCardSkeleton';
 type ProductsProps = {
   columns?: number;
@@ -110,9 +111,9 @@ const Products = ({ columns = 5, category, showHeader = true, products: propProd
       {showHeader && (
         <div className="main-heading">
           <h3 className="heading">Popular Products</h3>
-          <button className="background-button">
+         <Link href="/shop"><button className="background-button">
             Explore <ChevronRight />
-          </button>
+          </button></Link> 
         </div>
       )}
 

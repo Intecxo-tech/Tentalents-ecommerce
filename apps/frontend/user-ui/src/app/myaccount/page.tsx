@@ -10,8 +10,10 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Editbutton from '../../assets/editbutton.png'
 import AccountPageSkeleton from './AccountPageSkeleton';
-
+import { useAuth } from '../../app/auth/callback/AuthContext';
 const AccountPage = () => {
+  const { user } = useAuth();
+const token = user?.token;
   const [profile, setProfile] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -29,7 +31,7 @@ const AccountPage = () => {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
+   
       if (!token) {
         router.push('/login');
         return;
@@ -61,7 +63,7 @@ const AccountPage = () => {
 
   const handleBecomeSeller = async () => {
     try {
-      const token = localStorage.getItem('token');
+    
       if (!token) {
         router.push('/login');
         return;
@@ -70,7 +72,7 @@ const AccountPage = () => {
       if (profile?.isVendor || profile?.vendorId) {
         // If already a vendor, redirect to the seller login page with the token for auto-login
         toast.success('Redirecting to your seller dashboard...');
-        router.push(`http://localhost:3000/login?token=${token}`);
+        router.push(`https://tentalents-ecommerce-seller.vercel.app/login?token=${token}`);
         return;
       }
 
@@ -123,7 +125,7 @@ const AccountPage = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+
    console.log("Your API Token is ",token)
     if (!token) {
       router.replace('/login');
@@ -141,11 +143,12 @@ const AccountPage = () => {
   };
 
   const vendorId = profile?.vendorId || '';
+
   const handleUpdateProfile = async () => {
     setUpdatingProfile(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+    
       if (!token) {
         router.push('/login');
         return;
@@ -184,7 +187,7 @@ const AccountPage = () => {
         throw new Error(`Unexpected response format: ${text}`);
       }
 
-      setProfile(updatedData.data);
+     setProfile(updatedData.data);
       toast.success('Profile updated successfully!');
 
     } catch (err: any) {
@@ -202,7 +205,7 @@ const AccountPage = () => {
     setUploadingImage(true);
 
     try {
-      const token = localStorage.getItem('token');
+   
       if (!token) {
         router.push('/login');
         return;
