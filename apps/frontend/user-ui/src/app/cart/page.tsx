@@ -390,3 +390,4 @@ const total = subtotal + shippingFee + platformFee;
 export default Cart;
 
 
+
