@@ -198,33 +198,34 @@ getCart: async (userId: string) => {
     }
   },
 
-  deleteCartItem: async (userId: string, itemId: string) => {
-    const cacheKey = `cart:${userId}`;
+ deleteCartItem: async (userId: string, itemId: string) => {
+  try {
+    await prisma.cartItem.deleteMany({
+      where: { id: itemId, userId },
+    });
+
+    // No Redis — direct DB fetch
+    const updatedCart = await prisma.cartItem.findMany({
+      where: { userId },
+      include: includeCartRelations,
+    });
+
     try {
-      await prisma.cartItem.deleteMany({
-        where: { id: itemId, userId },
+      const producer = await getKafkaProducer();
+      await producer.send({
+        topic: KAFKA_TOPICS.CART.UPDATED,
+        messages: [{ value: JSON.stringify({ userId, cart: updatedCart }) }],
       });
-
-      // Fetch updated cart with full details
-    const updatedCart = await refreshCartCache(userId);
-
-
-      try {
-        const producer = await getKafkaProducer();
-        await producer.send({
-          topic: KAFKA_TOPICS.CART.UPDATED,
-          messages: [{ value: JSON.stringify({ userId, cart: updatedCart }) }],
-        });
-      } catch (kafkaErr) {
-        console.error('Failed to send CART_UPDATED Kafka message:', kafkaErr);
-      }
-
-      return updatedCart;
-    } catch (error) {
-      console.error('Error deleting cart item:', error);
-      throw error;
+    } catch (kafkaErr) {
+      console.error('Failed to send CART_UPDATED Kafka message:', kafkaErr);
     }
-  },
+
+    return updatedCart;
+  } catch (error) {
+    console.error('Error deleting cart item:', error);
+    throw error;
+  }
+},
 getWishlist: async (userId: string) => {
   try {
     const wishlist = await prisma.cartItem.findMany({
