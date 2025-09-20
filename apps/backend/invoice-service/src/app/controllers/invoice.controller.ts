@@ -19,7 +19,7 @@ export async function generateInvoiceAutomatically(req: AuthRequest, res: Respon
     const result = await invoiceService.generateInvoice(orderId);
     return res.status(201).json({
       message: 'Invoice generated and uploaded successfully',
-      cloudinaryUrl: result.cloudinaryUrl,
+      cloudinaryUrl: result.cloudinaryUrl, // only one URL
       minioUrl: result.minioUrl,
     });
   } catch (err: any) {
@@ -37,17 +37,17 @@ export async function downloadInvoice(req: AuthRequest, res: Response) {
   }
 
   try {
-    const { streamUrl, filename, cloudinaryPreviewUrl, cloudinaryDownloadUrl } =
-      await invoiceService.getInvoiceFile(orderId);
+    const { streamUrl, filename, cloudinaryUrl } = await invoiceService.getInvoiceFile(orderId);
 
     if (req.query.preview === 'true') {
       return res.status(200).json({
-        message: 'Invoice preview and download URLs',
-        cloudinaryPreviewUrl,
-        cloudinaryDownloadUrl,
+        message: 'Invoice download URLs',
+        cloudinaryUrl,
+        minioUrl: streamUrl,
       });
     }
 
+    // Default: download PDF from MinIO
     const response = await axios.get(streamUrl, { responseType: 'stream' });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
