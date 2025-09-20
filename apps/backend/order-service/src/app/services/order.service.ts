@@ -254,17 +254,7 @@ if (!buyer) {
   throw new Error('Buyer not found');
 }
  try {
-    await invoiceService.generateInvoicePDF({
-      orderId: order.id,
-      userId: buyerId,
-      buyerEmail: buyer?.email || '',
-      items: order.items.map(item => ({
-        name: item.product?.title || 'Unknown Product',
-        price: item.unitPrice.toNumber(), // Convert Decimal to number
-        quantity: item.quantity,
-      })),
-      total: order.totalAmount.toNumber(), // Convert Decimal to number
-    });
+   await invoiceService.generateInvoice(order.id);
 
     console.log(`Invoice generated and saved for order ID: ${order.id}`);
   } catch (error) {
@@ -349,13 +339,7 @@ if (!buyer) {
   }));
 
   // Call the invoice service to generate the PDF
-  await invoiceService.generateInvoicePDF({
-    orderId: order.id,
-    userId: buyerId,
-    buyerEmail: buyer.email || '',  // Ensure buyer's email is available
-    items: items,
-    total: order.totalAmount.toNumber(),  // Convert Decimal to number
-  });
+  await invoiceService.generateInvoice(order.id);
 
   console.log(`Invoice generated and saved for order ID: ${order.id}`);
 } catch (error) {

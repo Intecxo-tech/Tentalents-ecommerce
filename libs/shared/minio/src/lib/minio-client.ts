@@ -1,14 +1,11 @@
 import { Client } from 'minio';
 
 export const minioClient = new Client({
-  endPoint: process.env['MINIO_ENDPOINT']!,         // No https://
-  port: parseInt(process.env['MINIO_PORT']!, 10),   // 443
-  useSSL: process.env['MINIO_USE_SSL'] === 'true',  // true
-  accessKey: process.env['MINIO_ACCESS_KEY']!,
-  secretKey: process.env['MINIO_SECRET_KEY']!,
+  endPoint: "minio-sfzd.onrender.com",  // Your Render MinIO endpoint
+  port: 443,                            // Always 443 since Render uses HTTPS
+  useSSL: true,                         // Render is HTTPS only
+  accessKey: "minio",                   // Your MinIO access key
+  secretKey: "minio123",                // Your MinIO secret key
 });
 
 export default minioClient;
-
-// npm install minio
-// npm install --save-dev @types/minio

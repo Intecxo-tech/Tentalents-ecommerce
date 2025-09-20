@@ -46,7 +46,7 @@ async function saveForLater(itemId: string) {
   const token = localStorage.getItem('token');
 
   try {
-    const res = await fetch(`http://localhost:3020/api/cart/save-for-later`, {
+    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart/save-for-later`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ async function fetchCart() {
     const cacheBuster = `_=${new Date().getTime()}`;
 
     // 2. Add the cache-busting parameter to your fetch URL
-    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart?${cacheBuster}`, {
+    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,

@@ -5,6 +5,7 @@ import OrderCard from '../components/orderssec/ordercard';
 import YourOrder from '../components/yourorder/yourorder';
 import OrderPlaced from '../components/orderplaced/orderplaced';
 import './orders.css';
+import Link from 'next/link';
 import Closet from '../home-page/closet-section/closet';
 import Products from '../home-page/products-grid/productsgrid';
 import { ChevronRight, Search } from 'lucide-react';
@@ -225,7 +226,7 @@ async function handleDownloadInvoice(orderId: string) {
       return;
     }
 
-    const res = await fetch(`https://invoice-service-66ox.onrender.com/api/invoices/download/${orderId}`, {
+    const res = await fetch(`https://invoice-service-66ox.onrender.com/api/invoices/${orderId}/download`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -238,19 +239,19 @@ async function handleDownloadInvoice(orderId: string) {
     }
 
     const data = await res.json();
-    const { signedUrl } = data;
+    const { downloadUrl } = data;
 
-    if (!signedUrl) {
+    if (!downloadUrl) {
       alert('Invoice URL not found');
       return;
     }
 
     // Now fetch the PDF as a blob
-    const pdfResponse = await fetch(signedUrl);
+    const pdfResponse = await fetch(downloadUrl);
     const blob = await pdfResponse.blob();
 
     // Create a temporary URL for the blob
-    const downloadUrl = URL.createObjectURL(blob);
+    // const downloadUrl = URL.createObjectURL(blob);
 
     // Create a hidden anchor and trigger download
     const a = document.createElement('a');
@@ -393,7 +394,7 @@ const handleCancelOrder = async (order: OrderData) => {
           products.slice(0, 4).map((product) => (
             <OrderPlaced key={product.id} product={product} />
           ))}
-        <button className="background-button shopbutton">Explore Shop</button>
+          <Link href="/shop"> <button className="background-button shopbutton">Explore Shop</button></ Link>
       </div>
 
       <div className="fullwidth-banner">
@@ -403,9 +404,11 @@ const handleCancelOrder = async (order: OrderData) => {
             <p className="content-para">
               Explore premium fits, rugged comfort, and timeless style made for every move.
             </p>
-            <button className="background-button mt-[10px]">
+           <Link href="/shop"> <button className="background-button mt-[10px]">
               Explore Now <ChevronRight />
             </button>
+            </ Link>
+            
           </div>
         </div>
       </div>

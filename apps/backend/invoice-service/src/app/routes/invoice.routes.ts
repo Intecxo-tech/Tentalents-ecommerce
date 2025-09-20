@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import {
-  manualInvoiceGeneration,
-  getInvoiceDownloadUrl,
-} from '../controllers/invoice.controller';
+import { generateInvoiceAutomatically, downloadInvoice } from '../controllers/invoice.controller';
+import { requireAuth, ROLES } from '@shared/auth';
 
 const router = Router();
 
-router.post('/generate/:orderId', manualInvoiceGeneration);
-router.get('/download/:orderId', getInvoiceDownloadUrl);
+router.post('/:orderId/generate', requireAuth([ROLES.ADMIN]), generateInvoiceAutomatically);
+
+router.get('/:orderId/download', requireAuth([ROLES.ADMIN, ROLES.BUYER]), downloadInvoice);
 
 export default router;

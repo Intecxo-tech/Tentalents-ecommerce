@@ -124,6 +124,7 @@ const AccountPage = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+   console.log("Your API Token is ",token)
     if (!token) {
       router.replace('/login');
       return;
