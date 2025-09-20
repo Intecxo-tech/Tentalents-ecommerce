@@ -39,6 +39,32 @@ export const getCart = async (
     next(err);
   }
 };
+export const deleteCartItem = async (
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Extract userId and itemId from request
+    const userId = extractUserId(req);
+    const itemId = req.params.itemId;
+
+    // Check if userId or itemId are missing
+    if (!userId || !itemId) {
+      return res.status(400).json({ message: '❌ Missing userId or itemId' });
+    }
+
+    // Call cartService to delete the item from the cart
+    const updatedCart = await cartService.deleteCartItem(userId, itemId);
+
+    // Return the updated cart response
+    return sendSuccess(res, '🗑️ Cart item deleted successfully', updatedCart);
+  } catch (err) {
+    // Log the error and pass it to the next error handler
+    logger.error('Error deleting cart item:', err);
+    next(err);
+  }
+};
 
 /**
  * POST /api/cart
