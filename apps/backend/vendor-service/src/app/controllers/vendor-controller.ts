@@ -15,6 +15,8 @@ import { vendorService } from '../services/vendor-service';
 
 import jwt from 'jsonwebtoken';
 import type { UserRole } from '@shared/types';
+import { sendSuccess, sendError } from '@shared/utils';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret';
 
 export interface AuthenticatedRequest extends Request {
@@ -682,5 +684,27 @@ export const uploadVendorKYCDocumentsController = async (req: Request, res: Resp
   } catch (err: any) {
     console.error('[Controller] Failed to upload KYC documents:', err);
     res.status(500).json({ error: err.message || 'Failed to upload KYC documents' });
+  }
+};
+
+export const getVendorReturnRequestsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const vendorId = req.params.vendorId;
+
+    if (!vendorId) {
+      return res.status(400).json({ error: 'Vendor ID is required' });
+    }
+
+    // Call service to fetch return requests
+    const returnRequests = await vendorService.getVendorReturnRequests(vendorId);
+
+    return sendSuccess(res, '✅ Vendor return requests fetched', returnRequests);
+  } catch (error: any) {
+    logger.error('[Controller] Failed to fetch return requests', error);
+    return sendError(res, '❌ Failed to fetch return requests', error);
   }
 };

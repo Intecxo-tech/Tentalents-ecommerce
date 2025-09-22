@@ -12,6 +12,7 @@ import { sendEmail } from '@shared/email';
 const prisma = new PrismaClient();
 import {uploadToCloudinary} from '@shared/auth'
 import * as crypto from 'crypto';
+
 export const vendorService = {
 initiateVendorRegistrationOtp: async (email: string) => {
   try {
@@ -694,5 +695,38 @@ uploadVendorKYCDocuments: async (
   }
 },
 
+getVendorReturnRequests: async (vendorId: string) => {
+  if (!vendorId) throw new Error('Vendor ID is required');
 
-};
+  const requests = await prisma.returnRequest.findMany({
+    where: { 
+      orderItem: { vendorId }  // Only requests for this vendor
+    },
+    include: {
+      user: { select: { id: true, name: true, email: true } }, // Customer info
+      orderItem: { 
+        select: { 
+          product: { select: { id: true, title: true } }, 
+          quantity: true,
+          unitPrice: true
+        } 
+      },
+      order: { select: { id: true, totalAmount: true, placedAt: true } },
+    },
+  });
+
+  return requests.map(r => ({
+    returnId: r.id,
+    orderId: r.orderId,
+    orderItemId: r.orderItemId,
+    reason: r.reason,
+    status: r.status,
+    attachments: r.attachmentUrls, // Images/videos customer uploaded
+    comment: r.comment,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    user: r.user,
+    product: r.orderItem.product,
+  }));
+} // <--- end of getVendorReturnRequests
+}; // <--- end of vendorService object

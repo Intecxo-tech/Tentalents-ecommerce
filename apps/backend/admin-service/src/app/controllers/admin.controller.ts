@@ -2,10 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { adminService } from '../services/admin.service';
 import { sendSuccess, sendError } from '@shared/utils';
 
-
-
-
-export const getVendorsWithProducts = async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * GET /api/admin/vendors/products
+ * Fetch all vendors with their products + login info (plaintext password)
+ */
+export const getVendorsWithProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const vendors = await adminService.getAllVendorsWithProducts();
     return sendSuccess(
@@ -20,20 +25,19 @@ export const getVendorsWithProducts = async (req: Request, res: Response, next: 
 
 /**
  * GET /api/admin/users
- * Fetch all users
+ * Fetch all users with addresses and vendor info
  */
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await adminService.getAllUsers();
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: 'Fetched all users with full details successfully',
+      message: '✅ Fetched all users with full details successfully',
       data: users,
     });
   } catch (error) {
     console.error('Error fetching users:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch users',
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -41,20 +45,33 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * POST /api/admin/create
+ * Create an admin user with vendor and plaintext password
+ */
 export const createAdminHandler = async (req: Request, res: Response) => {
   try {
     const { user, vendor } = await adminService.createAdminWithVendor();
-    res.status(201).json({ user, vendor });
+    return res.status(201).json({ user, vendor });
   } catch (error: any) {
-    res.status(400).json({ message: error.message });
+    return res.status(400).json({ message: error.message });
   }
 };
+
+/**
+ * GET /api/admin/vendors
+ * Fetch all vendors without product details
+ */
 export const getAllVendors = async (req: Request, res: Response) => {
   try {
     const vendors = await adminService.getAllVendors();
-    res.json(vendors);
+    return res.status(200).json({
+      success: true,
+      message: '✅ Fetched all vendors successfully',
+      data: vendors,
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch vendors', error: err });
+    return res.status(500).json({ message: 'Failed to fetch vendors', error: err });
   }
 };
 
@@ -83,7 +100,7 @@ export const updateUserRole = async (
 
 /**
  * GET /api/admin/sellers/pending
- * Fetch all pending sellers
+ * Fetch all pending vendors/sellers
  */
 export const getPendingSellers = async (
   _: Request,
@@ -100,7 +117,7 @@ export const getPendingSellers = async (
 
 /**
  * PATCH /api/admin/sellers/approve
- * Approve or reject a seller based on admin input
+ * Approve or reject a seller/vendor
  */
 export const approveSeller = async (
   req: Request,
@@ -131,7 +148,7 @@ export const approveSeller = async (
 
 /**
  * GET /api/admin/dashboard
- * Get admin dashboard stats (users, vendors, orders, etc.)
+ * Get admin dashboard stats
  */
 export const getAdminDashboard = async (
   _: Request,
