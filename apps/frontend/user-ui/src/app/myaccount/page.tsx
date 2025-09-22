@@ -31,7 +31,7 @@ const token = user?.token;
 
   const fetchProfile = async () => {
     try {
-   
+   console.log("Your API Token is ", token);
       if (!token) {
         router.push('/login');
         return;
@@ -124,15 +124,15 @@ const token = user?.token;
     }
   };
 
-  useEffect(() => {
+ useEffect(() => {
+  console.log("Your API Token is ", token);
+  if (!token) {
+    router.replace('/login');
+    return;
+  }
+  fetchProfile();
+}, [router, token]);
 
-   console.log("Your API Token is ",token)
-    if (!token) {
-      router.replace('/login');
-      return;
-    }
-    fetchProfile();
-  }, [router]);
 
   if (loading) return <AccountPageSkeleton />;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;

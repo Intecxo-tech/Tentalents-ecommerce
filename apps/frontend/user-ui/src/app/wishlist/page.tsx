@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useAuth } from '../auth/callback/AuthContext'; // Assuming the hook is exported from here
 import './savedforlater.css'; 
-import { ShoppingCart, Trash2 } from 'lucide-react';
+import { ShoppingCart, Trash2 ,Star} from 'lucide-react';
 
 type CartItem = {
   id: string;
@@ -19,12 +19,15 @@ type CartItem = {
     id: string;
     title: string;
     imageUrls: string[];
+    averageRating?: number | null; // ✅ add this
   };
   productListing?: {
     id: string;
     price: number;
+    originalPrice: number; // ✅ fix casing
   };
 };
+
 
 const Page = () => {
   const [savedItems, setSavedItems] = useState<CartItem[]>([]);
@@ -100,7 +103,7 @@ const Page = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:3020/api/cart/${itemId}`, {
+      const res = await fetch(`${CART_API_BASE_URL}/api/cart/${itemId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${user.token}`, // Use token from context
@@ -120,7 +123,7 @@ const Page = () => {
 
   return (
     <div className="saved-for-later-page">
-      <h2>Saved For Later</h2>
+  
 
       {savedItems.length === 0 ? (
         <div className="empty-saved">
@@ -129,29 +132,44 @@ const Page = () => {
           <Link href="/shop" className="background-button">Browse Products</Link>
         </div>
       ) : (
-        savedItems.map((item) => {
-          const { product, productListing } = item;
-          if (!product || !productListing) return null;
+       <div className="saved-items-grid">
+        {savedItems.map((item) => {
+         const { product, productListing } = item;
+if (!product || !productListing) return null;
 
-          const image = product.imageUrls?.[0] || '';
+const image = product.imageUrls?.[0] || '';
+
 
           return (
+            
             <div key={item.id} className="saved-item-card">
               <Image src={image} alt={product.title} width={80} height={80} />
 
               <div className="saved-item-details">
-                <h3>{product.title}</h3>
-               <p>
-  ${Number(productListing.price).toFixed(2)}
-</p>
-<p>$145</p>
+                <h3 className='product-title'>{product.title}</h3>
+                 <div className="price-main">
+  <div className="price-section">
+    <p>${Number(productListing.price).toFixed(2)}</p>
+    <p className="offer-price">${Number(productListing.originalPrice).toFixed(2)}</p> {/* Fixed spelling */}
+  </div>
+
+<div className="rating">
+
+    <p>{(typeof product.averageRating === 'number' ? product.averageRating.toFixed(1) : '0')} <Star size={20}  /></p>
+
+</div>
+
+
+</div>
+              
+
 
                 {/* Optional: Add rating or vendor info */}
               </div>
 
               <div className="saved-item-actions">
                 <button
-                  className="background-button small"
+                  className="cart-button background-button "
                   onClick={() => moveToCart(item.id)}
                 >
                   <ShoppingCart size={16} /> 
@@ -165,8 +183,11 @@ const Page = () => {
               </div>
             </div>
           );
+        
         })
+      }</div>
       )}
+      
     </div>
   );
 };

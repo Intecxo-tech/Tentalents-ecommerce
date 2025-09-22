@@ -1,0 +1,31 @@
+.saved-item-card{
+    display: flex;;
+    align-items: center;
+    justify-content:flex-start;
+    gap:15px;
+   background-color: #F6F5FF;
+    border-radius: 10px;
+    padding: 15px;
+}
+.saved-item-actions{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:10px;
+}
+.saved-item-actions .cart-button{
+    width: 100%;
+    display: flex;
+    padding: 10px 13px;
+}
+.saved-items-grid{
+    display: grid;
+ grid-template-columns: repeat(2,1fr);
+    gap:10px;
+}
+.rating p{
+    display: flex;
+    gap:5px;
+    justify-content: space-between;
+    align-items: center;
+}
