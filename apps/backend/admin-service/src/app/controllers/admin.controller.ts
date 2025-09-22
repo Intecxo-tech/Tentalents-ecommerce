@@ -2,6 +2,22 @@ import { Request, Response, NextFunction } from 'express';
 import { adminService } from '../services/admin.service';
 import { sendSuccess, sendError } from '@shared/utils';
 
+
+
+
+export const getVendorsWithProducts = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const vendors = await adminService.getAllVendorsWithProducts();
+    return sendSuccess(
+      res,
+      '✅ Fetched all vendors with products and login info successfully',
+      vendors
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
 /**
  * GET /api/admin/users
  * Fetch all users

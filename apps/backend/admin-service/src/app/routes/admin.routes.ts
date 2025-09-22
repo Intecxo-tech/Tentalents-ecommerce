@@ -6,7 +6,8 @@ import {
   approveSeller,
   getAdminDashboard,
   createAdminHandler,
-  getAllVendors
+  getAllVendors,
+  getVendorsWithProducts,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -42,4 +43,11 @@ router.put('/sellers/status', approveSeller);
  */
 router.get('/dashboard', getAdminDashboard);
 router.get('/sellers/all', getAllVendors);
+
+/**
+ * @route GET /admin/sellers/all-with-products
+ * @desc Get all vendors with their products and admin access to login info
+ */
+router.get('/sellers/all-with-products', getVendorsWithProducts);
+
 export default router;
