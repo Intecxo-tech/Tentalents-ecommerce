@@ -4,7 +4,9 @@ import {
   Vendor,
   UserRole ,
   VendorStatus,
-  BankDetail
+  BankDetail,
+   ProductListing,  // ✅ Add this
+  Product,
 } from '@prisma/client';
 import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
@@ -51,7 +53,31 @@ export const adminService = {
 
     return { user, vendor };
   },
-  
+  getAllVendorsWithProducts: async (): Promise<
+  (Vendor & {
+    user: Pick<User, 'id' | 'email' | 'password' | 'role'> | null;
+    productListings: (ProductListing & { product: Product })[];
+  })[]
+> => {
+  return prisma.vendor.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          password: true, // hashed password, for admin view only
+          role: true,
+        },
+      },
+      productListings: {
+        include: {
+          product: true,
+        },
+      },
+    },
+  });
+},
+
 getAllUsers: async (): Promise<
   Array<{
     id: string;

@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Upload, Bell, House, Menu, Link } from 'lucide-react';
+import { Search, Upload, Bell, House, Menu } from 'lucide-react';
 import { RiCustomerService2Line } from 'react-icons/ri';
 import SideBarWrapper from '../sidebar/sidebar'; // adjust path
 import './headerbanner.css';
 import '../sidebar/sidebar.css'
-
+import Link from 'next/link'
 interface HeaderBannerProps {
   onToggleSidebar?: () => void;
 }
@@ -54,9 +54,10 @@ const HeaderBanner: React.FC<HeaderBannerProps> = ({ onToggleSidebar }) => {
           <button className="bordered-button">
             <RiCustomerService2Line className="supportbutton" />
           </button>
-          <button className="bordered-button account">
+         <Link href="/dashboard/myaccount"> <button className="bordered-button account">
             Account <House />
           </button>
+          </Link>
         </div>
       </div>
     </>

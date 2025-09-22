@@ -25,6 +25,18 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
+export const getVendorsWithProducts = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const vendors = await adminService.getAllVendorsWithProducts();
+    return sendSuccess(
+      res,
+      '✅ Fetched all vendors with products and login info successfully',
+      vendors
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
 export const createAdminHandler = async (req: Request, res: Response) => {
   try {
     const { user, vendor } = await adminService.createAdminWithVendor();

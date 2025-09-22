@@ -31,7 +31,7 @@ const token = user?.token;
 
   const fetchProfile = async () => {
     try {
-   console.log("Your API Token is ", token);
+
       if (!token) {
         router.push('/login');
         return;
@@ -125,7 +125,7 @@ const token = user?.token;
   };
 
  useEffect(() => {
-  console.log("Your API Token is ", token);
+ 
   if (!token) {
     router.replace('/login');
     return;
