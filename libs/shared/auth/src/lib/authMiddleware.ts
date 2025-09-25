@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from './jwt';
 // We need the ROLES object for comparisons
 import { AuthPayload, UserRole, ROLES } from './types'; 
-import { logger } from '@shared/middlewares/logger/src/index';
+import { logger } from './logger';
 
 // Make sure your Express Request is properly extended
 declare global {

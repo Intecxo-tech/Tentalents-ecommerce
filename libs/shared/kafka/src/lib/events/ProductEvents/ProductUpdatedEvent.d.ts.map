@@ -1,1 +1,0 @@
-{"version":3,"file":"ProductUpdatedEvent.d.ts","sourceRoot":"","sources":["ProductUpdatedEvent.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,mBAAmB;IAClC,SAAS,EAAE,MAAM,CAAC;IAClB,OAAO,EAAE,MAAM,CAAC,MAAM,EAAE,GAAG,CAAC,CAAC;IAC7B,SAAS,EAAE,MAAM,CAAC;CACnB"}

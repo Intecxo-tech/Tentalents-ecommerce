@@ -1,1 +1,0 @@
-{"version":3,"file":"jwt-payload.d.ts","sourceRoot":"","sources":["jwt-payload.ts"],"names":[],"mappings":"AAAA,MAAM,MAAM,QAAQ,GAChB,OAAO,GACP,QAAQ,GACR,OAAO,GACP,aAAa,GACb,cAAc,CAAC;AAEnB,MAAM,WAAW,UAAU;IACzB,GAAG,EAAE,MAAM,CAAC;IACZ,KAAK,EAAE,MAAM,CAAC;IACd,IAAI,EAAE,QAAQ,CAAC;CAChB"}

@@ -10,3 +10,4 @@ export * from './lib/minio-utils';
 export * from './lib/bucket';
 export * from './lib/minio'; // contains uploadFileToMinIO etc.
 export * from './lib/minio-connection';
+export * from './lib/logger';

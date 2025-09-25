@@ -5,6 +5,7 @@ export * from './lib/kafka-consumer';
 export * from './lib/kafka-topics';
 export * from './lib/events/VendorEvent/vendor-events';
 export * from './lib/kafka-admin'; 
+export * from './lib/logger'; 
 export * as AnalyticsEvents from './lib/events/AnalyticsEvents';
 export * as CartEvents from './lib/events/CartEvents';
 export * as EmailEvents from './lib/events/EmailEvents';

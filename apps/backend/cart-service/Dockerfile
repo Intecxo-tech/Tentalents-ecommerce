@@ -1,48 +1,34 @@
-# Dockerfile for 'product-service'
-
-# --- Stage 1: Build ---
-# Use a specific version of Node for reproducibility
-FROM node:20-alpine AS builder
+# ---------- Stage 1: Builder ----------
+FROM base-builder AS builder
 WORKDIR /app
 
-# 1. Copy only the necessary package and config files first
-# This leverages Docker's layer caching. The build only re-runs `npm install`
-# if these specific files change, not on every code change.
-COPY package.json package-lock.json ./
-COPY tsconfig.base.json nx.json ./
+ARG SERVICE_NAME
+ENV SERVICE_NAME=cart-service
 
-# 2. Install dependencies for the entire monorepo
-# This is necessary for the build step to work
-RUN npm install
+# Build only this service
+RUN npx nx build $SERVICE_NAME --configuration=production
 
-# 3. Copy the rest of the source code
-COPY . .
-
-# 4. Build the specific application.
-# Nx will automatically create a pruned package.json in the output directory
-# if your project's build target is configured correctly.
-RUN npx nx build cart-service --configuration=production
-
-
-# --- Stage 2: Production Runtime ---
-FROM node:20-alpine
+# ---------- Stage 2: Runtime ----------
+FROM node:20-alpine AS runtime
 WORKDIR /app
 
-# Set to production environment
+ARG SERVICE_NAME
+ENV SERVICE_NAME=cart-service
 ENV NODE_ENV=production
 
-# 5. Copy the pruned package.json from the build output
-COPY --from=builder /app/dist/apps/cart-service/package.json ./package.json
+# Copy runtime package.json for this service
+COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME/package.json ./package.json
 
-# 6. Install ONLY the production dependencies for 'product-service'
-RUN npm install --omit=dev
+# Install production dependencies
+RUN npm ci --omit=dev
 
-# 7. Copy the built application code and prisma schema
-COPY --from=builder /app/dist/apps/cart-service .
+# Copy built service
+COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME ./
+
+# Copy Prisma schema and client
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Expose the correct port
-EXPOSE 3020
-
-# 8. Run the application using the correct file name
+EXPOSE 3000
 CMD ["node", "main.js"]

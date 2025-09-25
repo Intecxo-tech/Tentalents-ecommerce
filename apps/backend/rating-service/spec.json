@@ -1,8 +1,0 @@
-{
-  "name": "rating-service",
-  "type": "microservice",
-  "version": "1.0.0",
-  "description": "TODO: Add description for rating-service",
-  "owner": "TODO: Add owner/team for rating-service",
-  "tags": ["backend"]
-}

@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
-import { env } from '@shared/middlewares/config/src/lib/env';
-import { logger } from '@shared/middlewares/logger/src/lib/logger';
+import { env } from './env';
+import { logger } from './logger';
 
 const transporter = nodemailer.createTransport({
   host: env.SMTP_HOST,

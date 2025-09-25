@@ -1,5 +1,5 @@
 {
-  "name": "shared-middleware",
+  "name": "shared-middlewares",
   "root": "libs/shared/middlewares",
   "sourceRoot": "libs/shared/middlewares/src",
   "projectType": "library",

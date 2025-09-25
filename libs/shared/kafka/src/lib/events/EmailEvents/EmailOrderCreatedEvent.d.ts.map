@@ -1,1 +1,0 @@
-{"version":3,"file":"EmailOrderCreatedEvent.d.ts","sourceRoot":"","sources":["EmailOrderCreatedEvent.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,sBAAsB;IACrC,EAAE,EAAE,MAAM,CAAC;IACX,OAAO,EAAE,MAAM,CAAC;IAChB,QAAQ,EAAE,oBAAoB,CAAC;IAC/B,OAAO,EAAE;QACP,OAAO,EAAE,MAAM,CAAC;QAChB,MAAM,EAAE,MAAM,CAAC;QACf,KAAK,EAAE,MAAM,CAAC;KACf,CAAC;CACH"}

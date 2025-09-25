@@ -1,7 +1,7 @@
 // pages/api/verify-token.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { verifyToken } from '@shared/auth';
+import { verifyToken } from './jwt';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const { accessToken } = req.body;

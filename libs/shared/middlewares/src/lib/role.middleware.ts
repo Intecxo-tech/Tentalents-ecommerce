@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthPayload } from '@shared/auth';
+import { AuthPayload } from './types';
 
 export const checkRole = (roles: AuthPayload['role'][]) => {
   return (req: Request, res: Response, next: NextFunction) => {

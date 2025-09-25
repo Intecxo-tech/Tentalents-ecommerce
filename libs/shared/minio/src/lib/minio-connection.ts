@@ -1,5 +1,5 @@
 import minioClient from './minio-client';
-import { logger } from '@shared/logger';
+import { logger } from './logger';
 
 export async function connectMinio() {
   try {

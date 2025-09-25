@@ -1,48 +1,60 @@
-# ---------- Stage 1: Builder ----------
-FROM node:20-alpine AS builder
+# # ---------- Base builder for all services ----------
+# FROM node:20-alpine AS base-builder
+# WORKDIR /app
+
+# # Set production environment for base layer
+# ENV NODE_ENV=development
+
+# # Copy root package files first for caching
+# COPY package.json package-lock.json tsconfig.base.json nx.json ./
+
+# # Install all dependencies including dev for Nx builds
+# RUN npm ci
+
+# # Copy the entire monorepo for Nx to resolve all paths
+# COPY . .
+
+# # Pre-generate Prisma client for all services
+# RUN npx prisma generate --schema=./prisma/schema.prisma
+
+# # Optional: prebuild shared Nx libs (speed up service builds)
+# # Uncomment if you have common shared libs
+# # RUN npx nx build shared --configuration=production
+
+# # Verify base build is ready
+# RUN ls -la node_modules ./
+
+
+# ---------- Base builder for all services ----------
+FROM node:20-alpine AS base-builder
 WORKDIR /app
 
-ARG SERVICE_NAME
-ENV SERVICE_NAME=${SERVICE_NAME}
+# Use development environment for building
+ENV NODE_ENV=development
 
-# Install deps
-COPY package.json package-lock.json ./
-COPY tsconfig.base.json nx.json ./
-RUN npm install
+# Increase memory for Nx (optional but recommended for large repos)
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Copy entire monorepo
+# Copy only root configs and lock files first for better caching
+COPY package.json package-lock.json tsconfig.base.json nx.json prisma ./ 
+
+# Install all dependencies (including dev for building)
+RUN npm ci
+
+# Copy the rest of the monorepo source
 COPY . .
 
-# ✅ Generate Prisma Client for correct platform
+# Pre-generate Prisma client for all services (from root schema)
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
-# Build the specific service
-RUN npx nx build $SERVICE_NAME --configuration=production
+# (Optional) Prebuild shared libraries to speed up service builds
+# RUN npx nx build shared --configuration=production --skip-nx-cache --skip-eslint
 
-# ---------- Stage 2: Runtime ----------
-FROM node:20-alpine
-WORKDIR /app
+# List installed modules for debugging
+RUN ls -la node_modules ./ && echo "✅ Base builder ready for all services"
 
-ARG SERVICE_NAME
-ENV SERVICE_NAME=${SERVICE_NAME}
-ENV NODE_ENV=production
+# Example build command for testing this base image:
+# docker build -t tentalents .
 
-# Copy runtime package.json for that service
-COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME/package.json ./package.json
 
-# Install only prod deps
-RUN npm install --omit=dev
-
-# Copy built code and Prisma schema
-COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME/ ./
-COPY --from=builder /app/prisma ./prisma
-
-# ✅ Copy precompiled Prisma Client
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-# Optional: Check client exists
-RUN ls -la node_modules/.prisma/client
-
-EXPOSE 3000
-CMD ["node", "main.cjs"]
+# #  docker build -t tentalents .

@@ -1,6 +1,6 @@
 import { Producer, ProducerRecord } from 'kafkajs';
 import { Kafka } from 'kafkajs';
-import { logger } from '@shared/logger';
+import { logger } from './logger';
 import { getKafkaInstance } from './kafka-client'; // 🔧 Use this utility instead of importing kafka directly
 
 let producer: Producer | null = null;

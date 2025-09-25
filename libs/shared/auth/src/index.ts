@@ -8,3 +8,4 @@ export * from './lib/types';
 export * from './lib/password';
 export * from './lib/cloudinary';
 export * from './lib/firebase-admin';
+export * from './lib/logger';

@@ -1,6 +1,6 @@
 import { Kafka } from 'kafkajs';
 import { getKafkaInstance } from './kafka-client';
-import { logger } from '@shared/middlewares/logger/src/index';
+import { logger } from './logger';
 
 export async function createTopicsIfNotExists(topics: string[]) {
   const kafka = getKafkaInstance();

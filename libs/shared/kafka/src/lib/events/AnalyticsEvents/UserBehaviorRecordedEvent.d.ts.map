@@ -1,1 +1,0 @@
-{"version":3,"file":"UserBehaviorRecordedEvent.d.ts","sourceRoot":"","sources":["UserBehaviorRecordedEvent.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,yBAAyB;IACxC,MAAM,EAAE,MAAM,CAAC;IACf,SAAS,EAAE,MAAM,CAAC;IAClB,QAAQ,EAAE,MAAM,CAAC,MAAM,EAAE,GAAG,CAAC,CAAC;IAC9B,SAAS,EAAE,MAAM,CAAC;CACnB"}
