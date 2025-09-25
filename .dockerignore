@@ -17,8 +17,10 @@ node_modules/@prisma/
 .idea/
 
 # Ignore environment files – never include secrets in images
-.env
+.env*
 .env.local
+.env.docker
+
 
 # Ignore logs and coverage files
 *.log

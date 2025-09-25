@@ -4,3 +4,4 @@ node_modules
 dist/
 .next/
 .env.sendgrid
+.env.docker

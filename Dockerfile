@@ -1,34 +1,10 @@
-# # ---------- Base builder for all services ----------
-# FROM node:20-alpine AS base-builder
-# WORKDIR /app
 
-# # Set production environment for base layer
-# ENV NODE_ENV=development
-
-# # Copy root package files first for caching
-# COPY package.json package-lock.json tsconfig.base.json nx.json ./
-
-# # Install all dependencies including dev for Nx builds
-# RUN npm ci
-
-# # Copy the entire monorepo for Nx to resolve all paths
-# COPY . .
-
-# # Pre-generate Prisma client for all services
-# RUN npx prisma generate --schema=./prisma/schema.prisma
-
-# # Optional: prebuild shared Nx libs (speed up service builds)
-# # Uncomment if you have common shared libs
-# # RUN npx nx build shared --configuration=production
-
-# # Verify base build is ready
-# RUN ls -la node_modules ./
-
-
+# ---------- Stage 1: Builder ----------
 # ---------- Base builder for all services ----------
 FROM node:20-alpine AS base-builder
 WORKDIR /app
 
+# Build-time environment
 ENV NODE_ENV=development
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
@@ -49,4 +25,9 @@ RUN npx prisma generate --schema=/app/prisma/schema.prisma
 COPY . .
 
 # Debug check
-RUN ls -la /app/prisma && ls -la /app/node_modules/.prisma/client && echo "✅ Prisma client generated"
+RUN ls -la /app/prisma \
+ && ls -la /app/node_modules/.prisma/client \
+ && echo "✅ Prisma client generated"
+
+
+# docker build -t tentalents .
