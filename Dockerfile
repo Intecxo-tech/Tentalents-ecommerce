@@ -29,32 +29,24 @@
 FROM node:20-alpine AS base-builder
 WORKDIR /app
 
-# Use development environment for building
 ENV NODE_ENV=development
-
-# Increase memory for Nx (optional but recommended for large repos)
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Copy only root configs and lock files first for better caching
-COPY package.json package-lock.json tsconfig.base.json nx.json prisma ./ 
+# Install dependencies needed by Prisma
+RUN apk add --no-cache openssl libc6-compat
 
-# Install all dependencies (including dev for building)
-RUN npm ci
+# Copy only root configs + prisma schema first (for caching)
+COPY package.json package-lock.json tsconfig.base.json nx.json ./ 
+COPY prisma ./prisma
 
-# Copy the rest of the monorepo source
+# Install all dependencies (skip scripts to avoid double prisma engine installs)
+RUN npm ci --ignore-scripts
+
+# ✅ Generate Prisma client (schema path is inside /app/prisma/schema.prisma)
+RUN npx prisma generate --schema=/app/prisma/schema.prisma
+
+# Copy the rest of the monorepo
 COPY . .
 
-# Pre-generate Prisma client for all services (from root schema)
-RUN npx prisma generate --schema=./prisma/schema.prisma
-
-# (Optional) Prebuild shared libraries to speed up service builds
-# RUN npx nx build shared --configuration=production --skip-nx-cache --skip-eslint
-
-# List installed modules for debugging
-RUN ls -la node_modules ./ && echo "✅ Base builder ready for all services"
-
-# Example build command for testing this base image:
-# docker build -t tentalents .
-
-
-# #  docker build -t tentalents .
+# Debug check
+RUN ls -la /app/prisma && ls -la /app/node_modules/.prisma/client && echo "✅ Prisma client generated"
