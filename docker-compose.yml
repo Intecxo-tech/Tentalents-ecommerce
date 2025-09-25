@@ -101,3 +101,6 @@ volumes:
 networks:
   backend:
     driver: bridge
+
+
+# docker compose --env-file .env.docker up -d --force-recreate
