@@ -22,12 +22,13 @@ ENV PORT=3010
 COPY --from=builder /app/dist/apps/backend/analytics-service ./
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/healthz || exit 1
 
 EXPOSE 3010
 CMD ["node", "main.cjs"]
 
 # ---------- Docker commands ----------
-# docker build -t analytics-service:latest .
+# docker build -t analytics-service:latest -f apps/backend/analytics-service/Dockerfile apps/backend/analytics-service
+
 # docker rm -f analytics-service
 # docker run -d --name analytics-service -p 3010:3010 --rm analytics-service:latest

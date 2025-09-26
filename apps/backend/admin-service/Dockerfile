@@ -22,12 +22,13 @@ ENV PORT=3008
 COPY --from=builder /app/dist/apps/backend/admin-service ./
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/healthz || exit 1
 
 EXPOSE 3008
 CMD ["node", "main.cjs"]
 
 # ---------- Docker commands ----------
-# docker build -t admin-service:latest .
+# docker build -t admin-service:latest -f apps/backend/admin-service/Dockerfile apps/backend/admin-service
+
 # docker rm -f admin-service
 # docker run -d --name admin-service -p 3008:3008 --rm admin-service:latest

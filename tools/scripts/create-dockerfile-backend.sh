@@ -80,13 +80,14 @@ ENV PORT=$PORT
 COPY --from=builder /app/dist/apps/backend/$service ./
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \\
-  CMD wget --no-verbose --tries=1 --spider http://localhost:\$PORT/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:\$PORT/healthz || exit 1
 
 EXPOSE $PORT
 CMD ["node", "main.cjs"]
 
 # ---------- Docker commands ----------
-# docker build -t $service:latest .
+# docker build -t $service:latest -f apps/backend/$service/Dockerfile apps/backend/$service
+
 # docker rm -f $service
 # docker run -d --name $service -p $PORT:$PORT --rm $service:latest
 EOL
