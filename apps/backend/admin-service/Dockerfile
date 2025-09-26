@@ -17,17 +17,17 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV SERVICE_NAME=admin-service
-ENV PORT=3000
+ENV PORT=3008
 
 COPY --from=builder /app/dist/apps/backend/admin-service ./
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/health || exit 1
 
-EXPOSE 3000
+EXPOSE 3008
 CMD ["node", "main.cjs"]
 
 # ---------- Docker commands ----------
 # docker build -t admin-service:latest .
 # docker rm -f admin-service
-# docker run -d --name admin-service -p 3000:3000 --rm admin-service:latest
+# docker run -d --name admin-service -p 3008:3008 --rm admin-service:latest
