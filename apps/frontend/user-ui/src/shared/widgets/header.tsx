@@ -109,7 +109,7 @@ const fetchCartCount = useCallback(async () => {
 
     const totalItems = Array.isArray(data.data)
       ? data.data
-          .filter((item: { productId?: string }) => item && item.productId)
+          .filter((item: { productId?: string; saveForLater?: boolean }) => item && item.productId && !item.saveForLater)
           .reduce((acc: number, item: { quantity: number }) => acc + item.quantity, 0)
       : 0;
 
@@ -119,7 +119,8 @@ const fetchCartCount = useCallback(async () => {
     console.error('Failed to fetch cart count:', error);
     setCartCount(0);
   }
-}, [token]); // <-- Make sure to add 'token' as a dependency
+}, [token]);
+// <-- Make sure to add 'token' as a dependency
 
 
 

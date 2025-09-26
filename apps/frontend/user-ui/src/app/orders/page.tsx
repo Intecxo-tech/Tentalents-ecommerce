@@ -183,7 +183,10 @@ function filterOrdersByDate(orders: OrderData[], filter: string) {
   return orders.filter(order => new Date(order.placedAt) >= dateLimit);
 }
 
-const filteredOrders = filterOrdersByDate(orders, dateFilter);
+const filteredOrders = filterOrdersByDate(orders, dateFilter).filter(
+  (order) => order.status.toLowerCase() !== 'canceled'
+);
+
 useEffect(() => {
     async function fetchPopularProducts() {
       try {
@@ -365,7 +368,8 @@ const handleCancelOrder = async (order: OrderData) => {
   <p><OrderCardSkeleton /></p>
 ) : orderError ? (
   <p className="error-message">{orderError}</p>
-) : orders.length > 0 ? (
+) : filteredOrders.length > 0 ? (
+
   filteredOrders.map(order => (
     <div key={order.id} className="sectionsorder">
       {/* You can put OrderCard for that order */}
@@ -374,7 +378,7 @@ const handleCancelOrder = async (order: OrderData) => {
       {/* If YourOrder is supposed to show multiple orders, you might want to filter or pass only this order */}
       {/* Or if YourOrder is a summary component, maybe keep it outside the map? */}
       {/* But since you want the section repeated for every order, let's assume you want YourOrder here as well */}
-      <YourOrder orders={[order]} loading={false} error={null}   buyerId={order.buyerId} />
+      <YourOrder orders={[order]} loading={false} error={null}   onCancelOrder={handleCancelOrder}   buyerId={order.buyerId} />
     
     </div>
   ))

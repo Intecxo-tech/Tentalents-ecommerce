@@ -192,7 +192,18 @@ async function updateQuantity(listingId: string, currentQty: number, change: num
       .filter(Boolean) as CartItem[]
   : [];
 
-    setCartItems(updatedItems);
+  const filtered = updatedItems
+  .filter((item: CartItem) => !item.savedForLater)
+  .map((item: CartItem) => {
+    if (item.productListing && typeof item.productListing.price === 'string') {
+      item.productListing.price = parseFloat(item.productListing.price);
+    }
+    return item;
+  })
+  .filter(Boolean) as CartItem[];
+
+setCartItems(filtered);
+
   } catch (error) {
     console.error('Failed to update quantity:', error);
     // Revert on error
@@ -265,7 +276,7 @@ const total = subtotal + shippingFee + platformFee;
                         <h3 className="product-title">{product.title}</h3>
                       </Link>
 
-                      <div className="price-main">
+                      <div className="price-main2">
                         <div className="price-section">
                           <p>${listing.price.toFixed(2)}</p>
                         </div>
@@ -273,7 +284,7 @@ const total = subtotal + shippingFee + platformFee;
   <button
     type="button"
     onClick={() => saveForLater(item.id)}
-    className="bordered-button "
+    className='saveforlater'
   >
     Save for later
   </button>

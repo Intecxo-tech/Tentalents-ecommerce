@@ -6,9 +6,17 @@
     gap:20px;
     
 }
+.orderupdates2{
+    margin: 0px;;
+}
 .quantity{
     text-align: left;
     align-items: flex-start;
+}
+.cancel-order-standalone-container{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 .flexcontainer{
     display: flex;
@@ -17,7 +25,15 @@
     gap:40px;
     width: 50%;
 }
-
+.yourorder2{
+    padding-bottom: 10px;;
+}
+.product-list2{
+    padding: 15px 0px;;
+}
+.mainsection{
+    padding: 15px 0px;;
+}
 .orderfirst{
     display: flex;
     align-items: center;

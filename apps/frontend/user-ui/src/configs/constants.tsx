@@ -18,10 +18,14 @@ export const navItems: NavItemsTypes[] = [
     title: 'My Orders',
     href: '/orders',
   },
-  // {
-  //   title: 'My Wishlist',
-  //   href: '/wishlist',
-  // },
+  {
+    title: 'My Wishlist',
+    href: '/wishlist',
+  },
+  {
+    title:'Returns & More',
+    href:'/returnrequest'
+  },
   
   
   {

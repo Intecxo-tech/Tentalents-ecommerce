@@ -1,7 +1,7 @@
 {
-  "/wishlist/page": "app/wishlist/page.js",
-  "/(routes)/login/page": "app/(routes)/login/page.js",
   "/shop/page": "app/shop/page.js",
-  "/myaccount/page": "app/myaccount/page.js",
-  "/cart/page": "app/cart/page.js"
+  "/returnrequest/page": "app/returnrequest/page.js",
+  "/cart/page": "app/cart/page.js",
+  "/wishlist/page": "app/wishlist/page.js",
+  "/cart/checkout/page": "app/cart/checkout/page.js"
 }

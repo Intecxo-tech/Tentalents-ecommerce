@@ -96,28 +96,29 @@ const Page = () => {
     }
   };
 
-  const deleteItem = async (itemId: string) => {
-    if (!user?.token) {
-      toast.error('User is not authenticated.');
-      return;
-    }
+ const deleteItem = async (itemId: string) => {
+  if (!user?.token) {
+    toast.error('User is not authenticated.');
+    return;
+  }
 
-    try {
-      const res = await fetch(`${CART_API_BASE_URL}/api/cart/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${user.token}`, // Use token from context
-        },
-      });
+  try {
+    const res = await fetch(`${CART_API_BASE_URL}/api/cart/${itemId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${user.token}`, // Use token from context
+      },
+    });
 
-      if (!res.ok) throw new Error(await res.text());
-      toast.success('Item removed 🗑️');
-      fetchSavedItems(); // Refresh saved items after deletion
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      toast.error('Could not delete item');
-    }
-  };
+    if (!res.ok) throw new Error(await res.text());
+    toast.success('Item removed 🗑️');
+    fetchSavedItems(); // Refresh saved items after deletion
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    toast.error('Could not delete item');
+  }
+};
+
 
   if (loading) return <p>Loading...</p>;
 
@@ -143,7 +144,8 @@ const image = product.imageUrls?.[0] || '';
           return (
             
             <div key={item.id} className="saved-item-card">
-              <Image src={image} alt={product.title} width={80} height={80} />
+              <div className="savelaterleft">
+ <Image src={image} alt={product.title} width={80} height={80} />
 
               <div className="saved-item-details">
                 <h3 className='product-title'>{product.title}</h3>
@@ -166,6 +168,8 @@ const image = product.imageUrls?.[0] || '';
 
                 {/* Optional: Add rating or vendor info */}
               </div>
+              </div>
+             
 
               <div className="saved-item-actions">
                 <button

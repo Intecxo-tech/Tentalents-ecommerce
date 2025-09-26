@@ -1,7 +1,7 @@
 .saved-item-card{
     display: flex;;
     align-items: center;
-    justify-content:flex-start;
+    justify-content:space-between;
     gap:15px;
    background-color: #F6F5FF;
     border-radius: 10px;
@@ -12,6 +12,21 @@
     align-items: center;
     justify-content: space-between;
     gap:10px;
+}
+.empty-saved{
+    max-width: 600px;
+    margin: auto;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 0px;
+    gap:15px;
+}
+.savelaterleft{
+    display: flex;
+    align-items: center;
+    gap:10px;
+    width: 100%;
 }
 .saved-item-actions .cart-button{
     width: 100%;

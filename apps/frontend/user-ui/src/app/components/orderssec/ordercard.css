@@ -19,7 +19,14 @@
    
   width:100%;
 }
-.cancel-button,.invoicebutton{
+.invoicebutton{
+  font-size: 14px;
+  color: var(--primary);
+  text-decoration: underline;
+   font-family: 'Radhika Trial', sans-serif;
+    font-weight: 400;
+}
+.cancel-button{
   background-color: white;
   border: 1px solid var(--primary);
   border-radius:5px;

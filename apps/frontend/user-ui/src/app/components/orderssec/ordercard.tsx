@@ -97,11 +97,11 @@ const isDelivered = status.toLowerCase() === 'delivered';
     Download Invoice
   </button>
 
-  {isCancelable && (
+  {/* {isCancelable && (
     <button className="cancel-button" onClick={() => onCancelOrder(order)}>
       Cancel Order
     </button>
-  )}
+  )} */}
 
 
 
