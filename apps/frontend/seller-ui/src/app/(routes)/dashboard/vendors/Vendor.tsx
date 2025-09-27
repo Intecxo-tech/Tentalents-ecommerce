@@ -7,7 +7,8 @@ import Image from 'next/image';
 import { Star } from 'lucide-react';
 import './vendor.css';
 import VendorSkeleton from './VendorSkeleton';
-import Default from '../../../assets/defaultprofile.png'
+import Default from '../../../../assets/defaultprofile.png'
+import { useRouter } from 'next/navigation';
 interface VendorData {
   id: string;
   name: string;
@@ -24,6 +25,7 @@ interface VendorData {
 }
 
 function Vendor() {
+    const router = useRouter();
   const [vendors, setVendors] = useState<VendorData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +74,7 @@ function Vendor() {
     <div>
         <div className="vendor-grid">
       {vendors.map((vendor) => (
-        <div key={vendor.id} className="vendorcard">
+        <div key={vendor.id} className="vendorcard" onClick={() => router.push(`/dashboard/vendors/${vendor.id}`)} >
           <div className="cardstyles">
             <div className="vendordeatil">
               <div className="vendorleft">

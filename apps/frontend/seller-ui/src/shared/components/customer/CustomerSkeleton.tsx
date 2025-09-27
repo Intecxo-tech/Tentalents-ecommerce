@@ -3,7 +3,7 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import '../vendors/vendor.css'; // Assuming your styles are similar to the original
+import '../../../app/(routes)/dashboard/vendors/vendor.css'; // Assuming your styles are similar to the original
 
 const CustomerSkeleton = () => {
   return (

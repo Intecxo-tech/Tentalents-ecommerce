@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Vendor from '../../../../shared/components/vendors/Vendor';
+import Vendor from '../vendors/Vendor';
 import Customer from '../../../../shared/components/customer/Customer';
 import { useAdminTab } from '../../../../services/AdminTabContext'; // ✅ Use context here
 

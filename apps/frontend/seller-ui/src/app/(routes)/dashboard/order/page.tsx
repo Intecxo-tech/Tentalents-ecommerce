@@ -226,10 +226,13 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
                   </div>
                 ) : isPreparing ? (
                   <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleTrackOrder(orderItem.id)}>
-                      Track Order
-                    </button>
-                  </div>
+    <button
+      className="center-borderedbutton"
+      onClick={() => handleViewOrder(orderItem.order?.id || '')}
+    >
+      Track Order
+    </button>
+  </div>
                 ) : isConfirmed ? (
                   <div className="product-buttons">
                     <button className="center-borderedbutton" onClick={() => handleViewStatus(orderItem.id)}>
@@ -255,13 +258,14 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
         })}
       </div>
 
-      {selectedOrderId && (
-        <FullOrderPage
-          selectedOrderId={selectedOrderId}
-          onClose={() => setSelectedOrderId(null)}
-          selectedOrderGroup={orders.filter((o) => o.order?.id === selectedOrderId)}
-        />
-      )}
+     {selectedOrderId && (
+  <FullOrderPage
+    selectedOrderId={selectedOrderId}
+    onClose={() => setSelectedOrderId(null)}
+    selectedOrder={orders.find((o) => o.order?.id === selectedOrderId) ?? null}
+  />
+)}
+
     </div>
   );
 };

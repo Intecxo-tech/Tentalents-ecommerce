@@ -135,7 +135,7 @@ const allItems = orders.flatMap(order =>
       <h2 className="yourorder">Your Orders</h2>
       <div className="product-list">
         {allItems.map(item => (
-          <Link key={item.id} href={`/shop/${item.product.slug || ''}`} passHref>
+           <Link href={`/shop/${item.product.slug}`} key={item.id}>
             <div className="orderlistitem" style={{ cursor: 'pointer' }}>
               <div className="orderimage">
                 <div
@@ -203,9 +203,7 @@ const allItems = orders.flatMap(order =>
 {hasDeliveredOrder && (
     <div className="review-button-container">
         {/* ✅ Show Review button only when delivered */}
-        <button className="bordered-button">
-            Give Us a Review <Star />
-        </button>
+       
 
         <div
             className="return-refund-button-container"

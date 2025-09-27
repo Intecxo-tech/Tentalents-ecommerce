@@ -7,7 +7,7 @@ import { AdminTabProvider } from '../../../services/AdminTabContext';
 import HeaderBanner from '../../../shared/components/header/headerbanner';
 import Adminheader from '../../../shared/components/adminheader/Adminheader';
 import { jwtDecode } from 'jwt-decode';
-import Vendor from '../../../shared/components/vendors/Vendor';
+import Vendor from '../dashboard/vendors/Vendor';
 import Customer from '../../../shared/components/customer/Customer';
 
 interface TokenPayload {

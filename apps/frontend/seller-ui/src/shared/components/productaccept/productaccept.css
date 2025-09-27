@@ -46,12 +46,13 @@
 
 .produtdetails {
   display: grid;
-  grid-template-columns: 80px 80px 80px 190px auto; /* Quantity, Price, City, Status tags */
+  /* grid-template-columns: repeat(4,1fr); */
+  grid-template-columns: 40px 40px 80px  auto; 
   align-items: center;
   gap: 10px;
   flex: 3;
   width: 100%;
-  min-width: 50px;
+
   font-size: 14px;
 }
 

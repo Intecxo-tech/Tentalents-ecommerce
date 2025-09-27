@@ -393,7 +393,7 @@ font-weight: 400;
 }
 .unpaid{
   background-color:var(--unpaid);
-  padding:10px;
+  padding: 4px 10px;
   border-radius:10px;
   text-align: center;
  font-family: 'Radhika Trial', sans-serif;

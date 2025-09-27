@@ -1,4 +1,4 @@
-import { PrismaClient,PaymentMethod,PaymentStatus,ReturnStatus } from '@prisma/client';
+import { PrismaClient,PaymentMethod,PaymentStatus,ReturnStatus ,ReturnRequest,RefundRequest,ProductListing} from '@prisma/client';
 import type { OrderStatus } from '@prisma/client';
 import Stripe from 'stripe';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,7 +38,11 @@ interface AddressInput {
   addressType: string;  // e.g. 'shipping'
   isDefault?: boolean;
 }
-
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
 const prisma = new PrismaClient();
 const stripe = new Stripe(process.env.STRIPE_PAYMENT_SECRET_KEY!, {
   
@@ -482,7 +486,7 @@ getOrdersByUser: async (buyerId: string) => {
     });
   },
 
-    getVendorOrders: async (vendorId: string) => {
+getVendorOrders: async (vendorId: string) => {
   return prisma.orderItem.findMany({
     where: { vendorId },
     include: {
@@ -490,12 +494,17 @@ getOrdersByUser: async (buyerId: string) => {
       order: {
         include: {
           shippingAddress: true,
-          buyer: { select: { name: true, email: true } }
+          buyer: { select: { name: true, email: true } },
+          returnRequests: true,   // If you want order-level return requests too
+          refundRequests: true,   // And refund requests at order-level
         }
-      }
+      },
+      returnRequests: true,    // Item-level return requests
+      refundRequests: true,    // Item-level refund requests
     }
   });
 }
+
   
 };
 
@@ -663,12 +672,48 @@ createReturnRequest: async (
     });
   },
 
-  updateReturnRequestStatus: async (returnRequestId: string, status: 'approved' | 'rejected') => {
-    const updatedRequest = await prisma.returnRequest.update({
-      where: { id: returnRequestId },
-      data: { status: status.toUpperCase() as ReturnStatus },  // Assert it to ReturnStatus enum
-    });
+updateReturnRequestStatus: async (returnRequestId: string, status: 'approved' | 'rejected') => {
+  const returnRequest = await prisma.returnRequest.findUnique({
+    where: { id: returnRequestId },
+    include: {
+      orderItem: {
+        include: {
+          product: {
+            include: {
+              listings: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
-    return updatedRequest;
-  },
+  if (!returnRequest) {
+    throw new Error('Return request not found');
+  }
+
+  let resolvedAtDate = null;
+
+  if (status === 'approved') {
+    // Extract deliveryEta from the first listing or fallback to 5
+    const deliveryEtaStr = returnRequest.orderItem?.product?.listings?.[0]?.deliveryEta;
+    const deliveryEtaDays = deliveryEtaStr ? parseInt(deliveryEtaStr, 10) : 5;
+
+    // Acceptance date is now
+    const acceptanceDate = new Date();
+
+    // Calculate resolvedAt by adding deliveryEta days
+    resolvedAtDate = addDays(acceptanceDate, deliveryEtaDays);
+  }
+
+  const updatedRequest = await prisma.returnRequest.update({
+    where: { id: returnRequestId },
+    data: {
+      status: status.toUpperCase() as ReturnStatus,
+      resolvedAt: resolvedAtDate,
+    },
+  });
+
+  return updatedRequest;
+}
 };

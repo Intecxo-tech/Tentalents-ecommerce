@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
 import Default from '../../../assets/defaultprofile.png'; // fallback image
-import '../vendors/vendor.css';
+import '../../../app/(routes)/dashboard/vendors/vendor.css';
 import './approve.css';
 import VendorApproveSkeleton from './VendorApproveSkeleton';
 

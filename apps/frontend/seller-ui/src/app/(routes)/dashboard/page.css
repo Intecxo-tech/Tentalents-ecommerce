@@ -23,7 +23,14 @@
   
   min-height: 100vh;
 }
+.inventory-sectionback2{
+    display: flex;;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap:10px;
+}
 .prodiucttabdsw{
+ 
       flex: 2;
 
 

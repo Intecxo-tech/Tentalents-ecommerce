@@ -5,7 +5,14 @@ import {
   UserRole ,
   VendorStatus,
   BankDetail,
-   ProductListing,  // ✅ Add this
+   ProductListing,
+   OrderItem,
+   Rating,
+   ReturnStatus,
+   RefundRequest,
+   Order,
+   ReturnRequest,
+     // ✅ Add this
   Product,
 } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -53,30 +60,114 @@ export const adminService = {
 
     return { user, vendor };
   },
-  getAllVendorsWithProducts: async (): Promise<
-  (Vendor & {
-    user: Pick<User, 'id' | 'email' | 'password' | 'role'> | null;
-    productListings: (ProductListing & { product: Product })[];
-  })[]
-> => {
-  return prisma.vendor.findMany({
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          password: true, // hashed password, for admin view only
-          role: true,
-        },
-      },
-      productListings: {
-        include: {
-          product: true,
+getAllVendorsWithProducts: async (): Promise<
+        (Vendor & {
+            user: Pick<User, 'id' | 'email' | 'password' | 'role'> | null;
+            productListings: (ProductListing & {
+                product: Product & {
+                    ratings: Rating[];
+                };
+            })[];
+            // ✅ NEW RELATION: Include all OrderItems sold by this vendor
+            orderItems: (OrderItem & {
+                // ✅ Include the parent Order details on each OrderItem
+                order: Order;
+                returnRequests: ReturnRequest[];
+                refundRequests: RefundRequest[];
+            })[];
+        })[]
+    > => {
+        return prisma.vendor.findMany({
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        password: true,
+                        role: true,
+                    },
+                },
+                productListings: {
+                    select: {
+                        id: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        productId: true,
+                        vendorId: true,
+                        sku: true,
+                        price: true,
+                        stock: true,
+                        deliveryEta: true,
+                        status: true,
+                        itemWeight: true,
+                        originalPrice: true,
+                        packageHeight: true,
+                        packageLength: true,
+                        packageWidth: true,
+                        unit: true,
+                        brand: true,
+                        includedComponents: true,
+                        numberOfItems: true,
+                        enclosureMaterial: true,
+                        productCareInstructions: true,
+                        productFeatures: true,
+                        dispatchTimeInDays: true,
+                        shippingCost: true,
+                        returnPolicyType: true,
+                        product: {
+                            select: {
+                                id: true,
+                                brand: true,
+                                slug: true,
+                                numberOfItems: true,
+                                enclosureMaterial: true,
+                                productCareInstructions: true,
+                                includedComponents: true,
+                                createdAt: true,
+                                updatedAt: true,
+                                ratings: true,
+                                productFeatures: true,
+                                title: true,
+                                description: true,
+                                category: true,
+                                subCategory: true,
+                                imageUrls: true,
+                                // ❌ Removed the unnecessary and confusing 'order' relation here
+                            },
+                        },
+                        variants: true,
+                    },
+                },
+                // ✅ NEW BLOCK: Include OrderItems and their parent Order details
+                orderItems: {
+  include: {
+    order: {
+      include: {
+        shippingAddress: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            country: true,
+            state: true,
+            city: true,
+            pinCode: true,
+            addressLine1: true,
+            addressLine2: true,
+            addressType: true,
+            isDefault: true,
+          },
         },
       },
     },
-  });
+    returnRequests: true,
+    refundRequests: true,
+  },
 },
+            },
+        });
+    },
+
 
 getAllUsers: async (): Promise<
   Array<{

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
-import '../vendors/vendor.css';
+import '../../../app/(routes)/dashboard/vendors/vendor.css';
 import CustomerSkeleton from './CustomerSkeleton';
 import Default from '../../../assets/defaultprofile.png';
 

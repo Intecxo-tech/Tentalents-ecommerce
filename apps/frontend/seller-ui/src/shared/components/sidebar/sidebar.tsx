@@ -128,7 +128,7 @@ const fetchVendor = async () => {
                 Store
               </div>
             </Link>
-            <Link href="/order">
+            <Link href="/dashboard/order">
               <div className="itemsec">
                 <Box color={getIconColor('/dashboard/order')} />
                Order
