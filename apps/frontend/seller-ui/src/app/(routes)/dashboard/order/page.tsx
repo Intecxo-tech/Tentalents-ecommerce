@@ -3,12 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import '../../../../shared/components/productaccept/productaccept.css';
 import Image from 'next/image';
-import { Search } from 'lucide-react';
+import { Search , X} from 'lucide-react';
 import axios from 'axios';
 import './order.css';
 import FullOrderPage from '../orderform/Orderform';
 import OrderSkeleton from './Orderskeleton';
-
+import {jwtDecode} from 'jwt-decode';
+import { Toaster,toast } from 'react-hot-toast';
 export interface Product {
   id: string;
   title: string;
@@ -32,6 +33,12 @@ export interface Order {
   shippingAddress?: ShippingAddress;
   createdAt: string;
   paymentMethod?: string;
+   returnRequest?: boolean;
+  refundRequest?: boolean;
+  returnRequestId?: string; // add this
+  refundRequestId?: string;
+  returnRequestStatus?: string; // REQUESTED / APPROVED / REJECTED
+  refundRequestStatus?: string; // REQUESTED / APPROVED / REJECTED
 }
 
 export interface VendorOrder {
@@ -64,6 +71,68 @@ const Page = () => {
     if (['paid', 'delivered', 'success'].includes(lowerStatus)) return 'paid';
     return '';
   };
+const handleReturnRefundAction = async (
+  requestId: string, // <-- change from orderId to requestId
+  type: 'return' | 'refund',
+  action: 'approved' | 'rejected'
+) => {
+  try {
+   const token = localStorage.getItem('token');
+if (token) {
+  const decoded: any = jwtDecode(token);
+  console.log(decoded.vendorId); // Use this to check vendor
+}
+
+    const url =
+      type === 'return'
+        ? 'https://order-service-322f.onrender.com/api/orders/return-request/status'
+        : 'https://order-service-322f.onrender.com/api/orders/refund-request/status'; // if refund has separate route
+
+    await axios.put(
+      url,
+      {
+        returnRequestId: requestId,
+        status: action,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+     toast.success(`✅ ${type === 'return' ? 'Return' : 'Refund'} request ${action}`);
+
+    // Update frontend state
+   setOrders((prev) =>
+  prev.map((o) => {
+    // Match either return or refund request ID
+    if (
+      o.order?.returnRequestId === requestId ||
+      o.order?.refundRequestId === requestId
+    ) {
+      return {
+        ...o,
+        order: {
+          ...o.order!,
+          // Update the status field based on type
+          returnRequestStatus:
+            type === 'return' ? action.toUpperCase() : o.order?.returnRequestStatus,
+          refundRequestStatus:
+            type === 'refund' ? action.toUpperCase() : o.order?.refundRequestStatus,
+        },
+      };
+    }
+    return o;
+  })
+);
+
+  } catch (err) {
+    console.error(`❌ Failed to ${action} ${type} request`, err);
+    alert(`Failed to ${action} ${type} request`);
+  }
+};
+
 
 useEffect(() => {
   const token = localStorage.getItem('token');
@@ -71,16 +140,49 @@ useEffect(() => {
     setLoading(false);
     return;
   }
-
   const fetchVendorOrders = async () => {
     try {
-      const res = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log('Fetched Orders:', res.data.data);  // Debug here
-      setOrders(res.data.data);
+      const res = await axios.get(
+        'https://order-service-322f.onrender.com/api/orders/vendor/orders',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log('Fetched Orders:', res.data.data);
+
+     const mappedOrders: VendorOrder[] = res.data.data.map((item: any) => {
+  const order = item.order || {};
+
+  // Find pending return/refund requests
+  const pendingReturnRequest = item.returnRequests?.find(
+    (r: any) => r.status === 'REQUESTED'
+  );
+  const pendingRefundRequest = item.refundRequests?.find(
+    (r: any) => r.status === 'REQUESTED'
+  );
+ const returnRequest = item.returnRequests?.[0];
+  const refundRequest = item.refundRequests?.[0];
+  return {
+    ...item,
+    order: {
+      ...order,
+      // Add boolean flags
+      returnRequest: !!pendingReturnRequest,
+      refundRequest: !!pendingRefundRequest,
+        returnRequestStatus: returnRequest?.status || null, // REQUESTED / APPROVED / REJECTED
+      refundRequestStatus: refundRequest?.status || null,
+      // Add the actual request IDs from related tables
+      returnRequestId: pendingReturnRequest?.id,
+      refundRequestId: pendingRefundRequest?.id,
+      
+    },
+  };
+});
+
+
+      setOrders(mappedOrders);
     } catch (err) {
       console.error('❌ Failed to fetch orders:', err);
     } finally {
@@ -214,45 +316,104 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
                   <span className={getStatusClass(dispatchStatus)}>{dispatchStatus}</span>
                 </div>
               </div>
-              <div className="productstatus">
-                {isPending ? (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleDeny(orderItem.id)}>
-                      Deny
-                    </button>
-                    <button className="background-buttonver" onClick={() => handleConfirm(orderItem.id)}>
-                      Confirm
-                    </button>
-                  </div>
-                ) : isPreparing ? (
-                  <div className="product-buttons">
+             <div className="productstatus">
+{orderItem.order?.returnRequestStatus === 'REQUESTED' || orderItem.order?.refundRequestStatus === 'REQUESTED' ? (
+  // Show Approve / Cancel buttons only if status is REQUESTED
+  <div className="product-buttons">
     <button
       className="center-borderedbutton"
-      onClick={() => handleViewOrder(orderItem.order?.id || '')}
+      onClick={() =>
+        handleReturnRefundAction(
+          orderItem.order?.returnRequestStatus === 'REQUESTED'
+            ? orderItem.order?.returnRequestId!
+            : orderItem.order?.refundRequestId!,
+          orderItem.order?.returnRequestStatus === 'REQUESTED' ? 'return' : 'refund',
+          'rejected'
+        )
+      }
     >
-      Track Order
+      <X size={16} />
+    </button>
+    <button
+      className="background-buttonver"
+      onClick={() =>
+        handleReturnRefundAction(
+          orderItem.order?.returnRequestStatus === 'REQUESTED'
+            ? orderItem.order?.returnRequestId!
+            : orderItem.order?.refundRequestId!,
+          orderItem.order?.returnRequestStatus === 'REQUESTED' ? 'return' : 'refund',
+          'approved'
+        )
+      }
+    >
+      Approve
     </button>
   </div>
-                ) : isConfirmed ? (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleViewStatus(orderItem.id)}>
-                      View Status
-                    </button>
-                  </div>
-                ) : isDispatched ? (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem.order?.id || '')}>
-                      View Order
-                    </button>
-                  </div>
-                ) : isFinished ? (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem.order?.id || '')}>
-                      View Order
-                    </button>
-                  </div>
-                ) : null}
-              </div>
+) : orderItem.order?.returnRequestStatus === 'APPROVED' || orderItem.order?.refundRequestStatus === 'APPROVED' ? (
+  // Show Approved label if already approved
+  <span className="bordered-button">Approved</span>
+) : orderItem.order?.returnRequestStatus === 'REJECTED' || orderItem.order?.refundRequestStatus === 'REJECTED' ? (
+  // Show Rejected label if rejected
+  <span className="bordered-button">Rejected</span>
+)  : isPending ? (
+    // 🟡 Pending
+    <div className="product-buttons">
+      <button
+        className="center-borderedbutton"
+        onClick={() => handleDeny(orderItem.id)}
+      >
+        Deny
+      </button>
+      <button
+        className="background-buttonver"
+        onClick={() => handleConfirm(orderItem.id)}
+      >
+        Confirm
+      </button>
+    </div>
+  ) : isPreparing ? (
+    // 🚚 Preparing
+    <div className="product-buttons">
+      <button
+        className="center-borderedbutton"
+        onClick={() => handleViewOrder(orderItem.order?.id || '')}
+      >
+        Track Order
+      </button>
+    </div>
+  ) : isConfirmed ? (
+    // ✅ Confirmed
+    <div className="product-buttons">
+      <button
+        className="center-borderedbutton"
+        onClick={() => handleViewStatus(orderItem.id)}
+      >
+        View Status
+      </button>
+    </div>
+  ) : isDispatched ? (
+    // 📦 Shipped
+    <div className="product-buttons">
+      <button
+        className="center-borderedbutton"
+        onClick={() => handleViewOrder(orderItem.order?.id || '')}
+      >
+        View Order
+      </button>
+    </div>
+  ) : isFinished ? (
+    // 🏁 Delivered / Returned / Refunded
+    <div className="product-buttons">
+      <button
+        className="center-borderedbutton"
+        onClick={() => handleViewOrder(orderItem.order?.id || '')}
+      >
+        View Order
+      </button>
+    </div>
+  ) : null}
+</div>
+
             </div>
           );
         })}

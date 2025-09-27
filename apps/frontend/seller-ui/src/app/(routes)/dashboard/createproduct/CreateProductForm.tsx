@@ -44,22 +44,23 @@ returnPolicyType: 'REFUND' | 'REPLACEMENT';
   shippingCost?: number;
   variants?: Variant[];
    // ...existing fields
-  listings?: {
-    id?: string; // <-- Add this
-    price: number;
-    originalPrice?: number;
-    stock: number;
-    unit: string;
-    itemWeight: number;
-    packageLength?: number;
-    packageWidth?: number;
-    packageHeight?: number;
-    deliveryEta?: string;
-    dispatchTimeInDays?: number;
-    shippingCost?: number;
-    returnPolicyType: 'REFUND' | 'REPLACEMENT';
-    sku: string;
-  }[];
+listings?: {
+  id?: string;
+  price: number;
+  originalPrice?: number;
+  stock: number;
+  unit: string;
+  itemWeight: number;
+  packageLength?: number;
+  packageWidth?: number;
+  packageHeight?: number;
+  deliveryEta?: string;
+  dispatchTimeInDays?: number;
+  shippingCost?: number;
+  returnPolicyType: 'REFUND' | 'REPLACEMENT';
+  sku: string;
+}[];
+
 };
 
 
@@ -81,6 +82,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ productId }) => {
   });
   useEffect(() => {
   if (!productId) return;
+
 
   async function fetchProduct() {
     try {
@@ -171,7 +173,10 @@ useEffect(() => {
 
 
 
-
+const toDecimal = (value: number | undefined, decimals = 2): number | undefined => {
+  if (value === undefined || value === null || isNaN(value)) return undefined;
+  return parseFloat(value.toFixed(decimals));
+};
 const onSubmit = async (data: FormData) => {
   try {
     setUploading(true);
@@ -186,36 +191,39 @@ const onSubmit = async (data: FormData) => {
         ? value.map(s => s.trim()).filter(Boolean)
         : (value ?? '').split(',').map(s => s.trim()).filter(Boolean);
 
-    // ✅ Step 1: Prepare ALL image Base64 uploads BEFORE the API call
     const base64Images: string[] = await Promise.all(
       selectedFiles.map(file => fileToBase64(file))
     );
 
-    // ✅ Step 2: Create or Update based on productId
+    // ✅ Format decimal fields
+    data.price = toDecimal(data.price)!;
+    data.originalPrice = toDecimal(data.originalPrice);
+
     if (productId) {
-      // Update existing product
+      // ✳️ UPDATE product
       const payload = {
         ...data,
         includedComponents: toArray(data.includedComponents),
         productFeatures: toArray(data.productFeatures),
         variants: data.variants?.filter(v => v.name && v.value) || [],
-        // ✅ Include the base64Images in the update payload
         images: base64Images.length > 0 ? base64Images : undefined,
-        listings: [{
-          id: data.listings?.[0]?.id,
-          price: data.price,
-          originalPrice: data.originalPrice,
-          stock: data.stock,
-          unit: data.unit,
-          itemWeight: data.itemWeight,
-          packageLength: data.packageLength,
-          packageWidth: data.packageWidth,
-          packageHeight: data.packageHeight,
-          deliveryEta: data.deliveryEta,
-          dispatchTimeInDays: data.dispatchTimeInDays,
-          shippingCost: data.shippingCost,
-          sku: data.sku,
-        }],
+        listings: [
+          {
+            id: data.listings?.[0]?.id,
+            price: toDecimal(data.price),
+            originalPrice: toDecimal(data.originalPrice),
+            stock: data.stock,
+            unit: data.unit,
+            itemWeight: data.itemWeight,
+            packageLength: data.packageLength,
+            packageWidth: data.packageWidth,
+            packageHeight: data.packageHeight,
+            deliveryEta: data.deliveryEta,
+            dispatchTimeInDays: data.dispatchTimeInDays,
+            shippingCost: data.shippingCost,
+            sku: data.sku,
+          },
+        ],
       };
 
       await axios.put(
@@ -227,28 +235,29 @@ const onSubmit = async (data: FormData) => {
       toast.success('Product updated successfully!');
       router.push(`/dashboard/store/${productId}`);
     } else {
-      // Create new product
+      // ✳️ CREATE product
       const createPayload = {
         ...data,
         includedComponents: toArray(data.includedComponents),
         productFeatures: toArray(data.productFeatures),
         variants: data.variants?.filter(v => v.name && v.value) || [],
-        // ✅ The crucial change: send all images in the initial create payload
         images: base64Images,
-        listings: [{
-          price: data.price,
-          originalPrice: data.originalPrice,
-          stock: data.stock,
-          unit: data.unit,
-          itemWeight: data.itemWeight,
-          packageLength: data.packageLength,
-          packageWidth: data.packageWidth,
-          packageHeight: data.packageHeight,
-          deliveryEta: data.deliveryEta,
-          dispatchTimeInDays: data.dispatchTimeInDays,
-          shippingCost: data.shippingCost,
-          sku: data.sku,
-        }],
+        listings: [
+          {
+            price: toDecimal(data.price),
+            originalPrice: toDecimal(data.originalPrice),
+            stock: data.stock,
+            unit: data.unit,
+            itemWeight: data.itemWeight,
+            packageLength: data.packageLength,
+            packageWidth: data.packageWidth,
+            packageHeight: data.packageHeight,
+            deliveryEta: data.deliveryEta,
+            dispatchTimeInDays: data.dispatchTimeInDays,
+            shippingCost: data.shippingCost,
+            sku: data.sku,
+          },
+        ],
       };
 
       await axios.post(
@@ -262,7 +271,6 @@ const onSubmit = async (data: FormData) => {
       setSelectedFiles([]);
       router.push('/dashboard/store');
     }
-
   } catch (err: any) {
     console.error(err);
     toast.error(err?.response?.data?.message || 'Something went wrong');
