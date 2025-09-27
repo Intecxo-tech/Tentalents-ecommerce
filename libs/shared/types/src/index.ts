@@ -3,6 +3,7 @@ export { UserRole } from './lib/enums/user-role.enum';
 export { OrderStatus } from './lib/enums/order-status.enum';
 export { PaymentStatus } from './lib/enums/payment-status.enum';
 export { VendorStatus } from './lib/enums/vendor-status.enum';
+export { ReturnStatus, ReturnPolicyType } from './lib/vendor'; // <-- added
 
 // === Interfaces ===
 export { Cart } from './lib/cart';
@@ -12,6 +13,8 @@ export {
   Vendor,
   VendorCreatedEvent,
   VendorStatusUpdatedEvent,
+  ReturnRequest,           // <-- added
+  UpdateReturnRequestDto,  // <-- added
 } from './lib/vendor';
 export { Order } from './lib/order';
 export { Product } from './lib/product';

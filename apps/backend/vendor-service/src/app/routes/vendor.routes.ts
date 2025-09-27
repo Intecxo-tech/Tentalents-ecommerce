@@ -1,13 +1,10 @@
-// import { Router } from 'express';
-import { Router, Request as ExpressRequest } from 'express';
+import { Router, Request as ExpressRequest, Response } from 'express';
 import multer from 'multer';
 import type { FileFilterCallback } from 'multer';
-
 import {
   updateVendor,
   getVendorById,
-    updateBankDetailsController,
-
+  updateBankDetailsController,
   getAllVendors,
   uploadCancelledCheque,
   deleteVendor,
@@ -20,12 +17,14 @@ import {
   verifyVendorEmailOtp,
   completeVendorUserRegistration,
   completeVendorProfileRegistration,
- getVendorProfileByVendorId,
+  getVendorProfileByVendorId,
   loginOrRegisterWithGoogle,
- updateVendorProfile,
-   uploadVendorProfileImageController,
-   uploadVendorKYCDocumentsController,
-  loginVendor
+  updateVendorProfile,
+  uploadVendorProfileImageController,
+  uploadVendorKYCDocumentsController,
+  loginVendor,
+  updateReturnRequestByVendor as updateReturnRequestByVendorController,
+  AuthenticatedRequest, // ✅ import from controller
 } from '../controllers/vendor-controller';
 
 import { authMiddleware } from '@shared/auth';
@@ -50,17 +49,21 @@ const upload = multer({
   },
 });
 
+// === Public routes ===
 router.post('/google', loginOrRegisterWithGoogle);
 router.get('/profile/:vendorId', authMiddleware(), getVendorProfileByVendorId);
-// === Public registration routes (no auth) ===
 router.post('/register/initiate-otp', initiateVendorRegistrationOtp);
 router.post('/register/verify-otp', verifyVendorEmailOtp);
 router.post('/register/user', completeVendorUserRegistration);
 router.put('/vendors/:vendorId/bank-details', updateBankDetailsController);
 router.post('/login', loginVendor);
 
-// === Protected routes (auth required) ===
-router.post('/register/profile', authMiddleware([UserRole.BUYER, UserRole.SELLER]), completeVendorProfileRegistration);
+// === Protected routes ===
+router.post(
+  '/register/profile',
+  authMiddleware([UserRole.BUYER, UserRole.SELLER]),
+  completeVendorProfileRegistration
+);
 
 router.get('/', authMiddleware(UserRole.ADMIN), getAllVendors);
 router.post('/convert', authMiddleware(), userBecameVendorController);
@@ -70,7 +73,6 @@ router.put(
   authMiddleware([UserRole.SELLER]),
   updateVendorProfile
 );
-// router.put('/:id', authMiddleware(UserRole.SELLER), updateVendor);
 router.delete('/:id', authMiddleware(UserRole.ADMIN), deleteVendor);
 
 router.post(
@@ -80,7 +82,6 @@ router.post(
   uploadVendorDocuments
 );
 
-
 router.patch('/:id/approve', authMiddleware(UserRole.ADMIN), approveVendor);
 router.patch('/:id/reject', authMiddleware(UserRole.ADMIN), rejectVendor);
 
@@ -89,22 +90,32 @@ router.get(
   authMiddleware([UserRole.ADMIN, UserRole.SELLER]),
   getVendorAnalytics
 );
+
 router.post(
   '/profile-image/:vendorId',
   authMiddleware(UserRole.SELLER),
   uploadVendorProfileImageController
 );
+
 router.post(
   '/cancelled-cheque/:vendorId',
   authMiddleware(UserRole.SELLER),
-  upload.single('file'), // ✅ This is where the middleware should be
-  uploadCancelledCheque // ✅ This is the corrected, single handler function
+  upload.single('file'),
+  uploadCancelledCheque
 );
-// Route expects 'files' for KYC docs multiple files
+
 router.post(
   '/kyc-docs/:vendorId',
   authMiddleware(UserRole.SELLER),
   uploadVendorKYCDocumentsController
+);
+
+// === Return request update ===
+router.put(
+  '/return-request/:returnRequestId',
+  authMiddleware([UserRole.SELLER]),
+  (req: ExpressRequest, res: Response) =>
+    updateReturnRequestByVendorController(req as AuthenticatedRequest, res)
 );
 
 export default router;

@@ -15,6 +15,8 @@ import { vendorService } from '../services/vendor-service';
 
 import jwt from 'jsonwebtoken';
 import type { UserRole } from '@shared/types';
+import { UpdateReturnRequestDto } from '@shared/types';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret';
 
 export interface AuthenticatedRequest extends Request {
@@ -238,11 +240,11 @@ export const updateVendorProfile = async (req: Request, res: Response) => {
  * Step 4: Complete vendor profile registration
  */
 export const completeVendorProfileRegistration = async (req: Request, res: Response) => {
-    try {
-      logger.info('Starting completeVendorProfileRegistration controller');
+    try {
+      logger.info('Starting completeVendorProfileRegistration controller');
 
       // STEP 1: Read ALL necessary fields from the request body
-      const { 
+      const { 
         userId, 
         bankDetails, 
         vendorDetails, 
@@ -251,17 +253,16 @@ export const completeVendorProfileRegistration = async (req: Request, res: Respo
         cancelledChequeFile, // <-- Now reading the cheque file
         cancelledChequeFilename // <-- And its name (optional but good practice)
       } = req.body;
-  
-      if (!userId || !bankDetails || !vendorDetails) {
-        return res.status(400).json({ error: 'User ID, bankDetails, and vendorDetails are required' });
-      }
-      
+  
+      if (!userId || !bankDetails || !vendorDetails) {
+        return res.status(400).json({ error: 'User ID, bankDetails, and vendorDetails are required' });
+      }
+      
       // This part for KYC files is correct
-      let kycBuffers: Buffer[] | undefined = undefined;
-      if (kycFiles && Array.isArray(kycFiles) && kycFiles.length > 0) {
-          kycBuffers = kycFiles.map(base64String => Buffer.from(base64String.split(',')[1], 'base64'));
-      }
-
+      let kycBuffers: Buffer[] | undefined = undefined;
+      if (kycFiles && Array.isArray(kycFiles) && kycFiles.length > 0) {
+          kycBuffers = kycFiles.map(base64String => Buffer.from(base64String.split(',')[1], 'base64'));
+      }
       // STEP 2: Add logic to convert the cancelled cheque to a Buffer
       let chequeBuffer: Buffer | undefined = undefined;
       if (cancelledChequeFile && typeof cancelledChequeFile === 'string') {
@@ -642,6 +643,7 @@ export const uploadVendorProfileImageController = async (req: Request, res: Resp
   }
 };
 
+
 export const uploadVendorKYCDocumentsController = async (req: Request, res: Response) => {
   try {
     const vendorId = req.params.vendorId;
@@ -684,3 +686,49 @@ export const uploadVendorKYCDocumentsController = async (req: Request, res: Resp
     res.status(500).json({ error: err.message || 'Failed to upload KYC documents' });
   }
 };
+
+
+export const updateReturnRequestByVendor = async (req: Request, res: Response) => {
+  try {
+    const { vendorId, returnRequestId } = req.params;
+    const updateData: UpdateReturnRequestDto = req.body;
+
+    // Fetch the return request along with its order item
+    const returnRequest = await prisma.returnRequest.findUnique({
+      where: { id: returnRequestId },
+      include: { orderItem: true },
+    });
+
+    if (!returnRequest) {
+      return res.status(404).json({ message: 'Return request not found' });
+    }
+
+    // Check if this vendor owns the order item
+    if (returnRequest.orderItem.vendorId !== vendorId) {
+      return res.status(403).json({ message: 'Unauthorized: Not your return request' });
+    }
+
+    // Update the return request
+    const updatedRequest = await prisma.returnRequest.update({
+      where: { id: returnRequestId },
+      data: {
+        status: updateData.status ?? returnRequest.status,
+        comment: updateData.comment ?? returnRequest.comment,
+        replacementProductId: updateData.replacementProductId ?? returnRequest.replacementProductId,
+        resolvedAt:
+          updateData.status === 'APPROVED' || updateData.status === 'REJECTED'
+            ? new Date()
+            : returnRequest.resolvedAt,
+      },
+    });
+
+    return res.json({ success: true, data: updatedRequest });
+  } catch (error) {
+    logger.error('updateReturnRequestByVendor error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+
+};
+
+  
+

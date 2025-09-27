@@ -1,3 +1,4 @@
+import { ReturnStatus } from '@shared/types';
 import { VendorStatus as SharedVendorStatus } from '@shared/types';
 import { Prisma, VendorStatus as PrismaVendorStatus } from '@prisma/client';
 
@@ -9,17 +10,26 @@ export interface CreateVendorDto {
   userId?: string;
   status?: SharedVendorStatus;
   documents?: string[];
-   address?: string;
+  address?: string;
   gstNumber?: string;
   profileImage?: string;
-    panNumber?: string; // Add panNumber here
-  AadharNumber?: string; // Add AadharNumber here
+  panNumber?: string;
+  AadharNumber?: string;
 }
 
 export interface UpdateVendorDto extends Partial<CreateVendorDto> {}
 
 export interface UpdateVendorStatusDto {
   status: SharedVendorStatus;
+}
+
+
+// ✅ Return request DTO
+export interface UpdateReturnRequestDto {
+  status?: ReturnStatus;
+  comment?: string;
+  replacementProductId?: string;
+  attachmentUrls?: string[];
 }
 
 export const createVendorDtoToPrisma = (
@@ -34,21 +44,14 @@ export const createVendorDtoToPrisma = (
     status: (dto.status ?? SharedVendorStatus.PENDING) as unknown as PrismaVendorStatus,
     address: dto.address ?? null,
     gstNumber: dto.gstNumber ?? null,
-    AadharNumber:dto.AadharNumber ?? null,
-    panNumber:dto.panNumber ?? null,
+    AadharNumber: dto.AadharNumber ?? null,
+    panNumber: dto.panNumber ?? null,
     profileImage: dto.profileImage ?? null,
-
   };
 
   if (dto.userId) {
-    data.user = {
-      connect: {
-        id: dto.userId,
-      },
-    };
+    data.user = { connect: { id: dto.userId } };
   }
 
   return data;
 };
-
-

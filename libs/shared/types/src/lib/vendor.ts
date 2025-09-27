@@ -27,3 +27,42 @@ export interface VendorStatusUpdatedEvent {
   newStatus: VendorStatus;
   updatedAt: string;
 }
+
+
+// ------------------- Return Request -------------------
+export enum ReturnStatus {
+  REQUESTED = 'REQUESTED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum ReturnPolicyType {
+  REFUND = 'REFUND',
+  REPLACEMENT = 'REPLACEMENT',
+}
+
+export interface ReturnRequest {
+  id: string;
+  orderItemId: string;
+  userId: string;
+  orderId: string;
+  reason: string;
+  status: ReturnStatus;
+  returnType: ReturnPolicyType;
+  replacementProductId?: string;
+  comment?: string;
+  attachmentUrls?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  resolvedAt?: Date;
+}
+
+// ✅ Update DTO
+export interface UpdateReturnRequestDto {
+  status?: ReturnStatus;
+  comment?: string;
+  replacementProductId?: string;
+  attachmentUrls?: string[];
+}

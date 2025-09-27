@@ -11,7 +11,11 @@ import { logger } from '@shared/logger';
 import { sendEmail } from '@shared/email';
 const prisma = new PrismaClient();
 import {uploadToCloudinary} from '@shared/auth'
+import { UpdateReturnRequestDto, ReturnStatus } from '@shared/types';
 import * as crypto from 'crypto';
+import { BadRequestError, NotFoundError, ForbiddenError } from '@shared/error';
+
+
 export const vendorService = {
 initiateVendorRegistrationOtp: async (email: string) => {
   try {
@@ -695,4 +699,50 @@ uploadVendorKYCDocuments: async (
 },
 
 
-};
+updateReturnRequestByVendor: async (
+  vendorId: string,
+  returnRequestId: string,
+  updateData: UpdateReturnRequestDto
+) => {
+  try {
+    // Fetch the return request along with its associated order item
+    const returnRequest = await prisma.returnRequest.findUnique({
+      where: { id: returnRequestId },
+      include: { orderItem: true },
+    });
+
+    if (!returnRequest) {
+      throw new NotFoundError('Return request not found');
+    }
+
+    // Ensure the vendor owns this return request
+    if (returnRequest.orderItem.vendorId !== vendorId) {
+      throw new ForbiddenError('Unauthorized: Not your return request');
+    }
+
+    // Prepare updated data
+    const updatedData: Partial<Prisma.ReturnRequestUpdateInput> = {
+      status: updateData.status ?? returnRequest.status,
+      comment: updateData.comment ?? returnRequest.comment,
+      replacementProductId: updateData.replacementProductId ?? returnRequest.replacementProductId,
+      resolvedAt:
+        updateData.status === 'APPROVED' || updateData.status === 'REJECTED'
+          ? new Date()
+          : returnRequest.resolvedAt,
+    };
+
+    // Update the return request
+    const updatedRequest = await prisma.returnRequest.update({
+      where: { id: returnRequestId },
+      data: updatedData,
+    });
+
+    logger.info(`[VendorService] Return request updated: ${returnRequestId}`);
+    return updatedRequest;
+  } catch (error) {
+    logger.error('[VendorService] updateReturnRequestByVendor error:', error);
+    throw error;
+  }
+}
+
+}
