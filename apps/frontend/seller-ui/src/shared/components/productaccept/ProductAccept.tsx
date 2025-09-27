@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import './productaccept.css';
 import Image from 'next/image';
 import ProductAcceptSkeleton from './ProductAcceptSkeleton'; 
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart,X } from 'lucide-react';
 import FullOrderPage from '../../../app/(routes)/dashboard/orderform/Orderform';
 
 interface Product {
@@ -26,6 +26,12 @@ interface Order {
   createdAt: string;
   paymentMethod?: string;
   shippingAddress?: ShippingAddress;
+   returnRequest?: boolean;
+  refundRequest?: boolean;
+  returnRequestId?: string; // add this
+  refundRequestId?: string;
+  returnRequestStatus?: string; // REQUESTED / APPROVED / REJECTED
+  refundRequestStatus?: string; // REQUESTED / APPROVED / REJECTED
 }
 
 interface VendorOrder {
@@ -41,9 +47,11 @@ interface VendorOrder {
 interface ProductAcceptProps {
   orders?: VendorOrder[];
   limit?: number;
+  handleReturnRefundAction?: (requestId: string, type: 'return' | 'refund', action: 'approved' | 'rejected') => void;
+  
 }
 
-const ProductAccept = ({ orders, limit }: ProductAcceptProps) => {
+const ProductAccept = ({ orders, limit ,handleReturnRefundAction}: ProductAcceptProps) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   if (!orders) {
@@ -112,32 +120,87 @@ const ProductAccept = ({ orders, limit }: ProductAcceptProps) => {
                 </div>
               </div>
 
-             <div className="productstatus">
-  {isPending ? (
+          <div className="productstatus">
+  {(orderItem.order?.returnRequestStatus?.toUpperCase() === 'REQUESTED' || 
+  orderItem.order?.refundRequestStatus?.toUpperCase() === 'REQUESTED') ? (
+    // Show Approve / Reject buttons only if status is REQUESTED
     <div className="product-buttons">
+    <button
+      className="center-borderedbutton"
+      onClick={() =>
+        handleReturnRefundAction &&
+        handleReturnRefundAction(
+          orderItem.order?.returnRequestStatus === 'REQUESTED'
+            ? orderItem.order?.returnRequestId!
+            : orderItem.order?.refundRequestId!,
+          orderItem.order?.returnRequestStatus === 'REQUESTED' ? 'return' : 'refund',
+          'rejected'
+        )
+      }
+    >
+      <X size={16} />
+    </button>
+    <button
+      className="background-buttonver"
+      onClick={() =>
+        handleReturnRefundAction &&
+        handleReturnRefundAction(
+          orderItem.order?.returnRequestStatus === 'REQUESTED'
+            ? orderItem.order?.returnRequestId!
+            : orderItem.order?.refundRequestId!,
+          orderItem.order?.returnRequestStatus === 'REQUESTED' ? 'return' : 'refund',
+          'approved'
+        )
+      }
+    >
+      Approve
+    </button>
+  </div>
+  ) : orderItem.order?.returnRequestStatus === 'APPROVED' || orderItem.order?.refundRequestStatus === 'APPROVED' ? (
+    <span className="bordered-button">Approved</span>
+  ) : orderItem.order?.returnRequestStatus === 'REJECTED' || orderItem.order?.refundRequestStatus === 'REJECTED' ? (
+    <span className="bordered-button">Rejected</span>
+  ) : (
+    // Original ProductAccept buttons (Pending / Preparing / Confirmed / Shipped / Finished)
+    <div className="product-buttons">
+  {/* Pending orders */}
+  {isPending ? (
+    <>
       <button className="center-borderedbutton" onClick={() => handleDeny(orderItem.id)}>Deny</button>
       <button className="background-buttonver" onClick={() => handleConfirm(orderItem.id)}>Confirm</button>
-    </div>
-  ) : isPreparing ? (
-    <div className="product-buttons">
-      {/* Use orderItem.id instead of orderItem.order?.id */}
-      <button className="center-borderedbutton" onClick={() => handleTrackOrder(orderItem.id)}>Track Order</button>
-    </div>
-  ) : isConfirmed ? (
-    <div className="product-buttons">
-      <button className="center-borderedbutton" onClick={() => handleViewStatus(orderItem.id)}>View Status</button>
-    </div>
-  ) : isDispatched ? (
-    <div className="product-buttons">
-      {/* Use orderItem.id instead of orderItem.order?.id */}
-      <button className="center-borderedbutton" onClick={() => handleTrackOrder(orderItem.id)}>View Order</button>
-    </div>
-  ) : isFinished ? (
-    <div className="product-buttons">
-      <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem.id)}>View Order</button>
-    </div>
+    </>
+  ) : 
+  // Preparing orders
+  isPreparing ? (
+    <button className="center-borderedbutton" onClick={() => handleTrackOrder(orderItem.id)}>Track Order</button>
+  ) : 
+  // Confirmed orders
+  isConfirmed ? (
+    <button className="center-borderedbutton" onClick={() => handleViewStatus(orderItem.id)}>View Status</button>
+  ) : 
+  // Dispatched orders
+  isDispatched ? (
+    <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem.id)}>View Order</button>
+  ) : 
+  // Finished / Delivered / Cancelled orders
+  isFinished ? (
+    <>
+      {/* Check return/refund status */}
+      {orderItem.order?.returnRequestStatus === 'APPROVED' || orderItem.order?.refundRequestStatus === 'APPROVED' ? (
+        <span className="bordered-button">Fulfilled / Returned</span>
+      ) : orderItem.order?.returnRequestStatus === 'REJECTED' || orderItem.order?.refundRequestStatus === 'REJECTED' ? (
+        <span className="bordered-button">Fulfilled / Rejected</span>
+      ) : (
+        <span className="bordered-button">Fulfilled / Delivered</span>
+      )}
+    </>
   ) : null}
 </div>
+
+
+  )}
+</div>
+
 
             </div>
           );

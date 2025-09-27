@@ -5,234 +5,234 @@ import './ProductTabs.css';
 import ProductAccept from '../productaccept/ProductAccept';
 import { FaBox } from "react-icons/fa";
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
+import { Toaster, toast } from 'react-hot-toast';
 
 // --- Interfaces ---
-
 interface Product {
-  id: string;
-  title: string;
-  imageUrls?: string[];
+  id: string;
+  title: string;
+  imageUrls?: string[];
 }
 interface ShippingAddress {
-  city: string;
+  city: string;
 }
 interface Order {
-  id: string;
-  status: string;
-  paymentStatus?: string;
-  createdAt: string;
-  paymentMethod?: string;
-  dispatchStatus?: string;
-  shippingAddress?: ShippingAddress;
+  id: string;
+  status: string;
+  paymentStatus?: string;
+  createdAt: string;
+  paymentMethod?: string;
+  dispatchStatus?: string;
+  shippingAddress?: ShippingAddress;
+  returnRequest?: boolean;
+  refundRequest?: boolean;
+  returnRequestId?: string;
+  refundRequestId?: string;
+  returnRequestStatus?: string;
+  refundRequestStatus?: string;
 }
 interface VendorOrder {
-  id: string;
-  quantity: number;
-  totalPrice: string;
-  dispatchStatus: string;
-  product?: Product;
-  order?: Order;
-  createdAt: string;
+  id: string;
+  quantity: number;
+  totalPrice: string;
+  dispatchStatus: string;
+  product?: Product;
+  order?: Order;
+  createdAt: string;
 }
 interface TokenPayload { 
-    role?: string;
-    vendorId?: string;
-    [key: string]: any;
+  role?: string;
+  vendorId?: string;
+  [key: string]: any;
 }
 interface ProductTabsProps {
-    vendorId?: string; // Prop passed from the parent Admin view-as page
+  vendorId?: string; // Prop passed from the parent Admin view-as page
 }
 
-
-// --- API Logic (Updated to accept and use currentVendorId) ---
-
+// --- API URLs ---
 const VENDOR_API_URL = "https://order-service-322f.onrender.com/api/orders/vendor/orders";
 const ADMIN_API_URL = "https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products"; 
 
-
+// --- Fetch Orders Function ---
 async function fetchOrdersByRole(token: string, role: string, currentVendorId: string | undefined): Promise<VendorOrder[]> {
-    if (role === 'admin') {
-        // 🔥 CRITICAL FILTERING STEP FOR ADMIN ROLE
-        if (!currentVendorId) {
-            console.error("Admin role detected but currentVendorId is missing for scoping. Returning no orders.");
-            return [];
-        }
+  if (role === 'admin') {
+    if (!currentVendorId) return [];
 
-        console.log(`Admin role detected. Filtering orders for Vendor ID: ${currentVendorId}`);
-        const response = await fetch(ADMIN_API_URL, {
-            method: "GET",
-            headers: { 
-                "Content-Type": "application/json", 
-                "Authorization": `Bearer ${token}` 
-            },
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to fetch admin orders');
-        }
-        
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.message || 'Admin API returned an error');
-        }
+    const response = await fetch(ADMIN_API_URL, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error('Failed to fetch admin orders');
 
-        const allVendors = data.data as any[];
-        const adminOrders: VendorOrder[] = [];
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || 'Admin API returned error');
 
-        // 1. Find the specific vendor
-        const currentVendor = allVendors.find(vendor => vendor.id === currentVendorId);
+    const currentVendor = data.data.find((v: any) => v.id === currentVendorId);
+    if (!currentVendor) return [];
 
-        if (!currentVendor) {
-            console.log(`Vendor ID ${currentVendorId} not found in Admin API response.`);
-            return [];
-        }
+    const productMap: Map<string, Product> = new Map();
+    currentVendor.productListings?.forEach((listing: any) => {
+      if (listing.product) {
+        productMap.set(listing.productId, { id: listing.product.id, title: listing.product.title, imageUrls: listing.product.imageUrls });
+      }
+    });
 
-        // 2. Create a Product Map for the specific vendor's listings
-        const productMap: Map<string, Product> = new Map();
-        currentVendor.productListings?.forEach((listing: any) => {
-            if (listing.product) {
-                productMap.set(listing.productId, {
-                    id: listing.product.id,
-                    title: listing.product.title,
-                    imageUrls: listing.product.imageUrls,
-                });
-            }
-        });
+    return currentVendor.orderItems?.map((item: any) => {
+      const order: Order = {
+        id: item.order.id,
+        status: item.order.status,
+        paymentStatus: item.order.paymentStatus,
+        createdAt: item.order.placedAt,
+        dispatchStatus: item.order.dispatchStatus,
+        shippingAddress: { city: item.order.shippingAddress.city },
+        returnRequest: !!item.returnRequests?.find((r: any) => r.status === 'REQUESTED'),
+        refundRequest: !!item.refundRequests?.find((r: any) => r.status === 'REQUESTED'),
+        returnRequestStatus: item.returnRequests?.[0]?.status || null,
+        refundRequestStatus: item.refundRequests?.[0]?.status || null,
+        returnRequestId: item.returnRequests?.find((r: any) => r.status === 'REQUESTED')?.id,
+        refundRequestId: item.refundRequests?.find((r: any) => r.status === 'REQUESTED')?.id,
+      };
+      return {
+        id: item.id,
+        quantity: item.quantity,
+        totalPrice: item.totalPrice,
+        dispatchStatus: item.dispatchStatus,
+        product: productMap.get(item.productId),
+        order,
+        createdAt: item.order.placedAt,
+      };
+    }) || [];
+  } else {
+    // Vendor role
+    const response = await fetch(VENDOR_API_URL, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error('Failed to fetch vendor orders');
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || 'Vendor API returned error');
 
-        // 3. Process only this vendor's orderItems
-        currentVendor.orderItems?.forEach((orderItem: any) => {
-            
-            const order: Order = {
-                id: orderItem.order.id,
-                status: orderItem.order.status,
-                paymentStatus: orderItem.order.paymentStatus,
-                createdAt: orderItem.order.placedAt,
-                dispatchStatus: orderItem.order.dispatchStatus,
-                shippingAddress: {
-                 city: orderItem.order.shippingAddress.city,
-                }
-            };
-            
-            // 4. Lookup the product details using productId
-            const product: Product | undefined = productMap.get(orderItem.productId);
-
-            adminOrders.push({
-                id: orderItem.id,
-                quantity: orderItem.quantity,
-                totalPrice: orderItem.totalPrice,
-                dispatchStatus: orderItem.dispatchStatus,
-                product: product,
-                order: order,
-                createdAt: orderItem.order.placedAt,
-            });
-        });
-
-        return adminOrders;
-
-    } else {
-        // Default Vendor API Call (original logic)
-        console.log("Vendor role or default role detected. Fetching orders from Vendor API.");
-        const response = await fetch(VENDOR_API_URL, {
-            method: "GET",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to fetch vendor orders');
-        }
-        
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.message || 'Vendor API returned an error');
-        }
-        return data.data as VendorOrder[];
-    }
+    return data.data.map((item: any) => ({
+      ...item,
+      order: {
+        ...item.order,
+        returnRequest: !!item.returnRequests?.find((r: any) => r.status === 'REQUESTED'),
+        refundRequest: !!item.refundRequests?.find((r: any) => r.status === 'REQUESTED'),
+        returnRequestStatus: item.returnRequests?.[0]?.status || null,
+        refundRequestStatus: item.refundRequests?.[0]?.status || null,
+        returnRequestId: item.returnRequests?.find((r: any) => r.status === 'REQUESTED')?.id,
+        refundRequestId: item.refundRequests?.find((r: any) => r.status === 'REQUESTED')?.id,
+      },
+    }));
+  }
 }
 
-
 // --- Component Logic ---
-
 const tabs = ['All', 'New', 'In Process', 'Completed'] as const;
 type TabType = typeof tabs[number];
 
 const ProductTabs = ({ vendorId: propVendorId }: ProductTabsProps) => {
-  const [activeTab, setActiveTab] = useState<TabType>('All');
-  const [allOrders, setAllOrders] = useState<VendorOrder[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('All');
+  const [allOrders, setAllOrders] = useState<VendorOrder[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadOrders = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("User is not authenticated.");
-        setLoading(false);
-        return;
-      }
+  // --- Load Orders ---
+  useEffect(() => {
+    const loadOrders = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) { setError("User not authenticated."); setLoading(false); return; }
 
-      // 1. Determine the user's role and the target Vendor ID
-      let userRole: string = 'vendor';
-      let targetVendorId: string | undefined = propVendorId; // Use passed prop first
-      
-      try {
-          const decoded = jwtDecode<TokenPayload>(token);
-          userRole = decoded.role || 'vendor';
+      let userRole: string = 'vendor';
+      let targetVendorId: string | undefined = propVendorId;
 
-          // Fallback: If no prop is passed, use the vendorId from the token (for regular vendor dashboard)
-          if (!targetVendorId) { 
-              targetVendorId = decoded.vendorId;
+      try {
+        const decoded = jwtDecode<TokenPayload>(token);
+        userRole = decoded.role || 'vendor';
+        if (!targetVendorId) targetVendorId = decoded.vendorId;
+      } catch {
+        setError("Invalid token."); setLoading(false); return;
+      }
+
+      try {
+        const fetchedOrders = await fetchOrdersByRole(token, userRole, targetVendorId);
+        setAllOrders(fetchedOrders);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadOrders();
+  }, [propVendorId]);
+
+  // --- Handle Approve/Reject Return/Refund ---
+  const handleReturnRefundAction = async (requestId: string, type: 'return' | 'refund', action: 'approved' | 'rejected') => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const url = type === 'return'
+        ? 'https://order-service-322f.onrender.com/api/orders/return-request/status'
+        : 'https://order-service-322f.onrender.com/api/orders/refund-request/status';
+
+      await axios.put(url, { returnRequestId: requestId, status: action }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success(`${type === 'return' ? 'Return' : 'Refund'} request ${action}`);
+
+      // Update frontend state
+      setAllOrders(prev =>
+        prev.map(o => {
+          if (o.order?.returnRequestId === requestId || o.order?.refundRequestId === requestId) {
+            return {
+              ...o,
+              order: {
+                ...o.order!,
+                returnRequestStatus: type === 'return' ? action.toUpperCase() : o.order?.returnRequestStatus,
+                refundRequestStatus: type === 'refund' ? action.toUpperCase() : o.order?.refundRequestStatus,
+              },
+            };
           }
+          return o;
+        })
+      );
 
-      } catch (e) {
-          console.error("Failed to decode JWT in ProductTabs:", e);
-          setError("Authentication token is invalid.");
-          setLoading(false);
-          return;
-      }
-      
-      try {
-        // 2. Call the fetch function with the determined Vendor ID
-        const fetchedOrders = await fetchOrdersByRole(token, userRole, targetVendorId);
-        setAllOrders(fetchedOrders);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadOrders();
-  }, [propVendorId]); // Re-run effect when the target vendor changes
-
-  const filterOrders = (tab: TabType) => {
-    // ... (Filter logic is unchanged and remains correct) ...
-    switch (tab) {
-        case 'New':
-            return allOrders.filter(item => item.order?.status?.toLowerCase() === 'pending');
-        case 'In Process':
-            return allOrders.filter(item => {
-                const orderStatus = item.order?.status?.toLowerCase();
-                const dispatchStatus = item.dispatchStatus?.toLowerCase() || item.order?.dispatchStatus?.toLowerCase();
-                return orderStatus === 'confirmed' || dispatchStatus === 'preparing' || dispatchStatus === 'dispatched' || orderStatus === 'shipped';
-            });
-        case 'Completed':
-            return allOrders.filter(item =>
-                ['delivered', 'cancelled', 'refunded', 'returned'].includes(item.order?.status?.toLowerCase() || '')
-            );
-        default:
-            return allOrders;
+    } catch (err) {
+      console.error(err);
+      toast.error(`Failed to ${action} ${type} request`);
     }
-  };
+  };
 
-  const filteredOrders = filterOrders(activeTab);
+  // --- Filter Orders ---
+  const filterOrders = (tab: TabType) => {
+    switch (tab) {
+      case 'New':
+        return allOrders.filter(item => item.order?.status?.toLowerCase() === 'pending');
+      case 'In Process':
+        return allOrders.filter(item => {
+          const orderStatus = item.order?.status?.toLowerCase();
+          const dispatchStatus = item.dispatchStatus?.toLowerCase() || item.order?.dispatchStatus?.toLowerCase();
+          return orderStatus === 'confirmed' || ['preparing','dispatched','shipped'].includes(dispatchStatus || '');
+        });
+      case 'Completed':
+        return allOrders.filter(item =>
+          ['delivered','cancelled','refunded','returned'].includes(item.order?.status?.toLowerCase() || '')
+        );
+      default:
+        return allOrders;
+    }
+  };
 
+  const filteredOrders = filterOrders(activeTab);
 
-  if (error) return <div>Error: {error}</div>;
+  if (error) return <div className="error-message">Error: {error}</div>;
 
-  return (
-    <div>
-  <div className='product-tabs-header'>
+  return (
+    <div>
+      <div className='product-tabs-header'>
         <div className='product-tabs-title'>
           <FaBox className='titleicon' />
           <h2 className='mainheading'>Orders</h2>
@@ -250,15 +250,13 @@ const ProductTabs = ({ vendorId: propVendorId }: ProductTabsProps) => {
         </div>
       </div>
 
-
-      {error ? (
-      <div className="error-message">Error: {error}</div>
-    ) : (
-        // Pass orders, which will be undefined only during initial loading
-      <ProductAccept orders={loading ? undefined : filteredOrders} />
-    )}
-    </div>
-  );
+      <ProductAccept 
+        orders={loading ? undefined : filteredOrders} 
+        handleReturnRefundAction={handleReturnRefundAction} 
+      />
+      <Toaster />
+    </div>
+  );
 };
 
 export default ProductTabs;
