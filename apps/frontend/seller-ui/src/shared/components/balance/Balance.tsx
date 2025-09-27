@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
 import axios from 'axios';
 import Dropdown from '../dropdown/Dropdownbutton';
 import Balanceicon from '../../../assets/balance.png';
@@ -24,56 +23,59 @@ interface VendorOrder {
   };
 }
 
+interface BalanceProps {
+  vendorId?: string; // optional, used only for admin view
+}
+
 interface TokenPayload {
   role?: string;
   [key: string]: any;
 }
 
-const Balance: React.FC = () => {
+const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { vendorId } = useParams(); // ✅ From the admin vendor detail page
-
   useEffect(() => {
     const token = localStorage.getItem('token');
-    let userRole: string | null = null; // 👈 Initialize a new variable for the role
+    let userRole: string | null = null;
 
-    // 1. Decode JWT to get the reliable role, just like the Layout component
     if (token) {
       try {
         const decoded = jwtDecode<TokenPayload>(token);
         userRole = decoded.role || null;
       } catch (e) {
         console.error('Failed to decode JWT in Balance component:', e);
-        // If decoding fails, treat as generic user or non-logged-in
       }
     }
-    
-    // Check if we have the necessary data to proceed
+
+    // Admin with vendorId check
     if (userRole === 'admin' && !vendorId) {
-        console.log('Admin role detected, but vendorId is not yet available. Waiting...');
-        setLoading(false); 
-        return;
+      console.log('Admin role detected, but vendorId is not yet available. Waiting...');
+      setLoading(false);
+      return;
     }
 
     async function fetchOrders() {
       try {
         let fetchedOrders: VendorOrder[] = [];
 
-        // 2. Use the userRole derived from the token
+        // --- Admin flow using vendorId ---
         if (userRole === 'admin' && vendorId) {
           console.log('--- Executing ADMIN API Call --- (Role from Token)');
-          const res = await axios.get('https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
+
+          const res = await axios.get(
+            'https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products',
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
 
           const vendors = res.data.data || [];
-          // Ensure vendorId is treated as a string for comparison
           const targetVendor = vendors.find((vendor: any) => String(vendor.id) === String(vendorId));
 
           if (!targetVendor) {
@@ -86,7 +88,6 @@ const Balance: React.FC = () => {
 
           targetVendor.orderItems?.forEach((orderItem: any) => {
             const price = parseFloat(orderItem.totalPrice);
-
             if (orderItem.order && !isNaN(price)) {
               allOrders.push({
                 id: orderItem.id,
@@ -105,14 +106,17 @@ const Balance: React.FC = () => {
 
           fetchedOrders = allOrders;
           console.log('Admin Flow - Extracted Orders:', fetchedOrders);
+
         } else {
-          // This runs for all non-admin users or if vendorId is missing (but role is not admin)
+          // --- Vendor or non-admin flow ---
           console.log('--- Executing VENDOR API Call --- (Role from Token or No Role)');
-          const res = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+
+          const res = await axios.get(
+            'https://order-service-322f.onrender.com/api/orders/vendor/orders',
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
 
           fetchedOrders = res.data.data || [];
           console.log('Vendor Flow - Fetched Orders:', fetchedOrders);
@@ -128,14 +132,12 @@ const Balance: React.FC = () => {
       }
     }
 
-    // Only call fetchOrders if we have a token
-    if (token) {
-        fetchOrders();
-    } else {
-        setLoading(false);
-        setError('No token found. Cannot fetch data.');
+    if (token) fetchOrders();
+    else {
+      setLoading(false);
+      setError('No token found. Cannot fetch data.');
     }
-  }, [vendorId]); // The dependency array remains the same
+  }, [vendorId]);
 
   if (loading) return <BalanceSkeleton />;
   if (error) return <div>{error}</div>;
@@ -151,16 +153,15 @@ const Balance: React.FC = () => {
     : null;
 
   const sortedCompletedOrders = completedOrders.sort((a, b) => {
-      const dateA = a.order?.createdAt ? new Date(a.order.createdAt).getTime() : 0;
-      const dateB = b.order?.createdAt ? new Date(b.order.createdAt).getTime() : 0;
-      return dateB - dateA; // Sort descending (newest first)
+    const dateA = a.order?.createdAt ? new Date(a.order.createdAt).getTime() : 0;
+    const dateB = b.order?.createdAt ? new Date(b.order.createdAt).getTime() : 0;
+    return dateB - dateA;
   });
 
   const recentOrder = sortedCompletedOrders[0];
   const recentAmount = recentOrder ? parseFloat(recentOrder.totalPrice) : null;
 
   return (
-    // ... (rest of the component JSX)
     <div>
       <div className="Balance p-[15px] rounded-[10px] flex flex-col gap-[10px] flex-1">
         <div className="balanceheading flex justify-between items-center">

@@ -6,27 +6,57 @@ import Image from 'next/image';
 import Dropdown from '../dropdown/Dropdownbutton';
 import { Bell } from 'lucide-react';
 import axios from 'axios';
-import ProductHistorySkeleton from './ProductHistorySkeleton'; 
+import ProductHistorySkeleton from './ProductHistorySkeleton';
 
 const statusOptions = ['10 Orders', '20 Orders', '30 Orders'];
 
-const ProductHistory: React.FC = () => {
+interface ProductHistoryProps {
+  vendorId?: string; // Optional, for admin
+}
+
+const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
   const [fulfilledPercentage, setFulfilledPercentage] = useState<number>(0);
   const [recentMessage, setRecentMessage] = useState<string>('NA');
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    let userRole: string | null = null;
+
+    if (token) {
+      try {
+        const decoded = JSON.parse(atob(token.split('.')[1])); // simple jwt decode
+        userRole = decoded.role || null;
+      } catch (err) {
+        console.error('Failed to decode token', err);
+      }
+    }
 
     async function fetchOrders() {
       try {
-        const res = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        let orders: any[] = [];
 
-        const orders = res.data.data;
+        if (userRole === 'admin' && vendorId) {
+          // --- Admin flow: fetch orders for specific vendor ---
+          const adminRes = await axios.get('https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          const vendors = adminRes.data.data || [];
+          const targetVendor = vendors.find((v: any) => String(v.id) === String(vendorId));
+
+          if (!targetVendor) throw new Error('Vendor not found');
+
+          // Orders for this vendor
+          orders = targetVendor.orderItems || [];
+
+        } else {
+          // --- Vendor or non-admin flow: fetch own orders ---
+          const res = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          orders = res.data.data || [];
+        }
 
         const fulfilled = orders.filter(
           (order: any) => order.order?.status?.toLowerCase() === 'delivered'
@@ -45,6 +75,7 @@ const ProductHistory: React.FC = () => {
         } else {
           setRecentMessage('No orders fulfilled recently');
         }
+
       } catch (error) {
         console.error('Failed to fetch orders:', error);
         setRecentMessage('Failed to load order data.');
@@ -54,7 +85,7 @@ const ProductHistory: React.FC = () => {
     }
 
     fetchOrders();
-  }, []);
+  }, [vendorId]);
 
   if (loading) return <ProductHistorySkeleton />;
 
@@ -69,10 +100,7 @@ const ProductHistory: React.FC = () => {
           <Dropdown
             options={statusOptions}
             defaultValue="10 Orders"
-            onSelect={(value) => {
-              console.log('Selected status:', value);
-              // Filtering logic can be implemented here if needed
-            }}
+            onSelect={(value) => console.log('Selected status:', value)}
           />
         </div>
       </div>

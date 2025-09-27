@@ -1,5 +1,6 @@
 {
   "/login/page": "app/login/page.js",
   "/(routes)/dashboard/page": "app/(routes)/dashboard/page.js",
-  "/(routes)/dashboard/order/page": "app/(routes)/dashboard/order/page.js"
+  "/(routes)/dashboard/myaccount/page": "app/(routes)/dashboard/myaccount/page.js",
+  "/(routes)/dashboard/vendors/[vendorId]/page": "app/(routes)/dashboard/vendors/[vendorId]/page.js"
 }
