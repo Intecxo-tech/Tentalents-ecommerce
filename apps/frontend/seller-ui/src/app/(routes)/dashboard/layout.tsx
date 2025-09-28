@@ -28,7 +28,7 @@ const [activeTab, setActiveTab] = useState<'vendors' | 'customers'>('vendors');
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
-        console.log('Token from localStorage:', token);
+        
 
         if (!token) {
           setUserRole(null);
@@ -37,10 +37,10 @@ const [activeTab, setActiveTab] = useState<'vendors' | 'customers'>('vendors');
         }
 
         const decoded = jwtDecode<TokenPayload>(token);
-        console.log('Decoded JWT:', decoded);
+       
         setUserRole(decoded.role || null);
       } catch (error) {
-        console.error('Failed to decode JWT:', error);
+        
         setUserRole(null);
       } finally {
         setLoading(false);
@@ -54,7 +54,7 @@ const [activeTab, setActiveTab] = useState<'vendors' | 'customers'>('vendors');
   //   return <div>Loading...</div>;
   // }
 
-  console.log('Rendering layout, userRole:', userRole);
+ 
 
   return (
      <AdminTabProvider>

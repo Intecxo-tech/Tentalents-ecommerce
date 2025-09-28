@@ -28,6 +28,7 @@ color:#797979;
 }
 
 .vendorcard {
+    cursor: pointer;
   width: 100%; /* Let the grid control the width */
 }
 .vendorname{

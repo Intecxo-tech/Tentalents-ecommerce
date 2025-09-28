@@ -28,7 +28,7 @@ export interface Order {
   status: string;
   paymentStatus?: string;
   dispatchStatus?: string;
-   placedAt?: string;  
+  placedAt?: string;
   shippingAddress?: ShippingAddress;
   createdAt: string;
   paymentMethod?: string;
@@ -44,17 +44,13 @@ export interface VendorOrder {
   createdAt: string;
 }
 
-// interface ProductAcceptProps {
-//   limit?: number;
-// }
-
 const Page = () => {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filteredOrders, setFilteredOrders] = useState<VendorOrder[]>([]);
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedOrderItem, setSelectedOrderItem] = useState<VendorOrder | null>(null);
 
   const getStatusClass = (status: string = '') => {
     const lowerStatus = status.toLowerCase();
@@ -65,71 +61,66 @@ const Page = () => {
     return '';
   };
 
-useEffect(() => {
-  const fetchOrders = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No token');
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No token');
 
-      const endpoint = 'https://order-service-322f.onrender.com/api/orders/order';
+        const res = await axios.get('https://order-service-322f.onrender.com/api/orders/order', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      const res = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        const ordersData = Array.isArray(res.data.orders) ? res.data.orders : [];
 
-      const ordersData = Array.isArray(res.data.orders) ? res.data.orders : [];
+      const mappedOrders = ordersData.flatMap((order: any) =>
+  order.items.map((item: any) => ({
+    id: item.id,
+    quantity: item.quantity,
+    totalPrice: item.totalPrice,
+    dispatchStatus: item.dispatchStatus || order.status,
+    createdAt: order.createdAt || order.placedAt || new Date().toISOString(),
+    order: {
+      id: order.id,
+      status: order.status,
+      paymentMethod: order.paymentMode,
+      createdAt: order.createdAt || order.placedAt || new Date().toISOString(),
+      shippingAddress: order.shippingAddress,
+      paymentStatus: order.paymentStatus,
+      dispatchStatus: order.dispatchStatus,
+      buyer: order.buyer || null, // add buyer
+    },
+    product: {
+      id: item.product?.id || 'unknown',
+      title: item.product?.title || 'No Title',
+      imageUrls: item.product?.imageUrls || ['/placeholder.png'],
+    },
+    vendor: item.vendor || order.vendors || [], // add vendor
+  }))
+);
 
-      // Map each item from every order
-      const mappedOrders = ordersData.flatMap((order: any) => {
-        return order.items.map((item: any) => ({
-          id: item.id,
-          quantity: item.quantity,
-          totalPrice: item.totalPrice,
-          dispatchStatus: item.dispatchStatus || order.status,
-          createdAt: order.createdAt || order.placedAt || new Date().toISOString(),
-          order: {
-            id: order.id,
-            status: order.status,
-            paymentMethod: order.paymentMode,
-            createdAt: order.createdAt || order.placedAt || new Date().toISOString(),
-            shippingAddress: order.shippingAddress,
-            paymentStatus: order.paymentStatus,
-            dispatchStatus: order.dispatchStatus,
-          },
-          product: {
-            id: item.product?.id || 'unknown',
-            title: item.product?.title || 'No Title',
-            imageUrls: item.product?.imageUrls || ['/placeholder.png'],
-          }
-        }));
-      });
 
-      setOrders(mappedOrders);
-    } catch (err) {
-      console.error('❌ Failed to fetch orders:', err);
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setOrders(mappedOrders);
+      } catch (err) {
+        console.error('❌ Failed to fetch orders:', err);
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchOrders();
-}, []);
-
+    fetchOrders();
+  }, []);
 
   useEffect(() => {
-   let updated = [...orders];
+    let updated = [...orders];
 
-  console.log('Filtering orders with statusFilter:', statusFilter);
-  updated.forEach(o => {
-    console.log('Order ID:', o.id, 'status:', o.order?.status);
-  });
+    if (statusFilter !== 'all') {
+      updated = updated.filter(
+        (o) => o.order?.status?.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
 
-  if (statusFilter !== 'all') {
-    updated = updated.filter(
-      (o) => o.order?.status?.toLowerCase() === statusFilter.toLowerCase()
-    );
-  }
     if (dateFilter !== 'all') {
       const now = new Date();
       updated = updated.filter((o) => {
@@ -140,9 +131,7 @@ useEffect(() => {
           case 'last7':
             return (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24) <= 7;
           case 'thisMonth':
-            return (
-              date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
-            );
+            return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
           default:
             return true;
         }
@@ -152,52 +141,33 @@ useEffect(() => {
     setFilteredOrders(updated);
   }, [orders, dateFilter, statusFilter]);
 
-  // const limitedOrders = limit ? filteredOrders.slice(0, limit) : filteredOrders;
-
-  // Handlers for buttons
   const handleConfirm = (id: string) => console.log('Confirmed product ID:', id);
   const handleDeny = (id: string) => console.log('Denied product ID:', id);
   const handleViewStatus = (id: string) => console.log('Viewing status for ID:', id);
-  const handleTrackOrder = (id: string) => console.log('Tracking order for ID:', id);
-  const handleViewOrder = (orderId: string) => {
-    setSelectedOrderId(orderId);
-  };
+  const handleViewOrder = (orderItem: VendorOrder) => setSelectedOrderItem(orderItem);
 
-if (loading) return <OrderSkeleton />;
-if (filteredOrders.length === 0) return <div className="ordersempty"><p>No orders found.</p></div>;
-
+  if (loading) return <OrderSkeleton />;
+  if (filteredOrders.length === 0) return <div className="ordersempty"><p>No orders found.</p></div>;
 
   return (
     <div className="orderspage">
+      {/* Header and filters */}
       <div className="ordersheading">
-        <div className="leftsideorder">
-          <h1>Orders</h1>
-        </div>
+        <div className="leftsideorder"><h1>Orders</h1></div>
         <div className="rightsideorder">
           <div className="search-container">
             <div className="searchbar">
               <input className="search-input" placeholder="Search Your Store" />
-              <div className="background-button">
-                <Search className="search-icon" size={20} />
-              </div>
+              <div className="background-button"><Search className="search-icon" size={20} /></div>
             </div>
           </div>
-
-          <select
-            className="filter-dropdown bordered-button"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          >
+          <select className="filter-dropdown bordered-button" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
             <option value="all">All Dates</option>
             <option value="today">Today</option>
             <option value="last7">Last 7 Days</option>
             <option value="thisMonth">This Month</option>
           </select>
-          <select
-            className="filter-dropdown bordered-button"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
+          <select className="filter-dropdown bordered-button" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
@@ -210,11 +180,11 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
         </div>
       </div>
 
+      {/* Order list */}
       <div className="productsection">
-     {filteredOrders.map((orderItem) => {
+        {filteredOrders.map((orderItem) => {
           const orderStatus = orderItem.order?.status?.toLowerCase() || 'pending';
           const dispatchStatus = orderItem.order?.dispatchStatus?.toLowerCase() || 'not_started';
-
           const isPending = orderStatus === 'pending';
           const isConfirmed = orderStatus === 'confirmed';
           const isPreparing = dispatchStatus === 'preparing';
@@ -224,12 +194,7 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
           return (
             <div key={orderItem.id} className="product-item">
               <div className="product-section">
-                <Image
-                  src={orderItem.product?.imageUrls?.[0] || '/placeholder.png'}
-                  alt={orderItem.product?.title || 'Product'}
-                  width={100}
-                  height={100}
-                />
+                <Image src={orderItem.product?.imageUrls?.[0] || '/placeholder.png'} alt={orderItem.product?.title || 'Product'} width={100} height={100} />
                 <h3 className="product-title">{orderItem.product?.title || 'No Title'}</h3>
               </div>
               <div className="produtdetails">
@@ -237,61 +202,31 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
                 <p className="orderprice">₹{orderItem.totalPrice}</p>
                 <p>{orderItem.order?.shippingAddress?.city || 'N/A'}</p>
                 <div className="status-tags">
-                  <span className={getStatusClass(orderItem.order?.paymentStatus)}>
-                    {orderItem.order?.paymentStatus || 'Pending'}
-                  </span>
+                  <span className={getStatusClass(orderItem.order?.paymentStatus)}>{orderItem.order?.paymentStatus || 'Pending'}</span>
                   <span className={getStatusClass(dispatchStatus)}>{dispatchStatus}</span>
                 </div>
               </div>
               <div className="productstatus">
-                {isPending ? (
+                {(isPending || isPreparing || isConfirmed || isDispatched || isFinished) && (
                   <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleDeny(orderItem.id)}>
-                      Deny
-                    </button>
-                    <button className="background-buttonver" onClick={() => handleConfirm(orderItem.id)}>
-                      Confirm
+                    <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem)}>
+                      {isPending ? 'View Order' : isPreparing ? 'Track Order' : 'View Order'}
                     </button>
                   </div>
-                ) : isPreparing ? (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleTrackOrder(orderItem.id)}>
-                      Track Order
-                    </button>
-                  </div>
-                ) : isConfirmed ? (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleViewStatus(orderItem.id)}>
-                      View Status
-                    </button>
-                  </div>
-                ) : isDispatched ? (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem.order?.id || '')}>
-                      View Order
-                    </button>
-                  </div>
-                ) : isFinished ? (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem.order?.id || '')}>
-                      View Order
-                    </button>
-                  </div>
-                ) : null}
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
-    {selectedOrderId && (
-  <Orderforms
-    selectedOrderId={selectedOrderId}
-    onClose={() => setSelectedOrderId(null)}
- 
-  />
-)}
-
+      {/* Sidebar Orderforms */}
+      {selectedOrderItem && (
+        <Orderforms
+          orderItem={selectedOrderItem}
+          onClose={() => setSelectedOrderItem(null)}
+        />
+      )}
     </div>
   );
 };
