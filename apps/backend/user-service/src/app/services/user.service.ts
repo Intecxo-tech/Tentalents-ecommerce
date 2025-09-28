@@ -424,6 +424,83 @@ uploadImageAndGetUrl: async (userId: string, file: Express.Multer.File): Promise
       throw err;
     }
   },
+// ==================== USER FORGOT PASSWORD ====================
+
+/**
+ * Step 1: Send OTP to email for password reset
+ */
+forgotPasswordSendOtp: async (email: string) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) throw new Error('User with this email does not exist');
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await prisma.pendingUserOtp.upsert({
+      where: { email },
+      update: { otp, expiresAt },
+      create: { email, otp, expiresAt },
+    });
+
+    await sendEmail({
+      to: email,
+      subject: 'Your OTP for Password Reset',
+      html: `<p>Your OTP for password reset is: <strong>${otp}</strong>. It expires in 5 minutes.</p>`,
+    });
+
+    logger.info(`[UserService] Forgot password OTP sent to ${email}`);
+    return { message: 'OTP sent to email' };
+  } catch (err: any) {
+    logger.error('[UserService] forgotPasswordSendOtp error:', err);
+    throw err;
+  }
+},
+
+/**
+ * Step 2: Verify OTP for password reset
+ */
+verifyForgotPasswordOtp: async (email: string, otp: string) => {
+  try {
+    const record = await prisma.pendingUserOtp.findUnique({ where: { email } });
+    if (!record || record.otp !== otp || record.expiresAt < new Date()) {
+      throw new Error('Invalid or expired OTP');
+    }
+
+    logger.info(`[UserService] Forgot password OTP verified for ${email}`);
+    return { verified: true };
+  } catch (err: any) {
+    logger.error('[UserService] verifyForgotPasswordOtp error:', err);
+    throw err;
+  }
+},
+
+/**
+ * Step 3: Reset password
+ */
+resetPasswordWithOtp: async (email: string, otp: string, newPassword: string) => {
+  try {
+    const record = await prisma.pendingUserOtp.findUnique({ where: { email } });
+    if (!record || record.otp !== otp || record.expiresAt < new Date()) {
+      throw new Error('Invalid or expired OTP');
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    await prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
+
+    await prisma.pendingUserOtp.delete({ where: { email } });
+
+    logger.info(`[UserService] Password reset successfully for ${email}`);
+    return { message: 'Password reset successful' };
+  } catch (err: any) {
+    logger.error('[UserService] resetPasswordWithOtp error:', err);
+    throw err;
+  }
+},
 
 
 };

@@ -7,6 +7,35 @@ import { PrismaClient,UserRole } from '@prisma/client';
 
 
 // 📝 POST /api/users/register
+export const sendForgotPasswordOtp = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    const result = await userService.forgotPasswordSendOtp(email);
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Failed to send OTP' });
+  }
+};
+
+export const verifyForgotPasswordOtp = async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+    const result = await userService.verifyForgotPasswordOtp(email, otp);
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Invalid OTP' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const result = await userService.resetPasswordWithOtp(email, otp, newPassword);
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Failed to reset password' });
+  }
+};
 export const initiateOtp = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await userService.initiateRegistrationOtp(req.body.email);
