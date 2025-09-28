@@ -6,6 +6,7 @@ import Image from 'next/image';
 import ProductAcceptSkeleton from './ProductAcceptSkeleton'; 
 import { ShoppingCart,X } from 'lucide-react';
 import FullOrderPage from '../../../app/(routes)/dashboard/orderform/Orderform';
+import ReturnRequestDrawer from '../../../app/(routes)/dashboard/returnForm/returnRequest';
 
 interface Product {
   id: string;
@@ -57,6 +58,7 @@ const ProductAccept = ({ orders, limit ,handleReturnRefundAction}: ProductAccept
   if (!orders) {
     return <ProductAcceptSkeleton count={limit || 5} />;
   }
+const [selectedReturnOrderId, setSelectedReturnOrderId] = useState<string | null>(null);
 
   const handleConfirm = (id: string) => console.log('Confirmed product ID:', id);
   const handleDeny = (id: string) => console.log('Denied product ID:', id);
@@ -84,6 +86,7 @@ const ProductAccept = ({ orders, limit ,handleReturnRefundAction}: ProductAccept
       </div>
     );
   }const selectedVendorOrder = orders.find(o => o.id === selectedOrderId) || null;
+const selectedReturnVendorOrder = orders.find(o => o.id === selectedReturnOrderId) || null;
 
   return (
     <>
@@ -156,8 +159,21 @@ const ProductAccept = ({ orders, limit ,handleReturnRefundAction}: ProductAccept
       Approve
     </button>
   </div>
-  ) : orderItem.order?.returnRequestStatus === 'APPROVED' || orderItem.order?.refundRequestStatus === 'APPROVED' ? (
-    <span className="bordered-button">Approved</span>
+  ) : orderItem.order?.returnRequestStatus === 'APPROVED' ? (
+  <button
+    className="bordered-button"
+    onClick={() => setSelectedReturnOrderId(orderItem.id)}
+  >
+    View Return Status
+  </button>
+) : orderItem.order?.refundRequestStatus === 'APPROVED' ? (
+  <button
+    className="bordered-button"
+    onClick={() => setSelectedReturnOrderId(orderItem.id)}
+  >
+    View Refund Status
+  </button>
+
   ) : orderItem.order?.returnRequestStatus === 'REJECTED' || orderItem.order?.refundRequestStatus === 'REJECTED' ? (
     <span className="bordered-button">Rejected</span>
   ) : (
@@ -215,6 +231,14 @@ const ProductAccept = ({ orders, limit ,handleReturnRefundAction}: ProductAccept
   selectedOrder={selectedVendorOrder}
 />
       )}
+      {selectedReturnOrderId && (
+  <ReturnRequestDrawer
+    selectedOrderId={selectedReturnOrderId}
+    onClose={() => setSelectedReturnOrderId(null)}
+    selectedOrder={selectedReturnVendorOrder}
+  />
+)}
+
     </>
   );
 };

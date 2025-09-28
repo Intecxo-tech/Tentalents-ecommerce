@@ -29,17 +29,11 @@
       "static/css/app/(routes)/dashboard/page.css",
       "static/chunks/app/(routes)/dashboard/page.js"
     ],
-    "/(routes)/dashboard/vendors/[vendorId]/page": [
+    "/(routes)/dashboard/order/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/css/app/(routes)/dashboard/vendors/[vendorId]/page.css",
-      "static/chunks/app/(routes)/dashboard/vendors/[vendorId]/page.js"
-    ],
-    "/(routes)/dashboard/orders/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(routes)/dashboard/orders/page.css",
-      "static/chunks/app/(routes)/dashboard/orders/page.js"
+      "static/css/app/(routes)/dashboard/order/page.css",
+      "static/chunks/app/(routes)/dashboard/order/page.js"
     ]
   }
 }

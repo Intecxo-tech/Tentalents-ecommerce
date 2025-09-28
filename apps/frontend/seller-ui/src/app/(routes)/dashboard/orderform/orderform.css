@@ -12,7 +12,18 @@
     margin: 10px 15px;;
     margin-left: 0px;;
 }
-
+.buyercard{
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap:10px;
+}
+.ordercards{
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap:10px;
+}
 .orderdetails{
   display:flex;
     gap:20px;

@@ -10,6 +10,8 @@ import FullOrderPage from '../orderform/Orderform';
 import OrderSkeleton from './Orderskeleton';
 import {jwtDecode} from 'jwt-decode';
 import { Toaster,toast } from 'react-hot-toast';
+import ReturnReplace from '../returnreplace/returnReplace';
+import ReturnRequestDrawer from '../returnForm/returnRequest';
 export interface Product {
   id: string;
   title: string;
@@ -56,12 +58,15 @@ export interface VendorOrder {
 // }
 
 const Page = () => {
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filteredOrders, setFilteredOrders] = useState<VendorOrder[]>([]);
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+const [selectedReturnRefundId, setSelectedReturnRefundId] = useState<string | null>(null);
+const [selectedReturnRefundType, setSelectedReturnRefundType] = useState<'return' | 'refund' | null>(null);
 
   const getStatusClass = (status: string = '') => {
     const lowerStatus = status.toLowerCase();
@@ -350,9 +355,28 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
       Approve
     </button>
   </div>
-) : orderItem.order?.returnRequestStatus === 'APPROVED' || orderItem.order?.refundRequestStatus === 'APPROVED' ? (
-  // Show Approved label if already approved
-  <span className="bordered-button">Approved</span>
+) : orderItem.order?.returnRequestStatus === 'APPROVED' ? (
+ <button
+  className="bordered-button"
+  onClick={() => {
+    setSelectedReturnRefundId(orderItem.order?.id || '');
+    setSelectedItemId(orderItem.product?.id || '');   // ✅ Pass product/item ID
+    setSelectedReturnRefundType('return');
+  }}
+>
+  View Return Status
+</button>
+) : orderItem.order?.refundRequestStatus === 'APPROVED' ? (
+  <button
+    className="bordered-button"
+    onClick={() => {
+      setSelectedReturnRefundId(orderItem.order?.id || '');
+      setSelectedReturnRefundType('refund');
+    }}
+  >
+    View Refund Status
+  </button>
+
 ) : orderItem.order?.returnRequestStatus === 'REJECTED' || orderItem.order?.refundRequestStatus === 'REJECTED' ? (
   // Show Rejected label if rejected
   <span className="bordered-button">Rejected</span>
@@ -427,6 +451,26 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
     selectedOrder={orders.find((o) => o.order?.id === selectedOrderId) ?? null}
   />
 )}
+
+{selectedReturnRefundId && selectedReturnRefundType && selectedItemId && (
+  <ReturnRequestDrawer
+    selectedOrderId={selectedReturnRefundId}
+    selectedOrder={
+      orders.find(
+        (o) =>
+          o.order?.id === selectedReturnRefundId &&
+          o.product?.id === selectedItemId
+      ) ?? null
+    }
+    onClose={() => {
+      setSelectedReturnRefundId(null);
+      setSelectedReturnRefundType(null);
+      setSelectedItemId(null);
+    }}
+  />
+)}
+
+
 
     </div>
   );

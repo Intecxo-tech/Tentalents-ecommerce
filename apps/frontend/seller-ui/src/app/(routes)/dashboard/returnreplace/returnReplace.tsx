@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
-import '../orderform/orderform.css';
-import './orderforms.css'
+// import '../orderform/orderform.css';
+import '../orderform/orderform.css'
 import { Star } from 'lucide-react';
 import OrderTracking from '../orderform/orderTrackign';
 import { RiCustomerService2Line } from 'react-icons/ri';
@@ -67,32 +67,30 @@ interface FullOrder {
 interface FullOrderPageAdminProps {
   selectedOrderId: string | null;
   onClose: () => void;
+   selectedItemId: string | null; 
   
 }
 
-const ReturnReplace = ({ selectedOrderId, onClose }: FullOrderPageAdminProps) => {
+const ReturnReplace = ({ selectedOrderId, onClose,selectedItemId  }: FullOrderPageAdminProps) => {
   const [order, setOrder] = useState<FullOrder | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!selectedOrderId) return;
-
-    setLoading(true);
-    setError(null);
-
-    axios
-      .get(`https://order-service-322f.onrender.com/api/orders/order?id=${selectedOrderId}`)
-      .then((res) => {
-        if (res.data.success && res.data.orders && res.data.orders.length > 0) {
-          setOrder(res.data.orders[0]);
-        } else {
-          setError('Order not found');
-        }
-      })
-      .catch(() => setError('Failed to fetch order details'))
-      .finally(() => setLoading(false));
-  }, [selectedOrderId]);
+useEffect(() => {
+  if (!selectedOrderId) return;
+  setLoading(true);
+  axios
+    .get(`https://order-service-322f.onrender.com/api/orders/order?id=${selectedOrderId}`)
+    .then((res) => {
+      if (res.data.success && res.data.orders?.length > 0) {
+        setOrder(res.data.orders[0]);
+      } else {
+        setError('Order not found');
+      }
+    })
+    .catch(() => setError('Failed to fetch order details'))
+    .finally(() => setLoading(false));
+}, [selectedOrderId]);
 
   const calculateTotals = () => {
     if (!order) return { subtotal: 0, shipping: 50, total: 50 };
@@ -108,10 +106,16 @@ const ReturnReplace = ({ selectedOrderId, onClose }: FullOrderPageAdminProps) =>
 const uniqueVendors = order
   ? Array.from(
       new Map(
-        order.items.map(item => [item.vendor.id, item.vendor])
+        (selectedItemId
+          ? order.items.filter(
+              item => item.id === selectedItemId || item.product.id === selectedItemId
+            )
+          : order.items
+        ).map(item => [item.vendor.id, item.vendor])
       ).values()
     )
   : [];
+
   if (!selectedOrderId) return null;
 
   if (loading)
@@ -135,6 +139,10 @@ const uniqueVendors = order
     return null;
 
   const totals = calculateTotals();
+// just before rendering
+const filteredItems = selectedItemId
+  ? order.items.filter(item => item.id === selectedItemId || item.product.id === selectedItemId)
+  : order.items;
 
   return (
     <div className="sidebar-overlay" onClick={onClose}>
@@ -258,7 +266,7 @@ const uniqueVendors = order
         </div>
             <h1 className="yourorder">Order Items ({order.items.length})</h1>
             <div className="orderlistitem" style={{ cursor: 'default' }}>
-              {order.items.map((item) => (
+              {filteredItems.map((item) => (
                 <div key={item.id} className="image-wrapper2">
                   <div className="firstsection">
                     <Image
