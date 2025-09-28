@@ -21,7 +21,9 @@
   color: var(--grey); /* Optional: make it look muted */
   text-align: center;
 }
-
+.product-buttons .background-buttonver{
+  gap:5px;
+}
 .ordericon{
   color: #919191;
 }

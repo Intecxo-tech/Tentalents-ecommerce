@@ -352,7 +352,11 @@ if (filteredOrders.length === 0) return <div className="ordersempty"><p>No order
         )
       }
     >
-      Approve
+      Approve <span className="request-label">
+    {orderItem.order?.returnRequestStatus === 'REQUESTED'
+      ? 'Return'
+      : 'Refund'}
+  </span>
     </button>
   </div>
 ) : orderItem.order?.returnRequestStatus === 'APPROVED' ? (

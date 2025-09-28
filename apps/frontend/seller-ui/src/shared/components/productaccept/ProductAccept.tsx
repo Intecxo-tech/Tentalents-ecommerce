@@ -54,11 +54,12 @@ interface ProductAcceptProps {
 
 const ProductAccept = ({ orders, limit ,handleReturnRefundAction}: ProductAcceptProps) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedReturnOrderId, setSelectedReturnOrderId] = useState<string | null>(null);
 
   if (!orders) {
     return <ProductAcceptSkeleton count={limit || 5} />;
   }
-const [selectedReturnOrderId, setSelectedReturnOrderId] = useState<string | null>(null);
+
 
   const handleConfirm = (id: string) => console.log('Confirmed product ID:', id);
   const handleDeny = (id: string) => console.log('Denied product ID:', id);
@@ -156,7 +157,11 @@ const selectedReturnVendorOrder = orders.find(o => o.id === selectedReturnOrderI
         )
       }
     >
-      Approve
+      Approve <span className="request-label">
+    {orderItem.order?.returnRequestStatus === 'REQUESTED'
+      ? 'Return'
+      : 'Refund'}
+  </span>
     </button>
   </div>
   ) : orderItem.order?.returnRequestStatus === 'APPROVED' ? (
