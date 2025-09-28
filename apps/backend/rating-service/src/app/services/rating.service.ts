@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../../../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 interface CreateRatingInput {
@@ -27,9 +27,12 @@ createRating: async (userId: string, data: CreateRatingInput) => {
     },
   });
 
-  if (!hasPurchased) {
-    throw new Error('You can only review products you have purchased.');
-  }
+    if (!hasPurchased) {
+      // Instead of throwing generic error, throw a custom error we can catch in controller
+      const error: any = new Error('You cannot add a review because you did not purchase this product.');
+      error.code = 'NOT_PURCHASED';
+      throw error;
+    }
   let vendorId = data.vendorId ?? null;
 
   if (!vendorId && data.productId) {

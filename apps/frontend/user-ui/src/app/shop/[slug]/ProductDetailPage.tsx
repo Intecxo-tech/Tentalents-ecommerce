@@ -358,7 +358,8 @@ const sellerInfo = product.vendor;
 </div>
                 <div className="storereviewbutton">
                   <button onClick={() => setIsReviewOpen(true)} className="background-button"><PlusIcon /> Add Review</button>
-                  <ReviewModal isOpen={isReviewOpen} onClose={() => setIsReviewOpen(false)} product={{ id: product.id, title: product.title, image: images[0] }} />
+                  <ReviewModal isOpen={isReviewOpen}  onSuccess={fetchRatings}
+                  onClose={() => setIsReviewOpen(false)} product={{ id: product.id, title: product.title, image: images[0] }} />
                 </div>
               </div>
               <div className="all-reviews">
@@ -440,7 +441,9 @@ const sellerInfo = product.vendor;
       {/* Bottom Tabs and Featured */}
       <ProductTabs />
       <div className="featuredproducts">
-        <div className="heavydiscount"><h2 className="heading discountheading">Heavy Discount</h2><Products showHeader={false} columns={3} /></div>
+        <div className="heavydiscount"><h2 className="heading discountheading">Heavy Discount</h2>
+        <Products showHeader={false} columns={3} />
+        </div>
         <div className="popularproducts"><h2 className="heading discountheading">Popular Products</h2><Products columns={3} showHeader={false} /></div>
       </div>
 

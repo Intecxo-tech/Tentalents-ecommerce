@@ -73,14 +73,17 @@ const Products = ({ columns = 5, category, showHeader = true, products: propProd
   };
 
   // Filter products by category if provided
-  const filteredProducts = category
-    ? products.filter((item) =>
-        Array.isArray(item.category)
-          ? item.category.includes(category)
-          : item.category === category
-      )
-    : products;
+// Filter products by category if provided
+const filteredProducts = category
+  ? products.filter((item) =>
+      Array.isArray(item.category)
+        ? item.category.includes(category)
+        : item.category === category
+    )
+  : products;
 
+// Limit displayed products to the number of columns
+const displayedProducts = filteredProducts.slice(0, columns);
 
 
 
@@ -117,11 +120,12 @@ const Products = ({ columns = 5, category, showHeader = true, products: propProd
         </div>
       )}
 
-      <div className={`product-grid columns-${columns}`}>
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} getDiscount={getDiscount} />
-        ))}
-      </div>
+  <div className={`product-grid columns-${columns}`}>
+  {displayedProducts.map((product) => (
+    <ProductCard key={product.id} product={product} getDiscount={getDiscount} />
+  ))}
+</div>
+
     </div>
   );
 

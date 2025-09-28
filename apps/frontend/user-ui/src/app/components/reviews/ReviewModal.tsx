@@ -12,6 +12,7 @@ import { toast, Toaster } from 'react-hot-toast';  // Import toast and Toaster
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
+   onSuccess?: () => void;
   product: {
     id: string;
     title: string;
@@ -21,7 +22,7 @@ interface ReviewModalProps {
 
 const MAX_FILE_SIZE_MB = 10;
 
-const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, product }) => {
+const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, product,onSuccess }) => {
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [reviewText, setReviewText] = useState('');
@@ -44,58 +45,73 @@ useEffect(() => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, [isOpen, onClose]);
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (rating === 0) {
-      toast.error('Please select a rating');
+  if (rating === 0) {
+    toast.error('Please select a rating');
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('User is not logged in');
+      setLoading(false);
       return;
     }
 
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('User is not logged in');
-        setLoading(false);
-        return;
+    const formData = new FormData();
+    formData.append('productId', product.id);
+    formData.append('score', rating.toString());
+    formData.append('comment', reviewText);
+
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        formData.append('imageFile', file);
+      } else if (file.type.startsWith('video/')) {
+        formData.append('videoFile', file);
       }
-
-      const formData = new FormData();
-      formData.append('productId', product.id);
-      formData.append('score', rating.toString());
-      formData.append('comment', reviewText);
-
-      if (file) {
-        formData.append('file', file);
-      }
-
-      const response = await axios.post(
-        `https://rating-service-pkgb.onrender.com/api/rating/rate`,
-        formData,
-        {
-         headers: {
-  Authorization: `Bearer ${token}`,
-}
-        }
-      );
-
-      console.log('✅ Rating submitted:', response.data);
-
-      // Reset form
-      setRating(0);
-      setHovered(0);
-      setReviewText('');
-      setFile(null);
-
-      onClose();
-    } catch (error: any) {
-      console.error('❌ Failed to submit rating:', error);
-      toast.error('Failed to submit review. Please try again.');
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const response = await axios.post(
+      `https://rating-service-pkgb.onrender.com/api/rating/rate`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    toast.success('Review added successfully!'); // ✅ Show success toast
+
+// Reset form
+setRating(0);
+setHovered(0);
+setReviewText('');
+setFile(null);
+
+onClose();
+if (onSuccess) onSuccess(); 
+// Call onSuccess to refresh parent reviews
+
+
+  } catch (error: any) {
+    console.error('❌ Failed to submit rating:', error);
+
+    // Check if backend sent a message
+    if (error.response && error.response.data && error.response.data.message) {
+      toast.error(error.response.data.message);
+    } else {
+      toast.error('Failed to submit review. Please try again.');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];

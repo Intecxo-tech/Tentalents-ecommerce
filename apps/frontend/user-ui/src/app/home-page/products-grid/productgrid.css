@@ -21,8 +21,14 @@
  
 }
 .columns-3 {
-  grid-template-columns: repeat(3, 1fr);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  grid-template-rows: 1fr; 
+  gap: 16px; 
+
+
 }
+
 .columns-4 {
   grid-template-columns: repeat(4, 1fr);
  

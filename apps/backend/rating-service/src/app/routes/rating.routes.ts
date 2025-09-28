@@ -18,20 +18,23 @@ if (!fs.existsSync(uploadDir)) {
   console.log(`Created upload directory at ${uploadDir}`);
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir); // use absolute path here
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
-    cb(null, uniqueName);
-  },
-});
+
+const storage = multer.memoryStorage();
+
 
 const upload = multer({ storage });
 const router = Router();
 
-router.post('/rate', authMiddleware(['buyer', 'buyer_seller']), upload.single('file'), createRating);
+router.post(
+  '/rate',
+  authMiddleware(['buyer', 'buyer_seller']),
+  upload.fields([
+    { name: 'imageFile', maxCount: 1 },
+    { name: 'videoFile', maxCount: 1 },
+  ]), // multer middleware parses files first
+  createRating // controller can now access req.files
+);
+
 router.put('/:id', authMiddleware(['buyer', 'buyer_seller']), updateRating);
 router.delete('/:id', authMiddleware(['buyer', 'buyer_seller']), deleteRating);
 router.get('/product/:productId', getRatingsByProduct);

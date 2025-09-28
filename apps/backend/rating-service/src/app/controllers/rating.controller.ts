@@ -1,74 +1,78 @@
 import { Request, Response, NextFunction } from 'express';
 import { ratingService } from '../services/rating.service';
 import { sendSuccess } from '@shared/utils';
-
-export const createRating = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+import { uploadToCloudinary } from '@shared/auth';
+export const createRating = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+    if (!req.user || !req.user.userId) 
+      return res.status(401).json({ message: 'Unauthorized' });
 
     const { productId, vendorId, comment } = req.body;
- const score = parseFloat(req.body.score);
+    const score = parseFloat(req.body.score);
 
-if ((!productId && !vendorId) || (productId && vendorId) || isNaN(score)) {
-  return res.status(400).json({
-    message: 'Provide either productId or vendorId (not both), and a valid score.',
-  });
-}
+    if ((!productId && !vendorId) || (productId && vendorId) || isNaN(score)) {
+      return res.status(400).json({
+        message: 'Provide either productId or vendorId (not both), and a valid score.',
+      });
+    }
 
+    let imageUrl: string | null = null;
+    let videoUrl: string | null = null;
 
-    let imageUrl: string | undefined = undefined;
-    let videoUrl: string | undefined = undefined;
+    if (req.files) {
+      const imageFile = (req.files as any)['imageFile']?.[0];
+      const videoFile = (req.files as any)['videoFile']?.[0];
 
-    if (req.file) {
-      const fileUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/uploads/${req.file.filename}`;
+      if (imageFile) {
+        imageUrl = await uploadToCloudinary(
+          imageFile.buffer,
+          'ratings',
+          undefined,
+          imageFile.mimetype
+        );
+      }
 
-      if (req.file.mimetype.startsWith('image/')) {
-        imageUrl = fileUrl;
-      } else if (req.file.mimetype.startsWith('video/')) {
-        videoUrl = fileUrl;
+      if (videoFile) {
+        videoUrl = await uploadToCloudinary(
+          videoFile.buffer,
+          'ratings',
+          undefined,
+          videoFile.mimetype
+        );
       }
     }
 
-    // ✅ Add this log to debug issues
-    console.log('➡️ Creating rating with:', {
-      userId: req.user.userId,
-      productId,
-      vendorId,
-      score,
-      comment,
-      imageUrl,
-      videoUrl,
-    });
-if (!req.user || !req.user.userId) {
-  return res.status(401).json({ message: 'Unauthorized' });
-}
-const userId: string = req.user.userId;
-   const created = await ratingService.createRating(userId,{
+    const userId: string = req.user.userId;
+
+    const created = await ratingService.createRating(userId, {
       productId: productId ?? null,
-  vendorId: vendorId ?? null,
-  score,
-  comment: comment ?? null,
-  imageUrl: imageUrl ?? null,
-  videoUrl: videoUrl ?? null,
+      vendorId: vendorId ?? null,
+      score,
+      comment: comment ?? null,
+      imageUrl: imageUrl ?? null,
+      videoUrl: videoUrl ?? null,
     });
 
     sendSuccess(res, 'Rating submitted', created);
+
   } catch (err: any) {
-  if (err.code === 'P2002') {
-    return res.status(400).json({
-      message: 'You have already submitted a rating for this product or vendor.',
-    });
+    if (err.code === 'P2002') {
+      return res.status(400).json({
+        message: 'You have already submitted a rating for this product or vendor.',
+      });
+    }
+
+    if (err.code === 'NOT_PURCHASED') {
+      return res.status(400).json({
+        message: 'You cannot add a review because you did not purchase this product.',
+      });
+    }
+
+    console.error('❌ Error in createRating:', err);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-
-  console.error('❌ Error in createRating:', err);
-  return res.status(500).json({ message: 'Internal server error' });
-}
-
 };
+
 
 
 export const getRatingsByProduct = async (
