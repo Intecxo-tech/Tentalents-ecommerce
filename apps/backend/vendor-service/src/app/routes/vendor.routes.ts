@@ -7,12 +7,13 @@ import {
   updateVendor,
   getVendorById,
     updateBankDetailsController,
-
   getAllVendors,
-  uploadCancelledCheque,
   deleteVendor,
   uploadVendorDocuments,
   approveVendor,
+  initiateForgotPasswordOtp,
+  verifyForgotPasswordOtp,
+  resetPasswordWithOtp,
   rejectVendor,
   getVendorAnalytics,
   userBecameVendorController,
@@ -25,7 +26,8 @@ import {
  updateVendorProfile,
    uploadVendorProfileImageController,
    uploadVendorKYCDocumentsController,
-  loginVendor
+  loginVendor,
+    uploadCancelledCheque
 } from '../controllers/vendor-controller';
 
 import { authMiddleware } from '@shared/auth';
@@ -49,6 +51,16 @@ const upload = multer({
     cb(null, true);
   },
 });
+// === Forgot Password (Public Routes) ===
+
+// Step 1: Send OTP to vendor email
+router.post('/forgot-password/initiate-otp', initiateForgotPasswordOtp);
+
+// Step 2: Verify OTP
+router.post('/forgot-password/verify-otp', verifyForgotPasswordOtp);
+
+// Step 3: Reset password using OTP
+router.post('/forgot-password/reset', resetPasswordWithOtp);
 
 router.post('/google', loginOrRegisterWithGoogle);
 router.get('/profile/:vendorId', authMiddleware(), getVendorProfileByVendorId);
@@ -61,7 +73,12 @@ router.post('/login', loginVendor);
 
 // === Protected routes (auth required) ===
 router.post('/register/profile', authMiddleware([UserRole.BUYER, UserRole.SELLER]), completeVendorProfileRegistration);
-
+router.post(
+  '/cancelled-cheque/:vendorId',
+  authMiddleware(UserRole.SELLER),
+  upload.single('file'), // ✅ This is where the middleware should be
+  uploadCancelledCheque // ✅ This is the corrected, single handler function
+);
 router.get('/', authMiddleware(UserRole.ADMIN), getAllVendors);
 router.post('/convert', authMiddleware(), userBecameVendorController);
 router.get('/:id', authMiddleware(), getVendorById);
@@ -80,7 +97,6 @@ router.post(
   uploadVendorDocuments
 );
 
-
 router.patch('/:id/approve', authMiddleware(UserRole.ADMIN), approveVendor);
 router.patch('/:id/reject', authMiddleware(UserRole.ADMIN), rejectVendor);
 
@@ -94,12 +110,7 @@ router.post(
   authMiddleware(UserRole.SELLER),
   uploadVendorProfileImageController
 );
-router.post(
-  '/cancelled-cheque/:vendorId',
-  authMiddleware(UserRole.SELLER),
-  upload.single('file'), // ✅ This is where the middleware should be
-  uploadCancelledCheque // ✅ This is the corrected, single handler function
-);
+
 // Route expects 'files' for KYC docs multiple files
 router.post(
   '/kyc-docs/:vendorId',
