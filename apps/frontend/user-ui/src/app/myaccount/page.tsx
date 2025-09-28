@@ -137,10 +137,12 @@ const token = user?.token;
   if (loading) return <AccountPageSkeleton />;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/login');
-  };
+  const { logout } = useAuth();
+
+const handleLogout = () => {
+  logout(); // ✅ updates state and clears localStorage
+  router.push('/login');
+}
 
   const vendorId = profile?.vendorId || '';
 

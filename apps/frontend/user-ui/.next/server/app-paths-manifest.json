@@ -1,5 +1,7 @@
 {
-  "/(routes)/login/page": "app/(routes)/login/page.js",
+  "/page": "app/page.js",
+  "/myaccount/page": "app/myaccount/page.js",
   "/shop/page": "app/shop/page.js",
-  "/shop/[slug]/page": "app/shop/[slug]/page.js"
+  "/(routes)/forgot-password/page": "app/(routes)/forgot-password/page.js",
+  "/(routes)/login/page": "app/(routes)/login/page.js"
 }

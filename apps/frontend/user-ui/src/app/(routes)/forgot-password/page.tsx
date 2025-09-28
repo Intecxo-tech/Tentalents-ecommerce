@@ -1,21 +1,23 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowBigRight, ChevronLeft } from 'lucide-react';
-import './forgotpassword.css'; // import your new styles
+import { ChevronLeft } from 'lucide-react';
+import './forgotpassword.css';
 
 type FormData = {
   email: string;
   password: string;
 };
 
+const API_BASE = 'https://user-service-zje4.onrender.com/api/auth';
+
 const ForgotPassword = () => {
   const [step, setStep] = useState<'email' | 'otp' | 'reset'>('email');
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']); // 6 digits
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [canResend, setCanResend] = useState(true);
   const [timer, setTimer] = useState(60);
@@ -23,10 +25,9 @@ const ForgotPassword = () => {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
-
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>();
 
-  // Timer for resend OTP
+  // Timer for OTP resend
   const startTimer = () => {
     setTimer(60);
     setCanResend(false);
@@ -42,11 +43,19 @@ const ForgotPassword = () => {
     }, 1000);
   };
 
-  // Fake mutations (replace with real API calls)
+  // -------------------- API MUTATIONS --------------------
   const requestOtpMutation = useMutation({
     mutationFn: async ({ email }: { email: string }) => {
-      // Simulate API call
-      return new Promise((res) => setTimeout(res, 1000));
+      const res = await fetch(`${API_BASE}/forgot-password/initiate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data?.error || 'Failed to send OTP');
+      }
+      return res.json();
     },
     onSuccess: (_, { email }) => {
       setUserEmail(email);
@@ -54,37 +63,60 @@ const ForgotPassword = () => {
       setServerError(null);
       startTimer();
     },
-    onError: () => {
-      setServerError('Failed to send OTP');
+    onError: (err: any) => {
+      setServerError(err.message);
     },
   });
 
   const verifyOtpMutation = useMutation({
     mutationFn: async () => {
-      return new Promise((res) => setTimeout(res, 1000));
+      if (!userEmail) throw new Error('Email is missing');
+      const res = await fetch(`${API_BASE}/forgot-password/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, otp: otp.join('') }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data?.error || 'Invalid OTP');
+      }
+      return res.json();
     },
     onSuccess: () => {
       setStep('reset');
       setServerError(null);
-      reset(); // reset password input
+      reset();
     },
-    onError: () => {
-      setServerError('Invalid OTP. Try again.');
-    },
-  });
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: async ({ password }: { password: string }) => {
-      return new Promise((res) => setTimeout(res, 1000));
-    },
-    onSuccess: () => {
-      router.push('/login');
-    },
-    onError: () => {
-      setServerError('Failed to reset password.');
+    onError: (err: any) => {
+      setServerError(err.message);
     },
   });
 
+const resetPasswordMutation = useMutation({
+  mutationFn: async ({ password }: { password: string }) => {
+    if (!userEmail) throw new Error('Email is missing');
+    const res = await fetch(`${API_BASE}/forgot-password/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        otp: otp.join(''),       // OTP
+        newPassword: password,   // Backend expects 'newPassword'
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data?.error || 'Failed to reset password');
+    }
+    return res.json();
+  },
+  onSuccess: () => router.push('/login'),
+  onError: (err: any) => setServerError(err.message),
+});
+
+
+
+  // -------------------- FORM HANDLERS --------------------
   const onSubmitEmail = (data: FormData) => {
     requestOtpMutation.mutate({ email: data.email });
   };
@@ -93,17 +125,13 @@ const ForgotPassword = () => {
     resetPasswordMutation.mutate({ password: data.password });
   };
 
-  // OTP input handlers
+  // -------------------- OTP INPUT HANDLERS --------------------
   const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return; // Only digits or empty
-
+    if (!/^\d?$/.test(value)) return; // Only digits
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    if (value && index < otp.length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
+    if (value && index < otp.length - 1) inputRefs.current[index + 1]?.focus();
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -116,10 +144,10 @@ const ForgotPassword = () => {
     <div className="forgot-password-page">
       <div className="forgot-container">
         <div className="forgot-heading">
-          <button onClick={() => router.back()} className='bordered-button'>
+          <button onClick={() => router.back()} className="bordered-button">
             <ChevronLeft />
           </button>
-          <h1 className='heading'>Forgot Password</h1>
+          <h1 className="heading">Forgot Password</h1>
         </div>
 
         <div className="forgot-box">
@@ -139,9 +167,9 @@ const ForgotPassword = () => {
                 />
                 {errors.email && <p className="error">{errors.email.message}</p>}
               </div>
-              <button type="submit" className="forgot-button" disabled={requestOtpMutation.isPending}>
-                {requestOtpMutation.isPending ? 'Sending OTP...' : 'Send OTP'}
-              </button>
+             <button type="submit" className="forgot-button" disabled={requestOtpMutation.isPending}>
+  {requestOtpMutation.isPending ? 'Sending OTP...' : 'Send OTP'}
+</button>
               {serverError && <p className="error">{serverError}</p>}
             </form>
           )}
@@ -154,29 +182,27 @@ const ForgotPassword = () => {
                     key={i}
                     maxLength={1}
                     value={digit}
-                   ref={(el) => {
-  inputRefs.current[i] = el;
-}}
+                    ref={(el) => { inputRefs.current[i] = el; }}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
                     type="text"
                   />
                 ))}
               </div>
-              <button
-                className="forgot-button"
-                disabled={verifyOtpMutation.isPending}
-                onClick={() => verifyOtpMutation.mutate()}
-              >
-                {verifyOtpMutation.isPending ? 'Verifying...' : 'Verify OTP'}
-              </button>
+             <button
+  className="forgot-button"
+  disabled={verifyOtpMutation.isPending}
+  onClick={() => verifyOtpMutation.mutate()}
+>
+  {verifyOtpMutation.isPending ? 'Verifying...' : 'Verify OTP'}
+</button>
 
               {canResend ? (
                 <button
                   className="resend-button"
                   onClick={() => {
                     if (userEmail) requestOtpMutation.mutate({ email: userEmail });
-                    setOtp(['', '', '', '']);
+                    setOtp(['', '', '', '', '', '']);
                   }}
                 >
                   Resend OTP
@@ -204,8 +230,8 @@ const ForgotPassword = () => {
                 {errors.password && <p className="error">{errors.password.message}</p>}
               </div>
               <button type="submit" className="forgot-button" disabled={resetPasswordMutation.isPending}>
-                {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
-              </button>
+  {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
+</button>
               {serverError && <p className="error">{serverError}</p>}
             </form>
           )}
@@ -213,8 +239,7 @@ const ForgotPassword = () => {
 
         <div className="bottom-links">
           <p>
-            Remember your password?{' '}
-            <Link href="/login">Login Here</Link>
+            Remember your password? <Link href="/login">Login Here</Link>
           </p>
           <p style={{ marginTop: 8 }}>
             <Link href="/signup">New User? Sign Up Here</Link>

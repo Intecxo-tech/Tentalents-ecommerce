@@ -25,14 +25,19 @@ const LoginClient = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth(); // ✅ use login function from context
+  const {user, login } = useAuth(); // ✅ use login function from context
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
-
+useEffect(() => {
+  if (user) {
+    // If user exists, redirect to shop
+    router.push('/shop');
+  }
+}, [user, router]);
   // ✅ Auto-login from token in URL
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token');

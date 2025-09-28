@@ -17,6 +17,7 @@ import { auth, provider } from '../../utils/firebase';
 import { signInWithPopup } from "firebase/auth";
 import { Suspense } from 'react';
 
+
 type FormData = {
   email: string;
   password: string;
@@ -28,6 +29,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+const [redirecting, setRedirecting] = useState(true);
 
   const {
     register,
