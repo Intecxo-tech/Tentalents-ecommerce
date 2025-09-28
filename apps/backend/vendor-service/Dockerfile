@@ -1,48 +1,34 @@
-# Dockerfile for 'product-service'
+# ---------- Dockerfile for vendor-service ----------
+# Uses root base Dockerfile image (tentalents)
 
-# --- Stage 1: Build ---
-# Use a specific version of Node for reproducibility
-FROM node:20-alpine AS builder
+# ---------- Stage 1: Builder ----------
+FROM tentalents AS builder
 WORKDIR /app
 
-# 1. Copy only the necessary package and config files first
-# This leverages Docker's layer caching. The build only re-runs `npm install`
-# if these specific files change, not on every code change.
-COPY package.json package-lock.json ./
-COPY tsconfig.base.json nx.json ./
+ENV SERVICE_NAME=vendor-service
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NX_DAEMON=false
 
-# 2. Install dependencies for the entire monorepo
-# This is necessary for the build step to work
-RUN npm install
+RUN npx nx build vendor-service --configuration=production --skip-eslint
 
-# 3. Copy the rest of the source code
-COPY . .
-
-# 4. Build the specific application.
-# Nx will automatically create a pruned package.json in the output directory
-# if your project's build target is configured correctly.
-RUN npx nx build vendor-service --configuration=production
-
-
-# --- Stage 2: Production Runtime ---
-FROM node:20-alpine
+# ---------- Stage 2: Production ----------
+FROM tentalents AS production
 WORKDIR /app
 
-# Set to production environment
 ENV NODE_ENV=production
+ENV SERVICE_NAME=vendor-service
+ENV PORT=3011
 
-# 5. Copy the pruned package.json from the build output
-COPY --from=builder /app/dist/apps/vendor-service/package.json ./package.json
+COPY --from=builder /app/dist/apps/backend/vendor-service ./
 
-# 6. Install ONLY the production dependencies for 'product-service'
-RUN npm install --omit=dev
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/healthz || exit 1
 
-# 7. Copy the built application code and prisma schema
-COPY --from=builder /app/dist/apps/vendor-service .
-COPY --from=builder /app/prisma ./prisma
+EXPOSE 3011
+CMD ["node", "main.cjs"]
 
-# Expose the correct port
-EXPOSE 3010
+# ---------- Docker commands ----------
+# docker build -t vendor-service:latest -f apps/backend/vendor-service/Dockerfile apps/backend/vendor-service
 
-# 8. Run the application using the correct file name
-CMD ["node", "main.js"]
+# docker rm -f vendor-service
+# docker run -d --name vendor-service -p 3011:3011 --rm vendor-service:latest

@@ -1,1 +1,0 @@
-{"version":3,"file":"analytics.d.ts","sourceRoot":"","sources":["analytics.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,cAAc;IAC7B,SAAS,EAAE,MAAM,CAAC;IAClB,MAAM,CAAC,EAAE,MAAM,CAAC;IAChB,SAAS,CAAC,EAAE,MAAM,CAAC;IACnB,SAAS,EAAE,MAAM,CAAC;IAClB,QAAQ,CAAC,EAAE,MAAM,CAAC,MAAM,EAAE,GAAG,CAAC,CAAC;CAChC"}

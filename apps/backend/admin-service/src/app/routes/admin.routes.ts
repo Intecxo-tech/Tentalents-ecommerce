@@ -7,7 +7,7 @@ import {
   getAdminDashboard,
   createAdminHandler,
   getAllVendors,
-  getVendorsWithProducts,
+   getVendorsWithProducts,
 } from '../controllers/admin.controller';
 
 const router = Router();
@@ -18,6 +18,11 @@ const router = Router();
  */
 router.post('/create-admin', createAdminHandler);
 router.get('/users', getAllUsers);
+/**
+ * @route GET /admin/sellers/all-with-products
+ * @desc Get all vendors with their products and admin access to login info
+ */
+router.get('/sellers/all-with-products', getVendorsWithProducts);
 
 /**
  * @route PUT /admin/users/role
@@ -43,11 +48,4 @@ router.put('/sellers/status', approveSeller);
  */
 router.get('/dashboard', getAdminDashboard);
 router.get('/sellers/all', getAllVendors);
-
-/**
- * @route GET /admin/sellers/all-with-products
- * @desc Get all vendors with their products and admin access to login info
- */
-router.get('/sellers/all-with-products', getVendorsWithProducts);
-
 export default router;

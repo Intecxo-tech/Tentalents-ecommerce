@@ -1,1 +1,0 @@
-{"version":3,"file":"UserCreatedEvent.d.ts","sourceRoot":"","sources":["UserCreatedEvent.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,gBAAgB;IAC/B,MAAM,EAAE,MAAM,CAAC;IACf,KAAK,EAAE,MAAM,CAAC;IACd,IAAI,EAAE,MAAM,CAAC;IACb,IAAI,EAAE,MAAM,GAAG,OAAO,GAAG,aAAa,CAAC;IACvC,SAAS,EAAE,MAAM,CAAC;CACnB"}

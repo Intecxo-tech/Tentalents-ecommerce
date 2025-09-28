@@ -1,48 +1,34 @@
-# Dockerfile for 'product-service'
+# ---------- Dockerfile for admin-service ----------
+# Uses root base Dockerfile image (tentalents)
 
-# --- Stage 1: Build ---
-# Use a specific version of Node for reproducibility
-FROM node:20-alpine AS builder
+# ---------- Stage 1: Builder ----------
+FROM tentalents AS builder
 WORKDIR /app
 
-# 1. Copy only the necessary package and config files first
-# This leverages Docker's layer caching. The build only re-runs `npm install`
-# if these specific files change, not on every code change.
-COPY package.json package-lock.json ./
-COPY tsconfig.base.json nx.json ./
+ENV SERVICE_NAME=admin-service
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NX_DAEMON=false
 
-# 2. Install dependencies for the entire monorepo
-# This is necessary for the build step to work
-RUN npm install
+RUN npx nx build admin-service --configuration=production --skip-eslint
 
-# 3. Copy the rest of the source code
-COPY . .
-
-# 4. Build the specific application.
-# Nx will automatically create a pruned package.json in the output directory
-# if your project's build target is configured correctly.
-RUN npx nx build admin-service --configuration=production
-
-
-# --- Stage 2: Production Runtime ---
-FROM node:20-alpine
+# ---------- Stage 2: Production ----------
+FROM tentalents AS production
 WORKDIR /app
 
-# Set to production environment
 ENV NODE_ENV=production
+ENV SERVICE_NAME=admin-service
+ENV PORT=3008
 
-# 5. Copy the pruned package.json from the build output
-COPY --from=builder /app/dist/apps/admin-service/package.json ./package.json
+COPY --from=builder /app/dist/apps/backend/admin-service ./
 
-# 6. Install ONLY the production dependencies for 'product-service'
-RUN npm install --omit=dev
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/healthz || exit 1
 
-# 7. Copy the built application code and prisma schema
-COPY --from=builder /app/dist/apps/product-service .
-COPY --from=builder /app/prisma ./prisma
-
-# Expose the correct port
 EXPOSE 3008
+CMD ["node", "main.cjs"]
 
-# 8. Run the application using the correct file name
-CMD ["node", "main.js"]
+# ---------- Docker commands ----------
+# docker build -t admin-service:latest -f apps/backend/admin-service/Dockerfile apps/backend/admin-service
+
+# docker rm -f admin-service
+# docker run -d --name admin-service -p 3008:3008 --rm admin-service:latest

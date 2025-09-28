@@ -1,1 +1,0 @@
-{"version":3,"file":"EmailPaymentSuccessEvent.d.ts","sourceRoot":"","sources":["EmailPaymentSuccessEvent.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,wBAAwB;IACvC,EAAE,EAAE,MAAM,CAAC;IACX,OAAO,EAAE,MAAM,CAAC;IAChB,QAAQ,EAAE,iBAAiB,CAAC;IAC5B,OAAO,EAAE;QACP,SAAS,EAAE,MAAM,CAAC;QAClB,MAAM,EAAE,MAAM,CAAC;KAChB,CAAC;CACH"}

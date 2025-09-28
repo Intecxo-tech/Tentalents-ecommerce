@@ -1,48 +1,33 @@
+
 # ---------- Stage 1: Builder ----------
-FROM node:20-alpine AS builder
+# ---------- Base builder for all services ----------
+FROM node:20-alpine AS base-builder
 WORKDIR /app
 
-ARG SERVICE_NAME
-ENV SERVICE_NAME=${SERVICE_NAME}
+# Build-time environment
+ENV NODE_ENV=development
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Install deps
-COPY package.json package-lock.json ./
-COPY tsconfig.base.json nx.json ./
-RUN npm install
+# Install dependencies needed by Prisma
+RUN apk add --no-cache openssl libc6-compat
 
-# Copy entire monorepo
+# Copy only root configs + prisma schema first (for caching)
+COPY package.json package-lock.json tsconfig.base.json nx.json ./ 
+COPY prisma ./prisma
+
+# Install all dependencies (skip scripts to avoid double prisma engine installs)
+RUN npm ci --ignore-scripts
+
+# ✅ Generate Prisma client (schema path is inside /app/prisma/schema.prisma)
+RUN npx prisma generate --schema=/app/prisma/schema.prisma
+
+# Copy the rest of the monorepo
 COPY . .
 
-# ✅ Generate Prisma Client for correct platform
-RUN npx prisma generate --schema=./prisma/schema.prisma
+# Debug check
+RUN ls -la /app/prisma \
+ && ls -la /app/node_modules/.prisma/client \
+ && echo "✅ Prisma client generated"
 
-# Build the specific service
-RUN npx nx build $SERVICE_NAME --configuration=production
 
-# ---------- Stage 2: Runtime ----------
-FROM node:20-alpine
-WORKDIR /app
-
-ARG SERVICE_NAME
-ENV SERVICE_NAME=${SERVICE_NAME}
-ENV NODE_ENV=production
-
-# Copy runtime package.json for that service
-COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME/package.json ./package.json
-
-# Install only prod deps
-RUN npm install --omit=dev
-
-# Copy built code and Prisma schema
-COPY --from=builder /app/dist/apps/backend/$SERVICE_NAME/ ./
-COPY --from=builder /app/prisma ./prisma
-
-# ✅ Copy precompiled Prisma Client
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
-# Optional: Check client exists
-RUN ls -la node_modules/.prisma/client
-
-EXPOSE 3000
-CMD ["node", "main.cjs"]
+# docker build -t tentalents .
