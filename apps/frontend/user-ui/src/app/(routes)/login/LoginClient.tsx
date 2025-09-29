@@ -105,15 +105,22 @@ useEffect(() => {
     }
   };
 
-    useEffect(() => {
-        if (!mounted) return;
-        const token = searchParams?.get('token');
-        if (token) {
-            setTokenFromUrl(token);
-            // Clean the URL immediately to hide the token
-            router.replace('/login', { shallow: true });
+  useEffect(() => {
+    if (!mounted) return;
+    const token = searchParams?.get('token');
+
+    if (token) {
+        setTokenFromUrl(token);
+        
+        // ✅ FIX: Use native window.history to safely remove the token from the URL
+        // while remaining on the same page.
+        if (window.history.replaceState) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('token');
+            window.history.replaceState(null, '', newUrl.toString());
         }
-    }, [searchParams, mounted, router]);
+    }
+}, [searchParams, mounted]);
 
     // auto-login if token exists
     useEffect(() => {
