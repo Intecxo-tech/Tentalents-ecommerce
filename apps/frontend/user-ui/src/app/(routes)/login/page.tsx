@@ -8,9 +8,9 @@ const LoadingFallback = () => {
 
 const Page = () => {
   return (
-    <Suspense fallback={<LoadingFallback />}>
+
       <LoginClient />
-    </Suspense>
+   
   );
 };
 
