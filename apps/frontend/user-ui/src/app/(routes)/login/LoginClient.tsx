@@ -151,29 +151,27 @@ useEffect(() => {
 
     // --- RENDER LOGIC ---
 
-    // 1. Initial hydration/loading state (SSR/CSR sync)
-    if (!mounted || isRedirecting) { // Check new flag here
-        return (
-            <div className="login-page">
-                <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-                    <h2>{isRedirecting ? 'Redirecting...' : 'Loading...'}</h2>
-                </div>
+  if (tokenFromUrl) { 
+    return (
+        <div className="login-page">
+            <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+                <h2>{isRedirecting ? 'Redirecting...' : 'Switching to your customer account... 🔄'}</h2>
+                <p>Please wait while we complete the secure switch.</p>
             </div>
-        );
-    }
-  
-  // FIX: Display the switching message ONLY if tokenFromUrl is set (client-side state)
-  // This state will be updated by the useEffect *after* mount and token detection.
- if (tokenFromUrl) { 
-         return (
-            <div className="login-page">
-                <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-                    <h2>Switching to your customer account... 🔄</h2>
-                    <p>Please wait while we complete the secure switch.</p>
-                </div>
+        </div>
+    );
+}
+
+// 2. Initial loading state (Server output must match initial client output)
+if (!mounted) {
+    return (
+        <div className="login-page">
+            <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+                <h2>Loading...</h2>
             </div>
-        );
-    }
+        </div>
+    );
+}
   return (
     <div className="login-page">
       <div className="logincontainer">
