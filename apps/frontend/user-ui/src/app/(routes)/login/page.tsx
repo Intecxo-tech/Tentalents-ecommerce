@@ -1,3 +1,4 @@
+'use client
 import React, { Suspense } from 'react';
 import LoginClient from './LoginClient';
 
@@ -6,10 +7,9 @@ const LoadingFallback = () => {
 };
 
 const Page = () => {
-  return (
-    <Suspense fallback={<LoadingFallback />}>
+  return
       <LoginClient />
-    </Suspense>
+   
   );
 };
 
