@@ -34,7 +34,10 @@ const [mounted, setMounted] = useState(false);
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
-
+useEffect(() => {
+  setMounted(true);
+}, []);
+  
   // redirect if already logged in
   useEffect(() => {
     if (user) {
@@ -43,33 +46,7 @@ const [mounted, setMounted] = useState(false);
   }, [user, router]);
 
   // extract token once
-  useEffect(() => {
-    const token = searchParams?.get('token');
-    if (token) {
-      setTokenFromUrl(token);
-    }
-  }, [searchParams?.toString()]); // ✅ only re-run when query string changes
 
-  // auto-login if token exists
-  useEffect(() => {
-    if (!tokenFromUrl) return;
-
-    const handleAutoLogin = async () => {
-      try {
-        setLoading(true);
-        login({ token: tokenFromUrl });
-        toast.success('Switched to customer account!');
-        router.push('/myaccount');
-      } catch (err) {
-        console.error(err);
-        toast.error('Invalid login token.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    handleAutoLogin();
-  }, [tokenFromUrl, login, router]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -127,9 +104,33 @@ const [mounted, setMounted] = useState(false);
     }
   };
 
-useEffect(() => {
-  setMounted(true);
-}, []);
+  useEffect(() => {
+    const token = searchParams?.get('token');
+    if (token) {
+      setTokenFromUrl(token);
+    }
+  }, [searchParams?.toString()]); // ✅ only re-run when query string changes
+
+  // auto-login if token exists
+  useEffect(() => {
+    if (!tokenFromUrl) return;
+
+    const handleAutoLogin = async () => {
+      try {
+        setLoading(true);
+        login({ token: tokenFromUrl });
+        toast.success('Switched to customer account!');
+        router.push('/myaccount');
+      } catch (err) {
+        console.error(err);
+        toast.error('Invalid login token.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    handleAutoLogin();
+  }, [tokenFromUrl, login, router]);
  // prevent hydration mismatch
 if (!mounted) return null;
 
