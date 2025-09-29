@@ -23,6 +23,7 @@ const LoginClient = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const {user, login } = useAuth(); // ✅ use login function from context
@@ -38,19 +39,29 @@ useEffect(() => {
     router.push('/shop');
   }
 }, [user, router]);
-  // ✅ Auto-login from token in URL
   useEffect(() => {
-    const tokenFromUrl = searchParams.get('token');
-    if (tokenFromUrl) {
-      try {
-        login({ token: tokenFromUrl }); // ✅ login via context
-        toast.success('Switched to customer account!');
-        router.push('/myaccount');
-      } catch (err) {
-        toast.error('Invalid login token.');
-      }
+  const token = searchParams.get('token');
+  if (token) setTokenFromUrl(token);
+}, [searchParams]);
+  // ✅ Auto-login from token in URL
+ // Auto-login from token in URL
+useEffect(() => {
+  const token = searchParams.get('token');
+  if (token) {
+    setLoading(true);
+    try {
+      login({ token }); 
+      toast.success('Switched to customer account!');
+      router.push('/myaccount');
+    } catch (err) {
+      console.error(err);
+      toast.error('Invalid login token.');
+    } finally {
+      setLoading(false);
     }
-  }, [searchParams, login, router]);
+  }
+}, [searchParams, login, router]);
+
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
