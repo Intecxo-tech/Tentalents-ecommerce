@@ -48,7 +48,7 @@ type Vendor = {
 const Page: React.FC = () => {
   const router = useRouter();
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-console.log('🔑 JWT Token:', token);
+
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [chequeFileName, setChequeFileName] = useState<string>('');
   const [vendor, setVendor] = useState<Vendor | null>(null);
@@ -80,10 +80,10 @@ const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     try {
       const decoded: any = jwtDecode(token);
-      console.log('✅ Token decoded:', decoded);
+    
 
      if (decoded.vendorId) {
-  console.log('✅ Setting vendorId:', decoded.vendorId);
+
   setVendorId(decoded.vendorId);  // ✅ CORRECT
 
       } else {
@@ -141,7 +141,7 @@ const handleBankSave = async () => {
 useEffect(() => {
   const fetchVendor = async () => {
     if (!vendorId || !token) {
-      console.log('⏳ Waiting for vendorId and token...');
+    
       return;
     }
 
@@ -149,7 +149,7 @@ useEffect(() => {
       setLoading(true);
       setError(null);
 
-      console.log(`📦 Fetching vendor details for ID: ${vendorId}`);  // Logs the vendorId for which you're fetching details
+   
 
       const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
         headers: {
@@ -165,24 +165,21 @@ useEffect(() => {
       }
 
       const data = await response.json();  // Parse the response data
-      console.log('🔍 Vendor data fetched:', JSON.stringify(data, null, 2));  // Log the full vendor data
+     
 
       setVendor(data.vendor);  // Save the fetched vendor data to state
 
-      // Log the fetched fields (profileImage, gstNumber, kycDocsUrl)
-      console.log('🔍 Vendor Profile Image:', data.vendor.profileImage);
-      console.log('🔍 Vendor GST Number:', data.vendor.gstNumber);
-      console.log('🔍 Vendor KYC Docs:', data.vendor.kycDocsUrl);
+    
 
       // Check if bankDetails are included in the response
-      console.log('🔍 Bank Details:', data.vendor.bankDetails);
+  
 
       if (data.vendor.bankDetails) {
         setVendor({
           ...data.vendor,
           bankDetails: data.vendor.bankDetails,
         });
-        console.log('✅ Bank Details set in state:', data.vendor.bankDetails);
+        
       } else {
         console.warn('⚠️ No bank details found for this vendor');
       }
@@ -199,7 +196,7 @@ if (data.vendor.bankDetails && data.vendor.bankDetails.cancelledcheque) {
       }
 
     } catch (err: any) {
-      console.error('❌ Fetch vendor error:', err.message);
+      
       setError(err.message);
     } finally {
       setLoading(false);
@@ -213,10 +210,7 @@ if (data.vendor.bankDetails && data.vendor.bankDetails.cancelledcheque) {
 useEffect(() => {
   if (vendor) {
     console.log('📌 Vendor state updated:', vendor);
-    console.log('📌 Vendor Profile Image:', vendor.profileImage);
-    console.log('📌 Vendor GST Number:', vendor.gstNumber);
-    console.log('📌 Vendor KYC Docs URL:', vendor.kycDocsUrl);
-    console.log('📌 Vendor Bank Details:', vendor.bankDetails);
+  
   }
 }, [vendor]);
 
@@ -948,3 +942,4 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
 };
 
 export default Page;
+
