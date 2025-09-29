@@ -25,6 +25,7 @@ const LoginClient = () => {
   const [isRedirecting, setIsRedirecting] = useState(false); 
   const [loading, setLoading] = useState(false);
   const [isTokenPresent, setIsTokenPresent] = useState(false);
+  const [mounted, setMounted] = useState(false);
   // const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
 // const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -39,7 +40,9 @@ const LoginClient = () => {
 // useEffect(() => {
 //   setMounted(true);
 // }, []);
-  
+  useEffect(() => {
+  setMounted(true);
+}, []);
   // redirect if already logged in
   useEffect(() => {
     if (user) {
@@ -128,37 +131,32 @@ const LoginClient = () => {
     // auto-login if token exists
 // Unified Token Detection, Auto-Login, and Redirect
 useEffect(() => {
-    // Check for the token query parameter
-    const token = searchParams?.get('token');
+  if (!mounted) return; // ✅ wait until mounted
 
-    if (token) {
-        // 1. Clean the URL immediately
-        // Must be run inside useEffect (client-side only)
-        if (window.history.replaceState) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete('token');
-            window.history.replaceState(null, '', newUrl.toString());
-        }
+  const token = searchParams?.get('token');
+  if (token) {
+    try {
+      // clean URL
+      if (window.history.replaceState) {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('token');
+        window.history.replaceState(null, '', newUrl.toString());
+      }
 
-        // 2. Perform login via context immediately
-        try {
-            // Note: If login() also handles redirection, remove the router.push below
-            login({ token }); 
-            
-            toast.success('Switched to customer account! Redirecting...');
-            
-            // 3. Immediately redirect to the final destination
-            // This stops the rendering process and prevents the hydration mismatch.
-            router.push('/shop'); // Or '/myaccount' as suggested in the original code
-            
-        } catch (err) {
-            console.error(err);
-            toast.error('Invalid login token.');
-            // Do NOT redirect on error. Fall through to show the login form.
-        }
+      login({ token });
+      toast.success('Switched to customer account! Redirecting...');
+      router.push('/shop');
+    } catch (err) {
+      console.error(err);
+      toast.error('Invalid login token.');
     }
-    // Remove isTokenPresent state usage entirely
-}, [searchParams, login, router]);
+  }
+}, [mounted, searchParams, login, router]);
+
+if (!mounted) {
+  // render nothing until mounted to prevent hydration mismatch
+  return null;
+}
 
     // --- RENDER LOGIC ---
 
