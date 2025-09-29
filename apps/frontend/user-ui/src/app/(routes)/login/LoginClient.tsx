@@ -131,35 +131,43 @@ const LoginClient = () => {
 
     // auto-login if token exists
 // Unified Token Detection, Auto-Login, and Redirect
-  useEffect(() => {
-    if (!mounted) return;
+useEffect(() => {
+  if (!mounted) return;
 
-    const token = searchParams?.get('token');
-    if (token) {
-      (async () => {
-        try {
-          // clean URL
-          if (window.history.replaceState) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete('token');
-            window.history.replaceState(null, '', newUrl.toString());
-          }
+  const token = searchParams?.get('token');
+  if (!token) {
+    setProcessingToken(false);
+    return;
+  }
 
-          // login
-          login({ token });
-          toast.success('Logged in successfully!');
-          router.replace('/shop'); // ✅ use replace instead of push to avoid history mess
-        } catch (err) {
-          console.error(err);
-          toast.error('Invalid or expired login link.');
-        } finally {
-          setProcessingToken(false);
-        }
-      })();
-    } else {
+  const handleTokenLogin = async () => {
+    try {
+      // Clean URL first
+      if (window.history.replaceState) {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('token');
+        window.history.replaceState(null, '', newUrl.toString());
+      }
+
+      // Perform login
+      login({ token });
+      toast.success('Logged in successfully!');
+      
+      // ✅ Delay navigation to next tick so hydration finishes first
+      setTimeout(() => {
+        router.replace('/shop');
+      }, 0);
+    } catch (err) {
+      console.error(err);
+      toast.error('Invalid or expired login link.');
+    } finally {
       setProcessingToken(false);
     }
-  }, [mounted, searchParams, login, router]);
+  };
+
+  handleTokenLogin();
+}, [mounted, searchParams, login, router]);
+
 
  useEffect(() => {
     if (mounted && !processingToken && user) {
