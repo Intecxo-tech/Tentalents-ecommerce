@@ -120,7 +120,7 @@ const LoginClient = () => {
             window.history.replaceState(null, '', newUrl.toString());
         }
     }
-}, [searchParams);
+}, [searchParams]);
 
     // auto-login if token exists
     useEffect(() => {
