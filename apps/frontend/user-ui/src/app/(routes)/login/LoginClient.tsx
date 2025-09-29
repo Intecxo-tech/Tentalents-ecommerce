@@ -41,60 +41,63 @@ const LoginClient = () => {
     }
   }, [user, router]);
 
-  useEffect(() => {
-    const urlToken = searchParams.get('token');
-    if (urlToken) {
-      // Token is available, try to decode it
-      try {
-        const decoded: any = jwtDecode(urlToken);
-        const isExpired = decoded.exp * 1000 < Date.now();
+ useEffect(() => {
+  const urlToken = searchParams.get('token');
+  
+  if (urlToken) {
+    // Token is available, try to decode it
+    try {
+      const decoded: any = jwtDecode(urlToken);  // Decode the JWT token
+      const isExpired = decoded.exp * 1000 < Date.now();
 
-        if (!isExpired) {
-          // Token is valid, save it in localStorage
-          localStorage.setItem('token', urlToken);
-          if (decoded.vendorId) {
-            localStorage.setItem('vendorId', decoded.vendorId);
-          }
-          if (decoded.role) {
-            localStorage.setItem('role', decoded.role);
-          }
+      if (!isExpired) {
+        // Token is valid, automatically log in the user
+        login({ token: urlToken });  // Login with token
 
-          // Automatically log in the user with the token
-          login({ token: urlToken });
-          toast.success('Login successful!');
-
-          // Redirect based on the role
-          if (decoded.role === 'admin') {
-            router.push('/shop');
-          } else {
-            router.push('/shop');
-          }
-          return;
-        } else {
-          toast.error('Session expired. Please log in again.');
+        // Save the token and user information in localStorage
+        localStorage.setItem('token', urlToken);
+        if (decoded.vendorId) {
+          localStorage.setItem('vendorId', decoded.vendorId);
         }
-      } catch (err) {
-        console.error('Error decoding token from URL:', err);
-        toast.error('Invalid token. Please log in.');
+        if (decoded.role) {
+          localStorage.setItem('role', decoded.role);
+        }
+
+        // Handle redirection based on the role
+        if (decoded.role === 'admin') {
+          router.push('/admin-dashboard');  // Redirect admin to the admin dashboard
+        } else if (decoded.role === 'vendor') {
+          router.push('/vendor-dashboard');  // Redirect vendor to the vendor dashboard
+        } else {
+          router.push('/shop');  // Redirect customer to the shop
+        }
+        toast.success('Login successful!');
+      } else {
+        toast.error('Session expired. Please log in again.');
       }
-    } else {
-      // If no token in URL, check for token in localStorage
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const decoded: any = jwtDecode(token);
-          const isExpired = decoded.exp * 1000 < Date.now();
-          if (!isExpired) {
-            router.push('/shop');
-          } else {
-            localStorage.removeItem('token');
-          }
-        } catch (err) {
+    } catch (err) {
+      console.error('Error decoding token from URL:', err);
+      toast.error('Invalid token. Please log in.');
+    }
+  } else {
+    // If no token in URL, check for token in localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+        const isExpired = decoded.exp * 1000 < Date.now();
+        if (!isExpired) {
+          router.push('/shop');  // Redirect to shop if the token is still valid
+        } else {
           localStorage.removeItem('token');
         }
+      } catch (err) {
+        localStorage.removeItem('token');
       }
     }
-  }, [router, searchParams, login]);
+  }
+}, [searchParams, router, login]);
+
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
