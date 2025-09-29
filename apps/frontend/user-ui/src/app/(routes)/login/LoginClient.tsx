@@ -106,22 +106,24 @@ const LoginClient = () => {
     }
   };
 
-  useEffect(() => {
-    
-    const token = searchParams?.get('token');
 
-    if (token) {
-        setTokenFromUrl(token);
-        
-        // ✅ FIX: Use native window.history to safely remove the token from the URL
-        // while remaining on the same page.
-        if (window.history.replaceState) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete('token');
-            window.history.replaceState(null, '', newUrl.toString());
-        }
-    }
-}, [searchParams]);
+
+// useEffect(() => {
+    
+//     const token = searchParams?.get('token');
+
+//     if (token) {
+//         setTokenFromUrl(token); // <--- THIS LINE CAUSES THE ERROR
+//         
+//         // ✅ FIX: Use native window.history to safely remove the token from the URL
+//         // while remaining on the same page.
+//         if (window.history.replaceState) {
+//             const newUrl = new URL(window.location.href);
+//             newUrl.searchParams.delete('token');
+//             window.history.replaceState(null, '', newUrl.toString());
+//         }
+//     }
+// }, [searchParams]);
 
     // auto-login if token exists
 // Unified Token Detection, Auto-Login, and Redirect
