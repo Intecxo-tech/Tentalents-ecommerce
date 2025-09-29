@@ -24,7 +24,7 @@ const LoginClient = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
-
+const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, login } = useAuth();
@@ -127,9 +127,15 @@ const LoginClient = () => {
     }
   };
 
-  if (searchParams.get('token')) {
-    return <div>Switching to your customer account...</div>;
-  }
+useEffect(() => {
+  setMounted(true);
+}, []);
+ // prevent hydration mismatch
+if (!mounted) return null;
+
+if (searchParams.get('token')) {
+  return <div>Switching to your customer account...</div>;
+}
   return (
     <div className="login-page">
       <div className="logincontainer">
