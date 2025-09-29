@@ -25,7 +25,7 @@ const LoginClient = () => {
   const [isRedirecting, setIsRedirecting] = useState(false); 
   const [loading, setLoading] = useState(false);
   const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
-const [mounted, setMounted] = useState(false);
+// const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, login } = useAuth();
@@ -35,9 +35,9 @@ const [mounted, setMounted] = useState(false);
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
-useEffect(() => {
-  setMounted(true);
-}, []);
+// useEffect(() => {
+//   setMounted(true);
+// }, []);
   
   // redirect if already logged in
   useEffect(() => {
@@ -106,7 +106,7 @@ useEffect(() => {
   };
 
   useEffect(() => {
-    if (!mounted) return;
+    
     const token = searchParams?.get('token');
 
     if (token) {
@@ -120,7 +120,7 @@ useEffect(() => {
             window.history.replaceState(null, '', newUrl.toString());
         }
     }
-}, [searchParams, mounted]);
+}, [searchParams);
 
     // auto-login if token exists
     useEffect(() => {
@@ -163,15 +163,15 @@ useEffect(() => {
 }
 
 // 2. Initial loading state (Server output must match initial client output)
-if (!mounted) {
-    return (
-        <div className="login-page">
-            <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-                <h2>Loading...</h2>
-            </div>
-        </div>
-    );
-}
+// if (!mounted) {
+//     return (
+//         <div className="login-page">
+//             <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+//                 <h2>Loading...</h2>
+//             </div>
+//         </div>
+//     );
+// }
   return (
     <div className="login-page">
       <div className="logincontainer">
