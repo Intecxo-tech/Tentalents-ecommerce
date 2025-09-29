@@ -128,50 +128,50 @@ const LoginClient = () => {
     // auto-login if token exists
 // Unified Token Detection, Auto-Login, and Redirect
 useEffect(() => {
+    // Check for the token query parameter
     const token = searchParams?.get('token');
 
     if (token) {
-        // 1. Immediately signal that the token process is active
-        setIsTokenPresent(true);
-        setIsRedirecting(true);
-
-        // 2. Clean the URL
+        // 1. Clean the URL immediately
+        // Must be run inside useEffect (client-side only)
         if (window.history.replaceState) {
             const newUrl = new URL(window.location.href);
             newUrl.searchParams.delete('token');
             window.history.replaceState(null, '', newUrl.toString());
         }
 
-        // 3. Perform login and redirect immediately
+        // 2. Perform login via context immediately
         try {
-            login({ token }); // Use the token directly
-            toast.success('Switched to customer account!');
-
-            // This push exits the page, preventing the hydration error.
-            router.push('/myaccount');
+            // Note: If login() also handles redirection, remove the router.push below
+            login({ token }); 
+            
+            toast.success('Switched to customer account! Redirecting...');
+            
+            // 3. Immediately redirect to the final destination
+            // This stops the rendering process and prevents the hydration mismatch.
+            router.push('/shop'); // Or '/myaccount' as suggested in the original code
+            
         } catch (err) {
             console.error(err);
             toast.error('Invalid login token.');
-            setIsRedirecting(false); // Reset on error
-            setIsTokenPresent(false); // Show login form on failure
-        } finally {
-            // setLoading(false); // No need for this if we push immediately
+            // Do NOT redirect on error. Fall through to show the login form.
         }
     }
+    // Remove isTokenPresent state usage entirely
 }, [searchParams, login, router]);
 
     // --- RENDER LOGIC ---
 
-if (isTokenPresent) { 
-  return (
-      <div className="login-page">
-          <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-              <h2>{isRedirecting ? 'Redirecting...' : 'Switching to your customer account... 🔄'}</h2>
-              <p>Please wait while we complete the secure switch.</p>
-          </div>
-      </div>
-  );
-}
+// if (isTokenPresent) { 
+//   return (
+//       <div className="login-page">
+//           <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+//               <h2>{isRedirecting ? 'Redirecting...' : 'Switching to your customer account... 🔄'}</h2>
+//               <p>Please wait while we complete the secure switch.</p>
+//           </div>
+//       </div>
+//   );
+// }
 
 // 2. Initial loading state (Server output must match initial client output)
 // if (!mounted) {
