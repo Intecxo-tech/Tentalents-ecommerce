@@ -22,6 +22,7 @@ type FormData = {
 const LoginClient = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false); 
   const [loading, setLoading] = useState(false);
   const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
 const [mounted, setMounted] = useState(false);
@@ -104,62 +105,68 @@ useEffect(() => {
     }
   };
 
- useEffect(() => {
-    // Only run this logic on the client, after mount
-    if (!mounted) return; 
+    useEffect(() => {
+        if (!mounted) return;
+        const token = searchParams?.get('token');
+        if (token) {
+            setTokenFromUrl(token);
+            // Clean the URL immediately to hide the token
+            router.replace('/login', { shallow: true });
+        }
+    }, [searchParams, mounted, router]);
 
-    const token = searchParams?.get('token');
-    if (token) {
-      setTokenFromUrl(token);
-      // OPTIONAL: Clean the URL immediately to hide the token
-      router.replace('/login', { shallow: true }); 
+    // auto-login if token exists
+    useEffect(() => {
+        if (!tokenFromUrl) return;
+
+        const handleAutoLogin = async () => {
+            try {
+                // 1. Set a redirecting flag BEFORE login/push
+                setIsRedirecting(true); // Stop all other rendering logic
+                setLoading(true);
+
+                login({ token: tokenFromUrl });
+                toast.success('Switched to customer account!');
+                
+                // 2. Perform the final push
+                router.push('/myaccount'); 
+            } catch (err) {
+                console.error(err);
+                toast.error('Invalid login token.');
+                setIsRedirecting(false); // Reset on error
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        handleAutoLogin();
+    }, [tokenFromUrl, login, router]);
+
+    // --- RENDER LOGIC ---
+
+    // 1. Initial hydration/loading state (SSR/CSR sync)
+    if (!mounted || isRedirecting) { // Check new flag here
+        return (
+            <div className="login-page">
+                <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+                    <h2>{isRedirecting ? 'Redirecting...' : 'Loading...'}</h2>
+                </div>
+            </div>
+        );
     }
-  }, [searchParams, mounted, router]); 
-  // auto-login if token exists
-   useEffect(() => {
-    if (!tokenFromUrl) return;
-
-    const handleAutoLogin = async () => {
-      try {
-        setLoading(true);
-        login({ token: tokenFromUrl });
-        toast.success('Switched to customer account!');
-        router.push('/myaccount'); // Redirect after successful switch
-      } catch (err) {
-        console.error(err);
-        toast.error('Invalid login token.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    handleAutoLogin();
-  }, [tokenFromUrl, login, router]);
- // prevent hydration mismatch
- if (!mounted) {
-    // This state is consistent on both server and client initially.
-    // Use a simple, non-dynamic UI during this phase.
-    return (
-      <div className="login-page">
-        <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-          <h2>Loading...</h2>
-        </div>
-      </div>
-    );
-  }
   
   // FIX: Display the switching message ONLY if tokenFromUrl is set (client-side state)
   // This state will be updated by the useEffect *after* mount and token detection.
-  if (tokenFromUrl) {
-    return (
-      <div className="login-page">
-        <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-          <h2>Switching to your customer account... 🔄</h2>
-          <p>Please wait while we complete the secure switch.</p>
-        </div>
-      </div>
-    );
-  }
+ if (tokenFromUrl) { 
+         return (
+            <div className="login-page">
+                <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+                    <h2>Switching to your customer account... 🔄</h2>
+                    <p>Please wait while we complete the secure switch.</p>
+                </div>
+            </div>
+        );
+    }
   return (
     <div className="login-page">
       <div className="logincontainer">
