@@ -12,36 +12,6 @@ import { ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { auth, provider } from '../../../services/firebase';
 import { signInWithPopup } from 'firebase/auth';
-import { useAuth } from '../../auth/callback/AuthContext'; // ✅ import
-
-type FormData = {
-  email: string;
-  password: string;
-};
-
-const LoginClient = () => {
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const {user, login } = useAuth(); // ✅ use login function from context
-
-  'use client';
-
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import Google from '../../../assets/google.png';
-import './login.css';
-import axios from 'axios';
-import { ChevronLeft } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { auth, provider } from '../../../services/firebase';
-import { signInWithPopup } from 'firebase/auth';
 import { useAuth } from '../../auth/callback/AuthContext';
 
 type FormData = {
