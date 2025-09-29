@@ -1,4 +1,4 @@
-
+'use client'
 import React, { Suspense } from 'react';
 import LoginClient from './LoginClient';
 
