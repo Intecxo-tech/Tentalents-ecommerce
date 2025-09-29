@@ -28,37 +28,78 @@ const LoginClient = () => {
   const searchParams = useSearchParams();
   const {user, login } = useAuth(); // ✅ use login function from context
 
+  'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import Google from '../../../assets/google.png';
+import './login.css';
+import axios from 'axios';
+import { ChevronLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { auth, provider } from '../../../services/firebase';
+import { signInWithPopup } from 'firebase/auth';
+import { useAuth } from '../../auth/callback/AuthContext';
+
+type FormData = {
+  email: string;
+  password: string;
+};
+
+const LoginClient = () => {
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, login } = useAuth();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
-useEffect(() => {
-  if (user) {
-    // If user exists, redirect to shop
-    router.push('/shop');
-  }
-}, [user, router]);
 
-  // ✅ Auto-login from token in URL
- // Auto-login from token in URL
-useEffect(() => {
-  const token = searchParams.get('token');
-  if (token) {
-    setLoading(true);
-    try {
-      login({ token }); 
-      toast.success('Switched to customer account!');
-      router.push('/myaccount');
-    } catch (err) {
-      console.error(err);
-      toast.error('Invalid login token.');
-    } finally {
-      setLoading(false);
+  // redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/shop');
     }
-  }
-}, [searchParams, login, router]);
+  }, [user, router]);
 
+  // extract token once
+  useEffect(() => {
+    const token = searchParams?.get('token');
+    if (token) {
+      setTokenFromUrl(token);
+    }
+  }, [searchParams?.toString()]); // ✅ only re-run when query string changes
+
+  // auto-login if token exists
+  useEffect(() => {
+    if (!tokenFromUrl) return;
+
+    const handleAutoLogin = async () => {
+      try {
+        setLoading(true);
+        login({ token: tokenFromUrl });
+        toast.success('Switched to customer account!');
+        router.push('/myaccount');
+      } catch (err) {
+        console.error(err);
+        toast.error('Invalid login token.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    handleAutoLogin();
+  }, [tokenFromUrl, login, router]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
