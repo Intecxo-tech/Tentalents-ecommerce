@@ -24,7 +24,8 @@ const LoginClient = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false); 
   const [loading, setLoading] = useState(false);
-  const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
+  const [isTokenPresent, setIsTokenPresent] = useState(false);
+  // const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
 // const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -123,43 +124,51 @@ const LoginClient = () => {
 }, [searchParams]);
 
     // auto-login if token exists
-    useEffect(() => {
-        if (!tokenFromUrl) return;
+// Unified Token Detection, Auto-Login, and Redirect
+useEffect(() => {
+    const token = searchParams?.get('token');
 
-        const handleAutoLogin = async () => {
-            try {
-                // 1. Set a redirecting flag BEFORE login/push
-                setIsRedirecting(true); // Stop all other rendering logic
-                setLoading(true);
+    if (token) {
+        // 1. Immediately signal that the token process is active
+        setIsTokenPresent(true);
+        setIsRedirecting(true);
 
-                login({ token: tokenFromUrl });
-                toast.success('Switched to customer account!');
-                
-                // 2. Perform the final push
-                router.push('/myaccount'); 
-            } catch (err) {
-                console.error(err);
-                toast.error('Invalid login token.');
-                setIsRedirecting(false); // Reset on error
-            } finally {
-                setLoading(false);
-            }
-        };
+        // 2. Clean the URL
+        if (window.history.replaceState) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('token');
+            window.history.replaceState(null, '', newUrl.toString());
+        }
 
-        handleAutoLogin();
-    }, [tokenFromUrl, login, router]);
+        // 3. Perform login and redirect immediately
+        try {
+            login({ token }); // Use the token directly
+            toast.success('Switched to customer account!');
+
+            // This push exits the page, preventing the hydration error.
+            router.push('/myaccount');
+        } catch (err) {
+            console.error(err);
+            toast.error('Invalid login token.');
+            setIsRedirecting(false); // Reset on error
+            setIsTokenPresent(false); // Show login form on failure
+        } finally {
+            // setLoading(false); // No need for this if we push immediately
+        }
+    }
+}, [searchParams, login, router]);
 
     // --- RENDER LOGIC ---
 
-  if (tokenFromUrl) { 
-    return (
-        <div className="login-page">
-            <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-                <h2>{isRedirecting ? 'Redirecting...' : 'Switching to your customer account... 🔄'}</h2>
-                <p>Please wait while we complete the secure switch.</p>
-            </div>
-        </div>
-    );
+if (isTokenPresent) { 
+  return (
+      <div className="login-page">
+          <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+              <h2>{isRedirecting ? 'Redirecting...' : 'Switching to your customer account... 🔄'}</h2>
+              <p>Please wait while we complete the secure switch.</p>
+          </div>
+      </div>
+  );
 }
 
 // 2. Initial loading state (Server output must match initial client output)
