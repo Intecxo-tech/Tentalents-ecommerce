@@ -7,9 +7,8 @@ const LoadingFallback = () => {
 };
 
 const Page = () => {
-  return(
-      <LoginClient />
-   );
+  return <LoginClient />
+
   
 };
 
