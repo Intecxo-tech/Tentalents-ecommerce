@@ -39,10 +39,7 @@ useEffect(() => {
     router.push('/shop');
   }
 }, [user, router]);
-  useEffect(() => {
-  const token = searchParams.get('token');
-  if (token) setTokenFromUrl(token);
-}, [searchParams]);
+
   // ✅ Auto-login from token in URL
  // Auto-login from token in URL
 useEffect(() => {
