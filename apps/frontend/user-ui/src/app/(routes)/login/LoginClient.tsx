@@ -12,7 +12,8 @@ import { ChevronLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { auth, provider } from '../../../services/firebase';
 import { signInWithPopup } from 'firebase/auth';
-import { useAuth } from '../../auth/callback/AuthContext';
+import { useAuth } from '../../auth/callback/AuthContext'; // ✅ import
+import { jwtDecode } from 'jwt-decode';
 
 type FormData = {
   email: string;
@@ -22,33 +23,78 @@ type FormData = {
 const LoginClient = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false); 
   const [loading, setLoading] = useState(false);
-  const [isTokenPresent, setIsTokenPresent] = useState(false);
-  // const [tokenFromUrl, setTokenFromUrl] = useState<string | null>(null);
-// const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, login } = useAuth();
+  const { user, login } = useAuth(); // ✅ use login function from context
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
-// useEffect(() => {
-//   setMounted(true);
-// }, []);
   
-  // redirect if already logged in
   useEffect(() => {
     if (user) {
+      // If user exists, redirect to /shop
       router.push('/shop');
     }
   }, [user, router]);
 
-  // extract token once
+  useEffect(() => {
+    const urlToken = searchParams.get('token');
+    if (urlToken) {
+      // Token is available, try to decode it
+      try {
+        const decoded: any = jwtDecode(urlToken);
+        const isExpired = decoded.exp * 1000 < Date.now();
 
+        if (!isExpired) {
+          // Token is valid, save it in localStorage
+          localStorage.setItem('token', urlToken);
+          if (decoded.vendorId) {
+            localStorage.setItem('vendorId', decoded.vendorId);
+          }
+          if (decoded.role) {
+            localStorage.setItem('role', decoded.role);
+          }
+
+          // Automatically log in the user with the token
+          login({ token: urlToken });
+          toast.success('Login successful!');
+
+          // Redirect based on the role
+          if (decoded.role === 'admin') {
+            router.push('/shop');
+          } else {
+            router.push('/shop');
+          }
+          return;
+        } else {
+          toast.error('Session expired. Please log in again.');
+        }
+      } catch (err) {
+        console.error('Error decoding token from URL:', err);
+        toast.error('Invalid token. Please log in.');
+      }
+    } else {
+      // If no token in URL, check for token in localStorage
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const decoded: any = jwtDecode(token);
+          const isExpired = decoded.exp * 1000 < Date.now();
+          if (!isExpired) {
+            router.push('/shop');
+          } else {
+            localStorage.removeItem('token');
+          }
+        } catch (err) {
+          localStorage.removeItem('token');
+        }
+      }
+    }
+  }, [router, searchParams, login]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -106,83 +152,10 @@ const LoginClient = () => {
     }
   };
 
+  if (searchParams.get('token')) {
+    return <div>Switching to your customer account...</div>;
+  }
 
-
-// useEffect(() => {
-    
-//     const token = searchParams?.get('token');
-
-//     if (token) {
-//         setTokenFromUrl(token); // <--- THIS LINE CAUSES THE ERROR
-//         
-//         // ✅ FIX: Use native window.history to safely remove the token from the URL
-//         // while remaining on the same page.
-//         if (window.history.replaceState) {
-//             const newUrl = new URL(window.location.href);
-//             newUrl.searchParams.delete('token');
-//             window.history.replaceState(null, '', newUrl.toString());
-//         }
-//     }
-// }, [searchParams]);
-
-    // auto-login if token exists
-// Unified Token Detection, Auto-Login, and Redirect
-useEffect(() => {
-    // Check for the token query parameter
-    const token = searchParams?.get('token');
-
-    if (token) {
-        // 1. Clean the URL immediately
-        // Must be run inside useEffect (client-side only)
-        if (window.history.replaceState) {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete('token');
-            window.history.replaceState(null, '', newUrl.toString());
-        }
-
-        // 2. Perform login via context immediately
-        try {
-            // Note: If login() also handles redirection, remove the router.push below
-            login({ token }); 
-            
-            toast.success('Switched to customer account! Redirecting...');
-            
-            // 3. Immediately redirect to the final destination
-            // This stops the rendering process and prevents the hydration mismatch.
-            router.push('/shop'); // Or '/myaccount' as suggested in the original code
-            
-        } catch (err) {
-            console.error(err);
-            toast.error('Invalid login token.');
-            // Do NOT redirect on error. Fall through to show the login form.
-        }
-    }
-    // Remove isTokenPresent state usage entirely
-}, [searchParams, login, router]);
-
-    // --- RENDER LOGIC ---
-
-// if (isTokenPresent) { 
-//   return (
-//       <div className="login-page">
-//           <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-//               <h2>{isRedirecting ? 'Redirecting...' : 'Switching to your customer account... 🔄'}</h2>
-//               <p>Please wait while we complete the secure switch.</p>
-//           </div>
-//       </div>
-//   );
-// }
-
-// 2. Initial loading state (Server output must match initial client output)
-// if (!mounted) {
-//     return (
-//         <div className="login-page">
-//             <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
-//                 <h2>Loading...</h2>
-//             </div>
-//         </div>
-//     );
-// }
   return (
     <div className="login-page">
       <div className="logincontainer">
@@ -196,9 +169,9 @@ useEffect(() => {
         <div className="login-box">
     
           <button className="google-button" onClick={handleFirebaseGoogleSignIn} disabled={loading}>
-  <Image src={Google} alt="Google Logo" width={20} height={20} />
-  Continue With Google
-</button>
+            <Image src={Google} alt="Google Logo" width={20} height={20} />
+            Continue With Google
+          </button>
 
           <div className="divider" />
 
