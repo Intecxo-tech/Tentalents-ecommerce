@@ -47,8 +47,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, getDiscount }) => {
         <h3 className="product-title">{product.title}</h3>
         <div className="price-main">
           <div className="price-section">
-            <p>${product.price}</p>
-            {hasDiscount && <p className="offer-price">${product.offerPrice}</p>}
+            <p>${product.offerPrice}</p>
+            {hasDiscount && <p className="offer-price">${product.price}</p>}
           </div>
           <div className="rating">
             <p>{product.rating}</p>
@@ -60,5 +60,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, getDiscount }) => {
     </div>
   );
 };
+
 
 export default ProductCard;
