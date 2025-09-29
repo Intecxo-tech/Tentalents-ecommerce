@@ -22,6 +22,7 @@ type FormData = {
 const LoginClient = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+    const [processingToken, setProcessingToken] = useState(true); 
   const [isRedirecting, setIsRedirecting] = useState(false); 
   const [loading, setLoading] = useState(false);
   const [isTokenPresent, setIsTokenPresent] = useState(false);
@@ -130,34 +131,53 @@ const LoginClient = () => {
 
     // auto-login if token exists
 // Unified Token Detection, Auto-Login, and Redirect
-useEffect(() => {
-  if (!mounted) return; // ✅ wait until mounted
+  useEffect(() => {
+    if (!mounted) return;
 
-  const token = searchParams?.get('token');
-  if (token) {
-    try {
-      // clean URL
-      if (window.history.replaceState) {
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('token');
-        window.history.replaceState(null, '', newUrl.toString());
-      }
+    const token = searchParams?.get('token');
+    if (token) {
+      (async () => {
+        try {
+          // clean URL
+          if (window.history.replaceState) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('token');
+            window.history.replaceState(null, '', newUrl.toString());
+          }
 
-      login({ token });
-      toast.success('Switched to customer account! Redirecting...');
-      router.push('/shop');
-    } catch (err) {
-      console.error(err);
-      toast.error('Invalid login token.');
+          // login
+          login({ token });
+          toast.success('Logged in successfully!');
+          router.replace('/shop'); // ✅ use replace instead of push to avoid history mess
+        } catch (err) {
+          console.error(err);
+          toast.error('Invalid or expired login link.');
+        } finally {
+          setProcessingToken(false);
+        }
+      })();
+    } else {
+      setProcessingToken(false);
     }
+  }, [mounted, searchParams, login, router]);
+
+ useEffect(() => {
+    if (mounted && !processingToken && user) {
+      router.replace('/shop');
+    }
+  }, [mounted, processingToken, user, router]);
+
+  // Prevent hydration mismatch
+  if (!mounted || processingToken) {
+    return (
+      <div className="login-page">
+        <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+          <h2>Redirecting...</h2>
+          <p>Please wait while we log you in.</p>
+        </div>
+      </div>
+    );
   }
-}, [mounted, searchParams, login, router]);
-
-if (!mounted) {
-  // render nothing until mounted to prevent hydration mismatch
-  return null;
-}
-
     // --- RENDER LOGIC ---
 
 // if (isTokenPresent) { 
