@@ -104,15 +104,19 @@ useEffect(() => {
     }
   };
 
-  useEffect(() => {
+ useEffect(() => {
+    // Only run this logic on the client, after mount
+    if (!mounted) return; 
+
     const token = searchParams?.get('token');
     if (token) {
       setTokenFromUrl(token);
+      // OPTIONAL: Clean the URL immediately to hide the token
+      router.replace('/login', { shallow: true }); 
     }
-  }, [searchParams?.toString()]); // ✅ only re-run when query string changes
-
+  }, [searchParams, mounted, router]); 
   // auto-login if token exists
-  useEffect(() => {
+   useEffect(() => {
     if (!tokenFromUrl) return;
 
     const handleAutoLogin = async () => {
@@ -120,7 +124,7 @@ useEffect(() => {
         setLoading(true);
         login({ token: tokenFromUrl });
         toast.success('Switched to customer account!');
-        router.push('/myaccount');
+        router.push('/myaccount'); // Redirect after successful switch
       } catch (err) {
         console.error(err);
         toast.error('Invalid login token.');
@@ -132,11 +136,30 @@ useEffect(() => {
     handleAutoLogin();
   }, [tokenFromUrl, login, router]);
  // prevent hydration mismatch
-if (!mounted) return null;
-
-if (searchParams.get('token')) {
-  return <div>Switching to your customer account...</div>;
-}
+ if (!mounted) {
+    // This state is consistent on both server and client initially.
+    // Use a simple, non-dynamic UI during this phase.
+    return (
+      <div className="login-page">
+        <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+          <h2>Loading...</h2>
+        </div>
+      </div>
+    );
+  }
+  
+  // FIX: Display the switching message ONLY if tokenFromUrl is set (client-side state)
+  // This state will be updated by the useEffect *after* mount and token detection.
+  if (tokenFromUrl) {
+    return (
+      <div className="login-page">
+        <div className="logincontainer" style={{ textAlign: 'center', padding: '50px' }}>
+          <h2>Switching to your customer account... 🔄</h2>
+          <p>Please wait while we complete the secure switch.</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="login-page">
       <div className="logincontainer">
