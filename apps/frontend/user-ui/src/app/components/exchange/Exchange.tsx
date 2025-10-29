@@ -68,7 +68,7 @@ function Exchange({ onClose, orderId, buyerId, onRequestSuccess }: ExchangeProps
       });
 
       const res = await fetch(
-        'https://order-service-322f.onrender.com/api/orders/return-request',
+        'https://orderservice.zeabur.app/api/orders/return-request',
         {
           method: 'POST',
           headers: {
