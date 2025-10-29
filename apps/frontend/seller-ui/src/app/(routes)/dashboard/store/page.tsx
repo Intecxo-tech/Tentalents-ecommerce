@@ -24,7 +24,7 @@ const Page = () => {
         if (!vendorId || !token) return;
 
         const response = await fetch(
-          `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`,
+          `https://vendorservice.zeabur.app/api/vendor/profile/${vendorId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -93,3 +93,4 @@ const handleAddProductClick = () => {
 };
 
 export default Page;
+
