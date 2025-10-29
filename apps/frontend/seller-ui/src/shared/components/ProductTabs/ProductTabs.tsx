@@ -51,8 +51,8 @@ interface ProductTabsProps {
 }
 
 // --- API URLs ---
-const VENDOR_API_URL = "https://order-service-322f.onrender.com/api/orders/vendor/orders";
-const ADMIN_API_URL = "https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products"; 
+const VENDOR_API_URL = "https://orderservice.zeabur.app/api/orders/vendor/orders";
+const ADMIN_API_URL = "https://adminservice.zeabur.app/api/admin/sellers/all-with-products"; 
 
 // --- Fetch Orders Function ---
 async function fetchOrdersByRole(token: string, role: string, currentVendorId: string | undefined): Promise<VendorOrder[]> {
@@ -174,8 +174,8 @@ const ProductTabs = ({ vendorId: propVendorId }: ProductTabsProps) => {
       if (!token) return;
 
       const url = type === 'return'
-        ? 'https://order-service-322f.onrender.com/api/orders/return-request/status'
-        : 'https://order-service-322f.onrender.com/api/orders/refund-request/status';
+        ? 'https://orderservice.zeabur.app/api/orders/return-request/status'
+        : 'https://orderservice.zeabur.app/api/orders/refund-request/status';
 
       await axios.put(url, { returnRequestId: requestId, status: action }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -260,3 +260,4 @@ const ProductTabs = ({ vendorId: propVendorId }: ProductTabsProps) => {
 };
 
 export default ProductTabs;
+
