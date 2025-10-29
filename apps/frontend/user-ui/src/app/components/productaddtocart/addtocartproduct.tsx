@@ -29,7 +29,7 @@ const ProductCart = ({ listCount = 2 }: ProductsProps) => {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch(`https://product-service-i82l.onrender.com/api/products`);
+        const res = await fetch(`https://productservice.zeabur.app/api/products`);
         if (!res.ok) throw new Error('Failed to fetch products');
 
         const json = await res.json();
@@ -113,4 +113,5 @@ const ProductCart = ({ listCount = 2 }: ProductsProps) => {
 };
 
 export default ProductCart;
+
 
