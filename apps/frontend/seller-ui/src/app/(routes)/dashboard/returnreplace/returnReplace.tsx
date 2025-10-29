@@ -80,7 +80,7 @@ useEffect(() => {
   if (!selectedOrderId) return;
   setLoading(true);
   axios
-    .get(`https://order-service-322f.onrender.com/api/orders/order?id=${selectedOrderId}`)
+    .get(`https://orderservice.zeabur.app/api/orders/order?id=${selectedOrderId}`)
     .then((res) => {
       if (res.data.success && res.data.orders?.length > 0) {
         setOrder(res.data.orders[0]);
