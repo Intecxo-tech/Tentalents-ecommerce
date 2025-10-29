@@ -91,7 +91,7 @@ const fetchCartCount = useCallback(async () => {
     }
 
     const cacheBuster = `_=${new Date().getTime()}`;
-    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart?${cacheBuster}`, {
+    const res = await fetch(`https://cartservice.zeabur.app/api/cart?${cacheBuster}`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -150,7 +150,7 @@ const fetchCartCount = useCallback(async () => {
     }
 
     try {
-      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
+      const res = await fetch(`https://userservice.zeabur.app/api/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -431,4 +431,5 @@ const fetchCartCount = useCallback(async () => {
 };
 
 export default Header;
+
 
