@@ -90,8 +90,8 @@ if (token) {
 
     const url =
       type === 'return'
-        ? 'https://order-service-322f.onrender.com/api/orders/return-request/status'
-        : 'https://order-service-322f.onrender.com/api/orders/refund-request/status'; // if refund has separate route
+        ? 'https://orderservice.zeabur.app/api/orders/return-request/status'
+        : 'https://orderservice.zeabur.app/api/orders/refund-request/status'; // if refund has separate route
 
     await axios.put(
       url,
@@ -148,7 +148,7 @@ useEffect(() => {
   const fetchVendorOrders = async () => {
     try {
       const res = await axios.get(
-        'https://order-service-322f.onrender.com/api/orders/vendor/orders',
+        'https://orderservice.zeabur.app/api/orders/vendor/orders',
         {
           headers: {
             Authorization: `Bearer ${token}`,
