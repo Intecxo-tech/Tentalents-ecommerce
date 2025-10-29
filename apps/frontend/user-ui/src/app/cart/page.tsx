@@ -39,14 +39,14 @@ type ApiCartResponse = {
 };
 
 const Cart = () => {
-  const CART_API_BASE_URL =  `https://cart-service-kona.onrender.com`;
+  const CART_API_BASE_URL =  `https://cartservice.zeabur.app`;
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 async function saveForLater(itemId: string) {
   const token = localStorage.getItem('token');
 
   try {
-    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart/save-for-later`, {
+    const res = await fetch(`https://cartservice.zeabur.app/api/cart/save-for-later`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ async function fetchCart() {
     const cacheBuster = `_=${new Date().getTime()}`;
 
     // 2. Add the cache-busting parameter to your fetch URL
-    const res = await fetch(`https://cart-service-kona.onrender.com/api/cart`, {
+    const res = await fetch(`https://cartservice.zeabur.app/api/cart`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -399,6 +399,7 @@ const total = subtotal + shippingFee + platformFee;
 };
 
 export default Cart;
+
 
 
 
