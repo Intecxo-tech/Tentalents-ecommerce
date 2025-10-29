@@ -31,7 +31,7 @@ export const UserRoleProvider = ({ children }: { children: React.ReactNode }) =>
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // ⏱ Timeout safety
 
-      const res = await fetch('http://localhost:3010/api/vendor/', {
+      const res = await fetch('https://vendorservice.zeabur.app/api/vendor/', {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export const UserRoleProvider = ({ children }: { children: React.ReactNode }) =>
           return;
         }
 
-        const res = await fetch('http://localhost:3010/api/vendor/', {
+        const res = await fetch('https://vendorservice.zeabur.app/api/vendor/', {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
