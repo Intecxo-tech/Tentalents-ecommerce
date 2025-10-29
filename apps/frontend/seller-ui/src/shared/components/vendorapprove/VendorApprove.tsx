@@ -40,7 +40,7 @@ const VendorApprove: React.FC = () => {
         const token = localStorage.getItem('token');
         if (!token) throw new Error('No token found');
 
-        const res = await fetch('https://admin-service-k0id.onrender.com/api/admin/sellers/pending', {
+        const res = await fetch('https://adminservice.zeabur.app/api/admin/sellers/pending', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -82,7 +82,7 @@ const updateStatus = async (vendorId: string, approve: boolean) => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('No token found');
 
-    const res = await fetch('https://admin-service-k0id.onrender.com/api/admin/sellers/status', {
+    const res = await fetch('https://adminservice.zeabur.app/api/admin/sellers/status', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
