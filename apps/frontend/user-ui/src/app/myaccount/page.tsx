@@ -37,7 +37,7 @@ const token = user?.token;
         return;
       }
 
-      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
+      const res = await fetch(`https://userservice.zeabur.app/api/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ const token = user?.token;
         return;
       }
 
-      const res = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/convert`, {
+      const res = await fetch(`https://vendorservice.zeabur.app/api/vendor/convert`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ const handleLogout = () => {
         return;
       }
 
-      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile`, {
+      const res = await fetch(`https://userservice.zeabur.app/api/user/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ const handleLogout = () => {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const res = await fetch(`https://user-service-zje4.onrender.com/api/user/profile/image`, {
+      const res = await fetch(`https://userservice.zeabur.app/api/user/profile/image`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -356,5 +356,6 @@ const handleLogout = () => {
 };
 
 export default AccountPage;
+
 
 
