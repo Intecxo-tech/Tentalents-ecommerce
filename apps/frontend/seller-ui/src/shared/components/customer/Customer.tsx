@@ -35,7 +35,7 @@ function Customer() {
           throw new Error('No authentication token found.');
         }
 
-        const res = await fetch('https://admin-service-k0id.onrender.com/api/admin/users', {
+        const res = await fetch('https://adminservice.zeabur.app/api/admin/users', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
