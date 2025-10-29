@@ -66,7 +66,7 @@ const Page = () => {
       try {
         const token = localStorage.getItem('token');
 
-        const response = await fetch('https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products', {
+        const response = await fetch('https://adminservice.zeabur.app/api/admin/sellers/all-with-products', {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
