@@ -57,7 +57,7 @@ const LoginClient = () => {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://user-service-zje4.onrender.com/api/auth/login`, {
+      const response = await fetch(`https://userservice.zeabur.app/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ const LoginClient = () => {
       const result = await signInWithPopup(auth, provider);
       const firebaseIdToken = await result.user.getIdToken();
 
-      const res = await axios.post(`https://user-service-zje4.onrender.com/api/auth/google-login`, {
+      const res = await axios.post(`https://userservice.zeabur.app/api/auth/google-login`, {
         provider: 'google',
         idToken: firebaseIdToken,
       });
