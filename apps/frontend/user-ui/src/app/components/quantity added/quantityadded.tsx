@@ -36,7 +36,7 @@ type CartItem = {
 
 const QuantityAdded = ({ listCount = 2 }: ProductsProps) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const CART_API_BASE_URL = process.env.NEXT_PUBLIC_CART_API_LINK ?? 'https://cart-service-kona.onrender.com';
+  const CART_API_BASE_URL = process.env.NEXT_PUBLIC_CART_API_LINK ?? 'https://cartservice.zeabur.app';
 
   useEffect(() => {
     fetchCartItems();
@@ -47,7 +47,7 @@ const QuantityAdded = ({ listCount = 2 }: ProductsProps) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const res = await fetch(`https://cart-service-kona.onrender.com/api/cart`, {
+      const res = await fetch(`https://cartservice.zeabur.app/api/cart`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -146,3 +146,4 @@ const QuantityAdded = ({ listCount = 2 }: ProductsProps) => {
 };
 
 export default QuantityAdded;
+
