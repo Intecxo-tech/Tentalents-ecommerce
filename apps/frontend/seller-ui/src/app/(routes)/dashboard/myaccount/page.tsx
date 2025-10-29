@@ -102,7 +102,7 @@ const handleBankSave = async () => {
   try {
     setSaving(true);
     const response = await fetch(
-      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/vendors/${vendorId}/bank-details`,
+      `https://vendorservice.zeabur.app/api/vendor/vendors/${vendorId}/bank-details`,
       {
         method: 'PUT',
         headers: {
@@ -151,7 +151,7 @@ useEffect(() => {
 
    
 
-      const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
+      const response = await fetch(`https://vendorservice.zeabur.app/api/vendor/profile/${vendorId}`, {
         headers: {
           Authorization: `Bearer ${token}`,  // Send the token with the request
           'Content-Type': 'application/json',
@@ -284,7 +284,7 @@ const handlePersonalDetailsSave = async (e: FormEvent) => {
   };
 
   try {
-    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
+    const response = await fetch(`https://vendorservice.zeabur.app/api/vendor/profile/${vendorId}`, {
       method: 'PUT',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -320,7 +320,7 @@ const handleBusinessDetailsSave = async (e: FormEvent) => {
 
   try {
     // Sending the PUT request to the backend
-    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
+    const response = await fetch(`https://vendorservice.zeabur.app/api/vendor/profile/${vendorId}`, {
       method: 'PUT',
       headers: {
         Authorization: token ? `Bearer ${token}` : '', // Ensure token is set
@@ -361,7 +361,7 @@ const handleBankDetailsSave = async (e: FormEvent) => {
   try {
     setSaving(true);
     const response = await fetch(
-      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/vendors/${vendorId}/bank-details`,
+      `https://vendorservice.zeabur.app/api/vendor/vendors/${vendorId}/bank-details`,
       {
         method: 'PUT',
         headers: {
@@ -414,7 +414,7 @@ const handleCancelledChequeUpload = async (e: ChangeEvent<HTMLInputElement>) => 
     setSaving(true); // Or a new state like setUploadingCheque(true)
     toast.loading('Uploading cancelled cheque...');
 
-    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/cancelled-cheque/${vendorId}`, {
+    const response = await fetch(`https://vendorservice.zeabur.app/api/vendor/cancelled-cheque/${vendorId}`, {
       method: 'POST',
       headers: {
         // DO NOT set 'Content-Type': 'multipart/form-data'. The browser handles it.
@@ -486,7 +486,7 @@ const handleProfileImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
       file: base64Image, // key name matches backend expected key
     };
 
-    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile-image/${vendorId}`, {
+    const response = await fetch(`https://vendorservice.zeabur.app/api/vendor/profile-image/${vendorId}`, {
       method: 'POST',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -551,7 +551,7 @@ const handleKycUploadTyped = async (e: ChangeEvent<HTMLInputElement>, docType: s
     console.log('Payload:', payload);
 
     // Send the request to the backend
-    const response = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/kyc-docs/${vendor.id}`, {
+    const response = await fetch(`https://vendorservice.zeabur.app/api/vendor/kyc-docs/${vendor.id}`, {
       method: 'POST',
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -942,4 +942,5 @@ const handleBankChange = (e: ChangeEvent<HTMLInputElement>) => {
 };
 
 export default Page;
+
 
