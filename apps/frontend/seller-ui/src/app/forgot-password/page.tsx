@@ -14,7 +14,7 @@ type FormData = {
   password: string;
 };
 
-const BASE_URL = 'https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor';
+const BASE_URL = 'https://vendorservice.zeabur.app/api/vendor';
 
 const ForgotPassword = () => {
   const [step, setStep] = useState<'email' | 'otp' | 'reset'>('email');
