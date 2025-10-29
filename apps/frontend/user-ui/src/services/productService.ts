@@ -14,7 +14,7 @@ type GetAddressesResponse = {
   data: Address[];
 };
 export const getAllProducts = async () => {
-  const res = await fetch(`https://product-service-i82l.onrender.com/api/products`);
+  const res = await fetch(`https://productservice.zeabur.app/api/products`);
   if (!res.ok) {
     throw new Error(`HTTP error! status: ${res.status}`);
   }
@@ -23,7 +23,7 @@ export const getAllProducts = async () => {
 };
 
 export const getProductBySlug = async (slug: string) => {
-  const res = await fetch(`https://product-service-i82l.onrender.com/api/products/slug/${encodeURIComponent(slug)}`);
+  const res = await fetch(`https://productservice.zeabur.app/api/products/slug/${encodeURIComponent(slug)}`);
 
   if (!res.ok) {
     console.error(`Failed to fetch product by slug: ${slug}, status: ${res.status}`);
@@ -35,7 +35,7 @@ export const getProductBySlug = async (slug: string) => {
   return json?.data; // assuming your backend wraps response as { data: ... }
 };
 export const getRatingsByProductId = async (productId: string) => {
-  const res = await fetch(`https://product-service-i82l.onrender.com/ratings/product/${encodeURIComponent(productId)}`);
+  const res = await fetch(`https://productservice.zeabur.app/ratings/product/${encodeURIComponent(productId)}`);
 
   if (!res.ok) {
     console.error(`Failed to fetch ratings for productId: ${productId}, status: ${res.status}`);
@@ -124,6 +124,7 @@ export const deleteAddress = async (addressId: string): Promise<void> => {
   // No need to return anything if it's just a delete operation
   await res.json(); // We assume we don't need to handle the response here
 };
+
 
 
 
