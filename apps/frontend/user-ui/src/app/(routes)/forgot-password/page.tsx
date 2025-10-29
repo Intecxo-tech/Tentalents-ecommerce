@@ -13,7 +13,7 @@ type FormData = {
   password: string;
 };
 
-const API_BASE = 'https://user-service-zje4.onrender.com/api/auth';
+const API_BASE = 'https://userservice.zeabur.app/api/auth';
 
 const ForgotPassword = () => {
   const [step, setStep] = useState<'email' | 'otp' | 'reset'>('email');
