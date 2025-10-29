@@ -45,7 +45,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
 
         if (userRole === 'admin' && vendorId) {
           // --- Admin flow: fetch products for specific vendor ---
-          const adminRes = await axios.get('https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products', {
+          const adminRes = await axios.get('https://adminservice.zeabur.app/api/admin/sellers/all-with-products', {
             headers: { Authorization: `Bearer ${token}` },
           });
           const vendors = adminRes.data.data || [];
@@ -65,12 +65,12 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
 
         } else {
           // --- Vendor or non-admin flow: fetch own products & orders ---
-          const productRes = await axios.get('https://product-service-i82l.onrender.com/api/products/vendor/products', {
+          const productRes = await axios.get('https://productservice.zeabur.app/api/products/vendor/products', {
             headers: { Authorization: `Bearer ${token}` },
           });
           products = productRes.data.data || [];
 
-          const ordersRes = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
+          const ordersRes = await axios.get('https://orderservice.zeabur.app/api/orders/vendor/orders', {
             headers: { Authorization: `Bearer ${token}` },
           });
           orders = ordersRes.data.data || [];
@@ -135,3 +135,4 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
 }
 
 export default HomeProducts;
+
