@@ -42,7 +42,7 @@ const Page: React.FC = () => {
     async function fetchVendorProducts() {
       try {
         setLoading(true);
-        const response = await axios.get('https://product-service-i82l.onrender.com/api/products/vendor/products', {
+        const response = await axios.get('https://productservice.zeabur.app/api/products/vendor/products', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -66,7 +66,7 @@ const Page: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      await axios.delete(`https://product-service-i82l.onrender.com/api/products/${productId}`, {
+      await axios.delete(`https://productservice.zeabur.app/api/products/${productId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
