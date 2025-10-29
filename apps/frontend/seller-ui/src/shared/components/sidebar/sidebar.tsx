@@ -46,7 +46,7 @@ const [loading, setLoading] = useState<boolean>(true); // A
       if (!vendorId) throw new Error('Invalid token: missing vendorId');
 const fetchVendor = async () => {
   try {
-    const res = await fetch(`https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/profile/${vendorId}`, {
+    const res = await fetch(`https://vendorservice.zeabur.app/api/vendor/profile/${vendorId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
