@@ -67,7 +67,7 @@ const Page = () => {
         const token = localStorage.getItem('token');
         if (!token) throw new Error('No token');
 
-        const res = await axios.get('https://order-service-322f.onrender.com/api/orders/order', {
+        const res = await axios.get('https://orderservice.zeabur.app/api/orders/order', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
