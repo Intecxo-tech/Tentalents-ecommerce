@@ -66,7 +66,7 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
           console.log('--- Executing ADMIN API Call --- (Role from Token)');
 
           const res = await axios.get(
-            'https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products',
+            'https://adminservice.zeabur.app/api/admin/sellers/all-with-products',
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -112,7 +112,7 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
           console.log('--- Executing VENDOR API Call --- (Role from Token or No Role)');
 
           const res = await axios.get(
-            'https://order-service-322f.onrender.com/api/orders/vendor/orders',
+            'https://orderservice.zeabur.app/api/orders/vendor/orders',
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -194,3 +194,4 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
 };
 
 export default Balance;
+
