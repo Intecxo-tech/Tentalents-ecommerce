@@ -144,7 +144,7 @@ const SignUpForm = () => {
     try {
       const { email: enteredEmail } = getValues();
       await axios.post(
-        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/initiate-otp`,
+        `https://vendorservice.zeabur.app/api/vendor/register/initiate-otp`,
         { email: enteredEmail }
       );
       setEmail(enteredEmail);
@@ -197,7 +197,7 @@ useEffect(() => {
     setLoading(true);
     try {
       await axios.post(
-        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/verify-otp`,
+        `https://vendorservice.zeabur.app/api/vendor/register/verify-otp`,
         { email, otp: otpCode }
       );
       setStep('password');
@@ -212,7 +212,7 @@ useEffect(() => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/user`,
+        `https://vendorservice.zeabur.app/api/vendor/register/user`,
         { email, password: data.password }
       );
 
@@ -307,7 +307,7 @@ const handleBankDetailsSubmit = async (data: FormData) => {
     };
 
     const response = await axios.post(
-      `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/profile`,
+      `https://vendorservice.zeabur.app/api/vendor/register/profile`,
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -384,7 +384,7 @@ const handleKycUploadClick = () => {
     setLoading(true);
     try {
       await axios.post(
-        `https://tentalents-ecommerce45-f8sw.onrender.com/api/vendor/register/initiate-otp`,
+        `https://vendorservice.zeabur.app/api/vendor/register/initiate-otp`,
         { email }
       );
       setCanResend(false);
@@ -825,5 +825,6 @@ const handleBack = () => {
     </div>
   );
 };
+
 
 export default SignUpForm;
