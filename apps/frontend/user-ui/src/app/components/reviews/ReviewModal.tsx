@@ -76,7 +76,7 @@ useEffect(() => {
     }
 
     const response = await axios.post(
-      `https://rating-service-pkgb.onrender.com/api/rating/rate`,
+      `https://ratingservice.zeabur.app/api/rating/rate`,
       formData,
       {
         headers: {
@@ -216,5 +216,6 @@ if (onSuccess) onSuccess();
 };
 
 export default ReviewModal;
+
 
 
