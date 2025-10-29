@@ -33,7 +33,7 @@ const Page = () => {
   const [savedItems, setSavedItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();  // Get user and token from the context
-  const CART_API_BASE_URL = 'https://cart-service-kona.onrender.com';
+  const CART_API_BASE_URL = 'https://cartservice.zeabur.app';
 
   const fetchSavedItems = async () => {
     if (!user?.token) {
