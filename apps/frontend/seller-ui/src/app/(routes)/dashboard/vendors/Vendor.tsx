@@ -35,7 +35,7 @@ function Vendor() {
     if (!token) throw new Error('Token not found');
 
     const response = await fetch(
-      'https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products',
+      'https://adminservice.zeabur.app/api/admin/sellers/all-with-products',
       {
         method: 'GET',
         headers: {
