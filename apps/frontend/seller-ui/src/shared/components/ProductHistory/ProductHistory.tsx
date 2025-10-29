@@ -38,7 +38,7 @@ const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
 
         if (userRole === 'admin' && vendorId) {
           // --- Admin flow: fetch orders for specific vendor ---
-          const adminRes = await axios.get('https://admin-service-k0id.onrender.com/api/admin/sellers/all-with-products', {
+          const adminRes = await axios.get('https://adminservice.zeabur.app/api/admin/sellers/all-with-products', {
             headers: { Authorization: `Bearer ${token}` },
           });
 
@@ -52,7 +52,7 @@ const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
 
         } else {
           // --- Vendor or non-admin flow: fetch own orders ---
-          const res = await axios.get('https://order-service-322f.onrender.com/api/orders/vendor/orders', {
+          const res = await axios.get('https://orderservice.zeabur.app/api/orders/vendor/orders', {
             headers: { Authorization: `Bearer ${token}` },
           });
           orders = res.data.data || [];
@@ -120,3 +120,4 @@ const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
 };
 
 export default ProductHistory;
+
