@@ -64,7 +64,7 @@ const router = useRouter();
 
     setIsLoading(true);
  try {
-  const res = await fetch(`https://search-service-71lc.onrender.com/api/search?${params.toString()}`);
+  const res = await fetch(`http://searchservice.zeabur.app/api/search?${params.toString()}`);
   const data = await res.json();
   console.log('Search API result for query:', searchQuery, data);
 
@@ -431,5 +431,6 @@ const fetchCartCount = useCallback(async () => {
 };
 
 export default Header;
+
 
 
