@@ -42,7 +42,7 @@ const [balanceLoading, setBalanceLoading] = useState(true);
     async function fetchVendorProducts() {
       try {
         const res = await axios.get(
-          'https://product-service-i82l.onrender.com/api/products/vendor/products',
+          'https://productservice.zeabur.app/api/products/vendor/products',
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -108,7 +108,7 @@ const [balanceLoading, setBalanceLoading] = useState(true);
     async function fetchVendorOrders() {
       try {
         const res = await axios.get(
-          'https://order-service-322f.onrender.com/api/orders/vendor/orders',
+          'https://orderservice.zeabur.app/api/orders/vendor/orders',
           {
             headers: {
               Authorization: `Bearer ${token}`,
