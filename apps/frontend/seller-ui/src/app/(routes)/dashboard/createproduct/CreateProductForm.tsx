@@ -261,7 +261,7 @@ const onSubmit = async (data: FormData) => {
       };
 
       await axios.post(
-        `https://product-service-i82l.onrender.com/api/products`,
+        `https://productservice.zeabur.app/api/products`,
         createPayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
