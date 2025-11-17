@@ -42,6 +42,7 @@ const ForgotPassword = () => {
       });
     }, 1000);
   };
+const API_BASE = 'http://userservice.zeabur.app/api/auth';
 
   // -------------------- API MUTATIONS --------------------
   const requestOtpMutation = useMutation({
