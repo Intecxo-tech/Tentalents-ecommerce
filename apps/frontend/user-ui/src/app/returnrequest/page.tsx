@@ -92,7 +92,7 @@ useEffect(() => {
     }
 
     try {
-      const res = await fetch(`https://order-service-322f.onrender.com/api/orders/`, {
+      const res = await fetch(`https://orderservice.zeabur.app/api/orders/`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -138,7 +138,7 @@ useEffect(() => {
 
     try {
       const res = await fetch(
-        'https://order-service-322f.onrender.com/api/orders/return-requests',
+        'https://orderservice.zeabur.app/api/orders/return-requests',
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -225,7 +225,7 @@ const filteredOrders = filterOrdersByDate(orders, dateFilter).filter(
 useEffect(() => {
     async function fetchPopularProducts() {
       try {
-        const res = await fetch(`https://product-service-i82l.onrender.com/api/products`);
+        const res = await fetch(`http://productservice.zeabur.app/api/products`);
         if (!res.ok) throw new Error('Failed to fetch products');
 
         const json = await res.json();
@@ -265,7 +265,7 @@ async function handleDownloadInvoice(orderId: string) {
       return;
     }
 
-    const res = await fetch(`https://invoice-service-66ox.onrender.com/api/invoices/${orderId}/download`, {
+    const res = await fetch(`http://invoiceservice.zeabur.app/api/invoices/${orderId}/download`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -332,7 +332,7 @@ const handleCancelOrder = async (order: OrderData) => {
   toast.success('Order cancelled successfully');
 
   try {
-    const API_URL = 'https://order-service-322f.onrender.com'; 
+    const API_URL = 'http://orderservice.zeabur.app'; 
     const res = await fetch(`${API_URL}/api/orders/${order.id}/cancel`, {
       method: 'POST',
       headers: {
