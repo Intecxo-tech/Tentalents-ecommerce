@@ -129,15 +129,16 @@ const response = await fetch(url, {
   body: JSON.stringify(payload),
 });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to save address');
-      }
-  const savedData = await response.json(); 
-      toast.success(addressToEdit ? 'Address updated successfully!' : 'Address added successfully!');
-      onClose();  // Close the popup
-  
-      onAdd(savedData);     // Notify parent with the new/updated address
+const data = await response.json();  // ✅ CALL ONLY ONCE
+
+if (!response.ok) {
+  throw new Error(data.message || 'Failed to save address');
+}
+
+toast.success(addressToEdit ? 'Address updated successfully!' : 'Address added successfully!');
+
+onClose();
+onAdd(data);    // Notify parent with the new/updated address
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to save address');
@@ -279,6 +280,7 @@ const response = await fetch(url, {
 };
 
 export default AddAddress;
+
 
 
 
