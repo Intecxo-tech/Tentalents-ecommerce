@@ -115,7 +115,7 @@ if (formRef.current && !formRef.current.contains(htmlTarget)) {
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/orders/addresses`, {
-        method: addressToEdit ? 'PUT' : 'POST', // PUT if editing, POST if adding
+        method: addressToEdit ? 'PATCH' : 'POST', // PUT if editing, POST if adding
         headers: {
           'Content-Type': 'application/json',
           'Authorization': token ? `Bearer ${token}` : '',
@@ -272,4 +272,5 @@ if (formRef.current && !formRef.current.contains(htmlTarget)) {
 };
 
 export default AddAddress;
+
 
