@@ -114,14 +114,20 @@ if (formRef.current && !formRef.current.contains(htmlTarget)) {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/addresses`, {
-        method: addressToEdit ? 'PATCH' : 'POST', // PUT if editing, POST if adding
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify(payload),
-      });
+     const url = addressToEdit
+  ? `${API_BASE_URL}/api/orders/addresses/${addressToEdit.id}`
+  : `${API_BASE_URL}/api/orders/addresses`;
+
+const method = addressToEdit ? 'PATCH' : 'POST';
+
+const response = await fetch(url, {
+  method,
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : '',
+  },
+  body: JSON.stringify(payload),
+});
 
       if (!response.ok) {
         const data = await response.json();
@@ -272,5 +278,6 @@ if (formRef.current && !formRef.current.contains(htmlTarget)) {
 };
 
 export default AddAddress;
+
 
 
