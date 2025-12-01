@@ -15,17 +15,22 @@ interface ProductHistoryProps {
 }
 
 const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
+  const [orders, setOrders] = useState<any[]>([]); // 👈 Store all orders once
   const [fulfilledPercentage, setFulfilledPercentage] = useState<number>(0);
   const [recentMessage, setRecentMessage] = useState<string>('NA');
   const [loading, setLoading] = useState<boolean>(true);
+  const [filter, setFilter] = useState<string>('10 Orders'); 
 
+  // -----------------------------------------------------------
+  // FETCH ORDERS ONLY ONCE
+  // -----------------------------------------------------------
   useEffect(() => {
     const token = localStorage.getItem('token');
     let userRole: string | null = null;
 
     if (token) {
       try {
-        const decoded = JSON.parse(atob(token.split('.')[1])); // simple jwt decode
+        const decoded = JSON.parse(atob(token.split('.')[1]));
         userRole = decoded.role || null;
       } catch (err) {
         console.error('Failed to decode token', err);
@@ -34,47 +39,31 @@ const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
 
     async function fetchOrders() {
       try {
-        let orders: any[] = [];
+        let fetchedOrders: any[] = [];
 
         if (userRole === 'admin' && vendorId) {
-          // --- Admin flow: fetch orders for specific vendor ---
-          const adminRes = await axios.get('https://adminservice.zeabur.app/api/admin/sellers/all-with-products', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const adminRes = await axios.get(
+            'https://adminservice.zeabur.app/api/admin/sellers/all-with-products',
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
 
           const vendors = adminRes.data.data || [];
-          const targetVendor = vendors.find((v: any) => String(v.id) === String(vendorId));
+          const targetVendor = vendors.find(
+            (v: any) => String(v.id) === String(vendorId)
+          );
 
           if (!targetVendor) throw new Error('Vendor not found');
-
-          // Orders for this vendor
-          orders = targetVendor.orderItems || [];
+          fetchedOrders = targetVendor.orderItems || [];
 
         } else {
-          // --- Vendor or non-admin flow: fetch own orders ---
-          const res = await axios.get('https://orderservice.zeabur.app/api/orders/vendor/orders', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          orders = res.data.data || [];
+          const res = await axios.get(
+            'https://orderservice.zeabur.app/api/orders/vendor/orders',
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          fetchedOrders = res.data.data || [];
         }
 
-        const fulfilled = orders.filter(
-          (order: any) => order.order?.status?.toLowerCase() === 'delivered'
-        );
-
-        const totalOrders = orders.length;
-        const fulfilledCount = fulfilled.length;
-
-        const percentage = totalOrders > 0 ? Math.round((fulfilledCount / totalOrders) * 100) : 0;
-        setFulfilledPercentage(percentage);
-
-        // If no fulfilled orders, show "NA" instead of recent count
-        if (fulfilledCount > 0) {
-          const recentCount = Math.min(10, fulfilledCount);
-          setRecentMessage(`Recent ${recentCount} order${recentCount !== 1 ? 's' : ''} were fulfilled`);
-        } else {
-          setRecentMessage('No orders fulfilled recently');
-        }
+        setOrders(fetchedOrders); // 👈 Save for future filtering
 
       } catch (error) {
         console.error('Failed to fetch orders:', error);
@@ -86,6 +75,38 @@ const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
 
     fetchOrders();
   }, [vendorId]);
+
+  // -----------------------------------------------------------
+  // APPLY FILTER LOCALLY (NO API CALL)
+  // -----------------------------------------------------------
+  useEffect(() => {
+    if (orders.length === 0) return;
+
+    const limit = parseInt(filter);
+    const limitedOrders = orders.slice(0, limit); // 👈 FAST local filtering
+
+    const fulfilled = limitedOrders.filter(
+      (order: any) => order.order?.status?.toLowerCase() === 'delivered'
+    );
+
+    const totalOrders = limitedOrders.length;
+    const fulfilledCount = fulfilled.length;
+
+    const percentage =
+      totalOrders > 0
+        ? Math.round((fulfilledCount / totalOrders) * 100)
+        : 0;
+
+    setFulfilledPercentage(percentage);
+
+    if (fulfilledCount > 0) {
+      setRecentMessage(
+        `Recent ${fulfilledCount} fulfilled order${fulfilledCount !== 1 ? 's' : ''}`
+      );
+    } else {
+      setRecentMessage('No orders fulfilled in this range');
+    }
+  }, [filter, orders]); // 👈 Only local filtering. Instant.
 
   if (loading) return <ProductHistorySkeleton />;
 
@@ -100,13 +121,15 @@ const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
           <Dropdown
             options={statusOptions}
             defaultValue="10 Orders"
-            onSelect={(value) => console.log('Selected status:', value)}
+            onSelect={(value) => setFilter(value)} 
           />
         </div>
       </div>
 
       <div className="orderpercentage">
-        <h2 className="text-[32px] text-[var(--secondary)]">{fulfilledPercentage}%</h2>
+        <h2 className="text-[32px] text-[var(--secondary)]">
+          {fulfilledPercentage}%
+        </h2>
       </div>
 
       <div className="flex justify-flex-start items-center p-[10px] gap-[15px] rounded-[10px] bg-[#EBEBEB]">
@@ -120,4 +143,3 @@ const ProductHistory: React.FC<ProductHistoryProps> = ({ vendorId }) => {
 };
 
 export default ProductHistory;
-

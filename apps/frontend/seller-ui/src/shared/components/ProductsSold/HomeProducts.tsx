@@ -8,22 +8,25 @@ import axios from 'axios';
 import Dropdown from '../dropdown/Dropdownbutton';
 import ProductSoldSkeleton from '../ProductsSold/product_soldperformance/ProductSoldSkeleton';
 
-const statusOptions = ["Past Week", "Yesterday", "Last Month"];
+const statusOptions = ["Full Inventory", "Past Week", "Yesterday", "Last Month"]; // 👈 Added "All"
 
 interface Product {
   id: string;
   name: string;
   image: string;
   sold: number;
+  createdAt?: string;
 }
 
 interface HomeProductsProps {
-  vendorId?: string; // Optional, for admin view
+  vendorId?: string;
 }
 
 const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
   const [productsSold, setProductsSold] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [filter, setFilter] = useState("Full Inventory"); // 👈 Default ALL
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -31,7 +34,7 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
 
     if (token) {
       try {
-        const decoded = JSON.parse(atob(token.split('.')[1])); // Simple jwt decode
+        const decoded = JSON.parse(atob(token.split('.')[1]));
         userRole = decoded.role || null;
       } catch (err) {
         console.error('Failed to decode token', err);
@@ -44,27 +47,24 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
         let orders: any[] = [];
 
         if (userRole === 'admin' && vendorId) {
-          // --- Admin flow: fetch products for specific vendor ---
           const adminRes = await axios.get('https://adminservice.zeabur.app/api/admin/sellers/all-with-products', {
             headers: { Authorization: `Bearer ${token}` },
           });
+
           const vendors = adminRes.data.data || [];
           const targetVendor = vendors.find((v: any) => String(v.id) === String(vendorId));
-
           if (!targetVendor) throw new Error('Vendor not found');
 
-          // Products for this vendor
-          products = targetVendor.productListings?.map((listing: any) => ({
-            id: listing.product?.id || listing.id,
-            name: listing.product?.title || 'Unknown Product',
-            image: listing.product?.imageUrls?.[0] || '',
-          })) || [];
+          products =
+            targetVendor.productListings?.map((listing: any) => ({
+              id: listing.product?.id || listing.id,
+              name: listing.product?.title || 'Unknown Product',
+              image: listing.product?.imageUrls?.[0] || '',
+            })) || [];
 
-          // Orders for this vendor
           orders = targetVendor.orderItems || [];
 
         } else {
-          // --- Vendor or non-admin flow: fetch own products & orders ---
           const productRes = await axios.get('https://productservice.zeabur.app/api/products/vendor/products', {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -76,21 +76,25 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
           orders = ordersRes.data.data || [];
         }
 
-        // Map products and calculate sold count per product
         const productSoldData: Product[] = products.map((product: any) => {
-          const soldCount = orders
-            .filter((order: any) => order.productId === product.id)
-            .reduce((acc: number, order: any) => acc + order.quantity, 0);
+          const filteredOrders = orders.filter((order: any) => order.productId === product.id);
+
+          const soldCount = filteredOrders.reduce(
+            (acc: number, order: any) => acc + order.quantity,
+            0
+          );
 
           return {
             id: product.id,
             name: product.name || product.title || 'Unknown Product',
             image: product.image || product.imageUrls?.[0] || '',
             sold: soldCount,
+            createdAt: filteredOrders[0]?.createdAt || null, // 👈 Used for filtering
           };
         });
 
         setProductsSold(productSoldData);
+        setFilteredProducts(productSoldData); // 👈 Default: ALL
 
       } catch (error) {
         console.error('Failed to fetch products or orders', error);
@@ -101,6 +105,52 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
 
     fetchData();
   }, [vendorId]);
+
+  // --- FILTER FUNCTION ---
+  useEffect(() => {
+    if (filter === "Full Inventory") {
+      setFilteredProducts(productsSold);
+      return;
+    }
+
+    const now = new Date();
+
+    const filtered = productsSold.filter(product => {
+      if (!product.createdAt) return false;
+      const createdAt = new Date(product.createdAt);
+
+      if (filter === "Yesterday") {
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+
+        return (
+          createdAt.getDate() === yesterday.getDate() &&
+          createdAt.getMonth() === yesterday.getMonth() &&
+          createdAt.getFullYear() === yesterday.getFullYear()
+        );
+      }
+
+      if (filter === "Past Week") {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        return createdAt >= weekAgo && createdAt <= now;
+      }
+
+      if (filter === "Last Month") {
+        const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+        const year = lastMonth === 11 ? now.getFullYear() - 1 : now.getFullYear();
+
+        return (
+          createdAt.getMonth() === lastMonth &&
+          createdAt.getFullYear() === year
+        );
+      }
+
+      return true;
+    });
+
+    setFilteredProducts(filtered);
+  }, [filter, productsSold]);
 
   return (
     <div className="productsoldmain p-[15px] rounded-[10px] background-white">
@@ -113,21 +163,22 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
           <div className='flex justify-flex-end'>
             <Dropdown
               options={statusOptions}
-              defaultValue="Past Week"
-              onSelect={(value) => console.log("Selected status:", value)}
+              defaultValue="Full Inventory" // 👈 Default ALL
+              onSelect={(value) => setFilter(value)} // 👈 Filter applied
             />
           </div>
         </div>
       </div>
+
       <div className="productsoldvalues">
         {loading ? (
           <ProductSoldSkeleton count={2} />
-        ) : productsSold.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <div className="inventory-empty text-center p-[20px] bg-white rounded-[10px]">
             <h2 className="text-[18px] text-[var(--grey)] font-medium">NA</h2>
           </div>
         ) : (
-          <ProductSold limit={2} products={productsSold} />
+          <ProductSold limit={2} products={filteredProducts} /> // 👈 Shows filtered products
         )}
       </div>
     </div>
@@ -135,4 +186,3 @@ const HomeProducts: React.FC<HomeProductsProps> = ({ vendorId }) => {
 }
 
 export default HomeProducts;
-

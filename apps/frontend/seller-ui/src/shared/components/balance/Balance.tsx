@@ -6,9 +6,9 @@ import axios from 'axios';
 import Dropdown from '../dropdown/Dropdownbutton';
 import Balanceicon from '../../../assets/balance.png';
 import BalanceSkeleton from './BalanceSkeleton';
-import { jwtDecode } from 'jwt-decode'; // 👈 Import jwtDecode here
+import { jwtDecode } from 'jwt-decode';
 
-const statusOptions = ['Past Week', 'Yesterday', 'Last Month'];
+const statusOptions = ['Full Balance', 'Past Week', 'Yesterday', 'Last Month'];  // 👈 Added "All"
 
 interface VendorOrder {
   id: string;
@@ -24,7 +24,7 @@ interface VendorOrder {
 }
 
 interface BalanceProps {
-  vendorId?: string; // optional, used only for admin view
+  vendorId?: string;
 }
 
 interface TokenPayload {
@@ -36,6 +36,8 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [filter, setFilter] = useState("Full Balance");   // 👈 Default is now ALL
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -50,9 +52,7 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
       }
     }
 
-    // Admin with vendorId check
     if (userRole === 'admin' && !vendorId) {
-      console.log('Admin role detected, but vendorId is not yet available. Waiting...');
       setLoading(false);
       return;
     }
@@ -61,10 +61,7 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
       try {
         let fetchedOrders: VendorOrder[] = [];
 
-        // --- Admin flow using vendorId ---
         if (userRole === 'admin' && vendorId) {
-          console.log('--- Executing ADMIN API Call --- (Role from Token)');
-
           const res = await axios.get(
             'https://adminservice.zeabur.app/api/admin/sellers/all-with-products',
             {
@@ -105,12 +102,7 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
           });
 
           fetchedOrders = allOrders;
-          console.log('Admin Flow - Extracted Orders:', fetchedOrders);
-
         } else {
-          // --- Vendor or non-admin flow ---
-          console.log('--- Executing VENDOR API Call --- (Role from Token or No Role)');
-
           const res = await axios.get(
             'https://orderservice.zeabur.app/api/orders/vendor/orders',
             {
@@ -119,7 +111,6 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
           );
 
           fetchedOrders = res.data.data || [];
-          console.log('Vendor Flow - Fetched Orders:', fetchedOrders);
         }
 
         setOrders(fetchedOrders);
@@ -142,24 +133,66 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
   if (loading) return <BalanceSkeleton />;
   if (error) return <div>{error}</div>;
 
+  // --- COMPLETED ORDERS ---
   const completedOrders = orders.filter(
     (order) =>
       order.order?.paymentStatus?.toLowerCase() === 'success' &&
       order.order?.status?.toLowerCase() === 'delivered'
   );
 
-  const totalBalance = completedOrders.length > 0
-    ? completedOrders.reduce((sum, order) => sum + parseFloat(order.totalPrice), 0)
-    : null;
+  // --- FILTER LOGIC (updated with "All") ---
+  const applyFilter = (orders: VendorOrder[]) => {
+    const now = new Date();
 
-  const sortedCompletedOrders = completedOrders.sort((a, b) => {
+    if (filter === "Full Balance") return orders;    // 👈 Show all orders by default
+
+    return orders.filter(order => {
+      const createdAt = order.order?.createdAt ? new Date(order.order.createdAt) : null;
+      if (!createdAt) return false;
+
+      if (filter === "Yesterday") {
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        return (
+          createdAt.getDate() === yesterday.getDate() &&
+          createdAt.getMonth() === yesterday.getMonth() &&
+          createdAt.getFullYear() === yesterday.getFullYear()
+        );
+      }
+
+      if (filter === "Past Week") {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        return createdAt >= weekAgo && createdAt <= now;
+      }
+
+      if (filter === "Last Month") {
+        const lastMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+        const year = lastMonth === 11 ? now.getFullYear() - 1 : now.getFullYear();
+        return (
+          createdAt.getMonth() === lastMonth &&
+          createdAt.getFullYear() === year
+        );
+      }
+
+      return true;
+    });
+  };
+
+  const filteredOrders = applyFilter(completedOrders);
+
+  const totalBalance = filteredOrders.length > 0
+    ? filteredOrders.reduce((sum, order) => sum + parseFloat(order.totalPrice), 0)
+    : 0;
+
+  const sortedCompletedOrders = filteredOrders.sort((a, b) => {
     const dateA = a.order?.createdAt ? new Date(a.order.createdAt).getTime() : 0;
     const dateB = b.order?.createdAt ? new Date(b.order.createdAt).getTime() : 0;
     return dateB - dateA;
   });
 
   const recentOrder = sortedCompletedOrders[0];
-  const recentAmount = recentOrder ? parseFloat(recentOrder.totalPrice) : null;
+  const recentAmount = recentOrder ? parseFloat(recentOrder.totalPrice) : 0;
 
   return (
     <div>
@@ -172,21 +205,19 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
           <div className="dropdownbutton">
             <Dropdown
               options={statusOptions}
-              defaultValue="Past Week"
-              onSelect={(value) => {
-                console.log('Selected status:', value);
-              }}
+              defaultValue="Full Balance"  // 👈 Default now ALL
+              onSelect={(value) => setFilter(value)}
             />
           </div>
         </div>
 
         <div className="balanceamount text-[32px] text-[var(--secondary)]">
-          <h2>{totalBalance !== null ? `$${totalBalance.toFixed(2)}` : 'N/A'}</h2>
+          <h2>${totalBalance.toFixed(2)}</h2>
         </div>
 
         <div className="totalbalance bg-[#EBEBEB] flex justify-between items-center p-[10px] rounded-[10px]">
           <p className="text-[var(--grey)]">Recents</p>
-          <p>{recentAmount !== null ? `+$${recentAmount.toFixed(2)}` : '+$0.00'}</p>
+          <p>+${recentAmount.toFixed(2)}</p>
         </div>
       </div>
     </div>
@@ -194,4 +225,3 @@ const Balance: React.FC<BalanceProps> = ({ vendorId }) => {
 };
 
 export default Balance;
-
