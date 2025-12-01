@@ -214,12 +214,13 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
             vendorId={vendorId}
             setAddress={setAddress}
           />
-          <Payment
+      <Payment
   onPaymentModeSelect={setPaymentMode}
   total={total}
   onConfirmPayment={(selectedPaymentMode) => {
-    // Validate address + paymentMode before placing order
-    if (!address) {
+    // Use the current address state at the moment of click
+    const selectedAddress = address; 
+    if (!selectedAddress) {
       toast.error('Please select or add a delivery address!');
       return;
     }
@@ -228,7 +229,7 @@ const handlePaymentStatus = async (paymentId: string, signature: string) => {
       return;
     }
     setPaymentMode(selectedPaymentMode);
-    handlePlaceOrder(selectedPaymentMode, address);
+    handlePlaceOrder(selectedPaymentMode, selectedAddress);
   }}
 />
 </div>
