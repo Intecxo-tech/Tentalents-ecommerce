@@ -73,32 +73,31 @@ const Page = () => {
 
         const ordersData = Array.isArray(res.data.orders) ? res.data.orders : [];
 
-      const mappedOrders = ordersData.flatMap((order: any) =>
-  order.items.map((item: any) => ({
-    id: item.id,
-    quantity: item.quantity,
-    totalPrice: item.totalPrice,
-    dispatchStatus: item.dispatchStatus || order.status,
-    createdAt: order.createdAt || order.placedAt || new Date().toISOString(),
-    order: {
-      id: order.id,
-      status: order.status,
-      paymentMethod: order.paymentMode,
-      createdAt: order.createdAt || order.placedAt || new Date().toISOString(),
-      shippingAddress: order.shippingAddress,
-      paymentStatus: order.paymentStatus,
-      dispatchStatus: order.dispatchStatus,
-      buyer: order.buyer || null, // add buyer
-    },
-    product: {
-      id: item.product?.id || 'unknown',
-      title: item.product?.title || 'No Title',
-      imageUrls: item.product?.imageUrls || ['/placeholder.png'],
-    },
-    vendor: item.vendor || order.vendors || [], // add vendor
-  }))
-);
-
+        const mappedOrders = ordersData.flatMap((order: any) =>
+          order.items.map((item: any) => ({
+            id: item.id,
+            quantity: item.quantity,
+            totalPrice: item.totalPrice,
+            dispatchStatus: item.dispatchStatus || order.status,
+            createdAt: order.createdAt || order.placedAt || new Date().toISOString(),
+            order: {
+              id: order.id,
+              status: order.status,
+              paymentMethod: order.paymentMode,
+              createdAt: order.createdAt || order.placedAt || new Date().toISOString(),
+              shippingAddress: order.shippingAddress,
+              paymentStatus: order.paymentStatus,
+              dispatchStatus: order.dispatchStatus,
+              buyer: order.buyer || null,
+            },
+            product: {
+              id: item.product?.id || 'unknown',
+              title: item.product?.title || 'No Title',
+              imageUrls: item.product?.imageUrls || ['/placeholder.png'],
+            },
+            vendor: item.vendor || order.vendors || [],
+          }))
+        );
 
         setOrders(mappedOrders);
       } catch (err) {
@@ -147,7 +146,6 @@ const Page = () => {
   const handleViewOrder = (orderItem: VendorOrder) => setSelectedOrderItem(orderItem);
 
   if (loading) return <OrderSkeleton />;
-  if (filteredOrders.length === 0) return <div className="ordersempty"><p>No orders found.</p></div>;
 
   return (
     <div className="orderspage">
@@ -180,44 +178,57 @@ const Page = () => {
         </div>
       </div>
 
+      {/* Order List Header */}
+      {/* <div className="orders-header">
+        <span>Product</span>
+        <span>Quantity</span>
+        <span>Total Price</span>
+        <span>City</span>
+        <span>Status</span>
+      </div> */}
+
       {/* Order list */}
       <div className="productsection">
-        {filteredOrders.map((orderItem) => {
-          const orderStatus = orderItem.order?.status?.toLowerCase() || 'pending';
-          const dispatchStatus = orderItem.order?.dispatchStatus?.toLowerCase() || 'not_started';
-          const isPending = orderStatus === 'pending';
-          const isConfirmed = orderStatus === 'confirmed';
-          const isPreparing = dispatchStatus === 'preparing';
-          const isDispatched = orderStatus === 'shipped';
-          const isFinished = ['delivered', 'cancelled', 'refunded', 'returned'].includes(orderStatus);
+        {filteredOrders.length === 0 ? (
+          <div className="ordersempty"><p>No orders found.</p></div>
+        ) : (
+          filteredOrders.map((orderItem) => {
+            const orderStatus = orderItem.order?.status?.toLowerCase() || 'pending';
+            const dispatchStatus = orderItem.order?.dispatchStatus?.toLowerCase() || 'not_started';
+            const isPending = orderStatus === 'pending';
+            const isConfirmed = orderStatus === 'confirmed';
+            const isPreparing = dispatchStatus === 'preparing';
+            const isDispatched = orderStatus === 'shipped';
+            const isFinished = ['delivered', 'cancelled', 'refunded', 'returned'].includes(orderStatus);
 
-          return (
-            <div key={orderItem.id} className="product-item">
-              <div className="product-section">
-                <Image src={orderItem.product?.imageUrls?.[0] || '/placeholder.png'} alt={orderItem.product?.title || 'Product'} width={100} height={100} />
-                <h3 className="product-title">{orderItem.product?.title || 'No Title'}</h3>
-              </div>
-              <div className="produtdetails">
-                <p className="orderprice">{orderItem.quantity}</p>
-                <p className="orderprice">₹{orderItem.totalPrice}</p>
-                <p>{orderItem.order?.shippingAddress?.city || 'N/A'}</p>
-                <div className="status-tags">
-                  <span className={getStatusClass(orderItem.order?.paymentStatus)}>{orderItem.order?.paymentStatus || 'Pending'}</span>
-                  <span className={getStatusClass(dispatchStatus)}>{dispatchStatus}</span>
+            return (
+              <div key={orderItem.id} className="product-item">
+                <div className="product-section">
+                  <Image src={orderItem.product?.imageUrls?.[0] || '/placeholder.png'} alt={orderItem.product?.title || 'Product'} width={100} height={100} />
+                  <h3 className="product-title">{orderItem.product?.title || 'No Title'}</h3>
+                </div>
+                <div className="produtdetails">
+                  <p className="orderprice">{orderItem.quantity}</p>
+                  <p className="orderprice">₹{orderItem.totalPrice}</p>
+                  <p>{orderItem.order?.shippingAddress?.city || 'N/A'}</p>
+                  <div className="status-tags">
+                    <span className={getStatusClass(orderItem.order?.paymentStatus)}>{orderItem.order?.paymentStatus || 'Pending'}</span>
+                    <span className={getStatusClass(dispatchStatus)}>{dispatchStatus}</span>
+                  </div>
+                </div>
+                <div className="productstatus">
+                  {(isPending || isPreparing || isConfirmed || isDispatched || isFinished) && (
+                    <div className="product-buttons">
+                      <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem)}>
+                        {isPending ? 'View Order' : isPreparing ? 'Track Order' : 'View Order'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="productstatus">
-                {(isPending || isPreparing || isConfirmed || isDispatched || isFinished) && (
-                  <div className="product-buttons">
-                    <button className="center-borderedbutton" onClick={() => handleViewOrder(orderItem)}>
-                      {isPending ? 'View Order' : isPreparing ? 'Track Order' : 'View Order'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* Sidebar Orderforms */}

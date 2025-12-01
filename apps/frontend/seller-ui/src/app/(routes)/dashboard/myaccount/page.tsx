@@ -280,10 +280,10 @@ const handlePersonalDetailsSave = async (e: FormEvent) => {
     email: vendor.email,
     phone: vendor.phone,
     address: vendor.address,
-    // other personal details
   };
 
   try {
+    setSaving(true);
     const response = await fetch(`https://vendorservice.zeabur.app/api/vendor/profile/${vendorId}`, {
       method: 'PUT',
       headers: {
@@ -299,53 +299,64 @@ const handlePersonalDetailsSave = async (e: FormEvent) => {
     }
 
     const data = await response.json();
-    setVendor(data.vendor);
+    // ✅ Merge updated data with existing vendor to prevent clearing other fields
+    setVendor(prev => ({
+      ...prev!,
+      ...data.vendor,
+    }));
+
     toast.success('Personal details updated!');
   } catch (err: any) {
     console.error('Error saving personal details:', err.message);
     toast.error(`Error: ${err.message}`);
+  } finally {
+    setSaving(false);
   }
 };
 const handleBusinessDetailsSave = async (e: FormEvent) => {
   e.preventDefault();
   if (!vendor) return;
 
-  // Preparing the payload to include the updated Aadhar and PAN numbers
   const payload = {
     businessName: vendor.businessName,
     gstNumber: vendor.gstNumber,
-    AadharNumber: vendor.aadharNumber, // Include Aadhar number
-    panNumber: vendor.panNumber, // Include PAN number
+    aadharNumber: vendor.aadharNumber,
+    panNumber: vendor.panNumber,
   };
 
   try {
-    // Sending the PUT request to the backend
+    setSaving(true);
     const response = await fetch(`https://vendorservice.zeabur.app/api/vendor/profile/${vendorId}`, {
       method: 'PUT',
       headers: {
-        Authorization: token ? `Bearer ${token}` : '', // Ensure token is set
+        Authorization: token ? `Bearer ${token}` : '',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload), // Send the payload
+      body: JSON.stringify(payload),
     });
-  
-    // Handling failed request
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to save business details');
     }
 
-    // If the request is successful, update the vendor details in the state
     const data = await response.json();
-    setVendor(data.vendor); // Set the updated vendor object
+    // ✅ Merge updated data to prevent clearing other fields like bankDetails
+    setVendor(prev => ({
+      ...prev!,
+      ...data.vendor,
+      bankDetails: prev?.bankDetails || {}, // keep bankDetails intact
+    }));
 
-    // Show success message
     toast.success('Business details updated!');
   } catch (err: any) {
     console.error('Error saving business details:', err.message);
     toast.error(`Error: ${err.message}`);
+  } finally {
+    setSaving(false);
   }
 };
+
 
 const handleBankDetailsSave = async (e: FormEvent) => {
   e.preventDefault();
@@ -378,17 +389,14 @@ const handleBankDetailsSave = async (e: FormEvent) => {
     }
 
     const data = await response.json();
-
-    // Update vendor state with the new bank details
-    setVendor({
-      ...vendor,
-      bankDetails: data.bankDetails || {
-        accountHolder: '',
-        accountNumber: '',
-        ifscCode: '',
-        bankName: '',
+    // ✅ Merge updated bank details with existing vendor
+    setVendor(prev => ({
+      ...prev!,
+      bankDetails: {
+        ...prev!.bankDetails!,
+        ...data.bankDetails,
       },
-    });
+    }));
 
     toast.success('Bank details updated!');
   } catch (err: any) {
@@ -398,6 +406,7 @@ const handleBankDetailsSave = async (e: FormEvent) => {
     setSaving(false);
   }
 };
+
 const handleCancelledChequeUpload = async (e: ChangeEvent<HTMLInputElement>) => {
   // 1. Guard against missing file or vendorId
   if (!e.target.files || !vendorId || !vendor) {

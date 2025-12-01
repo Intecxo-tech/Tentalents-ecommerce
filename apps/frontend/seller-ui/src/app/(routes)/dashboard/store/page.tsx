@@ -14,6 +14,7 @@ interface Vendor {
 const Page = () => {
   const router = useRouter();
   const [vendor, setVendor] = useState<Vendor | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>(''); // ✅ Lifted search state
 
   useEffect(() => {
     const fetchVendor = async () => {
@@ -45,19 +46,19 @@ const Page = () => {
     fetchVendor();
   }, []);
 
-const handleAddProductClick = () => {
-  if (!vendor) {
-    toast.error("Vendor not found. Please log in again.");
-    return;
-  }
+  const handleAddProductClick = () => {
+    if (!vendor) {
+      toast.error("Vendor not found. Please log in again.");
+      return;
+    }
 
-  if (vendor.status?.toUpperCase() !== "APPROVED") {
-    toast.error(`Your vendor account is not approved yet. (Status: ${vendor.status})`);
-    return;
-  }
+    if (vendor.status?.toUpperCase() !== "APPROVED") {
+      toast.error(`Your vendor account is not approved yet. (Status: ${vendor.status})`);
+      return;
+    }
 
-  router.push("/dashboard/createproduct");
-};
+    router.push("/dashboard/createproduct");
+  };
 
   return (
     <StoreLayout>
@@ -69,28 +70,33 @@ const handleAddProductClick = () => {
           <div className="search-bar" style={{ position: 'relative' }}>
             <div className="search-categories">
               Categories
-              <ChevronDown size={16} className="chevron" />
+              
             </div>
             <input
               className="search-input"
-              placeholder="Search Tentalents.in"
+              placeholder="Search products..."
+              value={searchQuery} // ✅ Controlled input
+              onChange={(e) => setSearchQuery(e.target.value)} // ✅ Updates state
             />
             <div className="search-button">
               <Search className="search-icon" size={20} />
             </div>
           </div>
 
-          {/* ✅ Only controlled by click handler now */}
-          <button className="background-button"  onClick={handleAddProductClick}
-  disabled={!vendor}>
+          <button
+            className="background-button"
+            onClick={handleAddProductClick}
+            disabled={!vendor}
+          >
             Add Product <PlusIcon />
           </button>
         </div>
       </div>
-      <Product />
+
+      {/* ✅ Pass searchQuery as prop */}
+      <Product searchQuery={searchQuery} />
     </StoreLayout>
   );
 };
 
 export default Page;
-
