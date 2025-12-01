@@ -62,7 +62,7 @@ const router = useRouter();
     const params = new URLSearchParams();
     params.append('query', searchQuery.trim());
 
-    const res = await fetch(`http://searchservice.zeabur.app/api/search?${params.toString()}`);
+    const res = await fetch(`https://searchservice.zeabur.app/api/search?${params.toString()}`);
     const data = await res.json();
 
     if (data.success && Array.isArray(data.data)) {
@@ -428,6 +428,7 @@ const fetchCartCount = useCallback(async () => {
 };
 
 export default Header;
+
 
 
 
