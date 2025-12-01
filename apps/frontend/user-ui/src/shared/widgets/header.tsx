@@ -50,36 +50,33 @@ const router = useRouter();
   }, [showMenuDropdown]);
 
   // Function to call search API
-  const fetchSearchResults = async () => {
+ const fetchSearchResults = async () => {
+  if (!searchQuery.trim()) {
+    setSearchResults([]);
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
     const params = new URLSearchParams();
+    params.append('query', searchQuery.trim());
 
-    if (searchQuery.trim()) params.append('query', searchQuery.trim());
-    if (searchCategory) params.append('category', searchCategory);
-    if (searchBrand) params.append('brand', searchBrand);
+    const res = await fetch(`http://searchservice.zeabur.app/api/search?${params.toString()}`);
+    const data = await res.json();
 
-    if (!searchQuery && !searchCategory && !searchBrand) {
+    if (data.success && Array.isArray(data.data)) {
+      setSearchResults(data.data);
+    } else {
       setSearchResults([]);
-      return;
     }
+  } catch (error) {
+    console.error('Error fetching search results:', error);
+    setSearchResults([]);
+  }
 
-    setIsLoading(true);
- try {
-  const res = await fetch(`http://searchservice.zeabur.app/api/search?${params.toString()}`);
-  const data = await res.json();
-  console.log('Search API result for query:', searchQuery, data);
-
- if (data.success && Array.isArray(data.data)) {
-  setSearchResults(data.data);
-} else {
-  setSearchResults([]);
-}
-} catch (error) {
-  console.error('Error fetching search results:', error);
-  setSearchResults([]);
-}
-
-    setIsLoading(false);
-  };
+  setIsLoading(false);
+};
 
   // 2. Define fetchCartCount outside useEffect and wrap in useCallback
   // This allows us to use the same function in multiple places without recreating it.
@@ -431,6 +428,7 @@ const fetchCartCount = useCallback(async () => {
 };
 
 export default Header;
+
 
 
 
