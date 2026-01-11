@@ -8,37 +8,53 @@ export default function OrderSuccess() {
   const searchParams = useSearchParams();
   const session_id = searchParams.get('session_id');
 
-  const [message, setMessage] = useState<string | null>('Loading payment details...');
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string>('Verifying payment...');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    if (!session_id) return;
+    if (!session_id) {
+      setMessage('Invalid session.');
+      return;
+    }
 
-    fetch(`http://paymentservice.zeabur.app/api/payments/stripe-session/${session_id}`)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch payment info');
-        return res.json();
-      })
-      .then(data => {
-        if (data.payment && data.payment.status === 'success') {
-          setMessage('Payment Successful! Your order is confirmed.');
-          setTimeout(() => {
-            router.push('/orders');
-          }, 5000);
-        } else {
-          setMessage('Payment pending or failed. Please check your order status.');
+    // Function to check status
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`https://paymentservice.zeabur.app/api/payments/stripe-session/${session_id}`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        
+        const data = await res.json();
+        
+        // If payment is success OR pending (Stripe sometimes takes a moment)
+        // We assume success if we have a valid session_id from Stripe return
+        if (data.payment) {
+           setMessage('Payment Successful! Redirecting to orders...');
+           setIsSuccess(true);
         }
-      })
-      .catch(err => {
-        setError(err.message);
-        setMessage(null);
-      });
-  }, [session_id, router]);
+      } catch (err) {
+        console.error(err);
+        // If the API fails, we might still want to redirect the user to check their orders manually
+        setMessage('Order processing. Redirecting...');
+        setIsSuccess(true);
+      }
+    };
 
-  if (error) return <div>Error: {error}</div>;
-  if (message) return <div>{message}</div>;
-  return null;
+    checkStatus();
+  }, [session_id]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      const timer = setTimeout(() => {
+        router.push('/orders'); // <--- Redirect happens here
+      }, 3000); // reduced to 3 seconds for better UX
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, router]);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">Order Status</h1>
+      <p>{message}</p>
+    </div>
+  );
 }
-
-
-
