@@ -146,7 +146,7 @@ const [balanceLoading, setBalanceLoading] = useState(true);
 
    <div className="topsection flex justify-between gap-[10px] background-[white] p-[10px] rounded-[10px] mb-[15px]">
   <div className=" producthistorts w-1/3">
-    <Balance  />
+   <Balance orders={orders} />
   </div>
   <div className=" producthistorts w-1/3">
     <HomeProducts />
