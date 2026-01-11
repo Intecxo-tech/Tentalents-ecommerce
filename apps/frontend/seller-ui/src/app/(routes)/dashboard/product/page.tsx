@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './product.css';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // ✅ Import useSearchParams
 import { Star } from 'lucide-react';
 import Link from 'next/link';
 import ProductSkeleton from './ProductSkeleton';
@@ -32,12 +32,16 @@ interface Product {
   listings: Listing[];
 }
 
-interface ProductProps {
-  searchQuery?: string; // ✅ Accept search query from parent
-}
+// ❌ DELETED: interface ProductProps (This was causing the error)
 
-const Page: React.FC<ProductProps> = ({ searchQuery = '' }) => {
+// ✅ CHANGED: Removed props from the function arguments
+const Page = () => {
   const router = useRouter();
+  
+  // ✅ ADDED: Get search query from the URL (e.g., /product?search=chair)
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
+
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -47,13 +51,20 @@ const Page: React.FC<ProductProps> = ({ searchQuery = '' }) => {
     async function fetchVendorProducts() {
       try {
         setLoading(true);
+        const token = localStorage.getItem('token');
+        if (!token) {
+           setError("No token found");
+           setLoading(false);
+           return;
+        }
+
         const response = await axios.get('https://productservice.zeabur.app/api/products/vendor/products', {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         setProducts(response.data.data);
-        setFilteredProducts(response.data.data); // ✅ initialize filtered
+        setFilteredProducts(response.data.data);
         setLoading(false);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to fetch products');
@@ -64,7 +75,7 @@ const Page: React.FC<ProductProps> = ({ searchQuery = '' }) => {
     fetchVendorProducts();
   }, []);
 
-  // ✅ Filter products whenever searchQuery changes
+  // Filter products whenever searchQuery (from URL) changes
   useEffect(() => {
     if (!searchQuery) {
       setFilteredProducts(products);
@@ -82,7 +93,7 @@ const Page: React.FC<ProductProps> = ({ searchQuery = '' }) => {
   }, [searchQuery, products]);
 
   if (loading) return <ProductSkeleton />;
-  if (error) return <div className="noproductsyet">You have no products yet. Create one!</div>;
+  if (error) return <div className="noproductsyet">{error}</div>;
   if (filteredProducts.length === 0)
     return <div className="noproductsyet">No products match your search.</div>;
 
