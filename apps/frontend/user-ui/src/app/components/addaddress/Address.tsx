@@ -3,13 +3,13 @@ import { MapPinPlus, PlusIcon, Trash, Pencil } from 'lucide-react';
 import AddAddress from '../addaddresspopup/addaddress';
 import './address.css';
 import toast from 'react-hot-toast';
-import { getAllAddresses, addAddress, editAddress, deleteAddress } from '../../../services/productService';
+import { getAllAddresses, deleteAddress } from '../../../services/productService'; // Removed 'editAddress' import
 import AddressSkeleton from './AddressSkeleton';
 
 type AddressProps = {
   showLocate: boolean;
   vendorId: string;
-  setAddress: React.Dispatch<React.SetStateAction<string | null>>; // Prop to set address in parent component
+  setAddress: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 const Address = ({ vendorId, setAddress }: AddressProps) => {
@@ -20,51 +20,36 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState<any | null>(null);
 
- useEffect(() => {
-  const fetchAddresses = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.warn('User not logged in. Skipping address fetch.');
-      setAddresses([]);
-      return;
-    }
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setAddresses([]);
+        return;
+      }
 
-    setLoading(true);
-  try {
-  const addresses = await getAllAddresses(); 
+      setLoading(true);
+      try {
+        const addresses = await getAllAddresses();
+        if (!Array.isArray(addresses)) {
+          setAddresses([]);
+          return;
+        }
+        setAddresses(addresses);
+      } catch (error: any) {
+        console.error('Error fetching addresses:', error);
+        setAddresses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!Array.isArray(addresses)) {
-    console.warn('Unexpected address response:', addresses);
-    setAddresses([]);
-    return;
-  }
-
-  setAddresses(addresses); // valid response, even if empty
-} catch (error: any) {
-  console.error('Error fetching addresses:', error);
-
-  // Only show toast if it's an actual network/server error
-  if (error?.message && error.message.toLowerCase().includes('network')) {
-    toast.error('Network error while fetching addresses');
-  } else {
-    // Optional: log it but don’t show toast
-    console.warn('Skipping toast for empty or unknown error while fetching addresses');
-  }
-
-  setAddresses([]);
-}
- finally {
-      setLoading(false);
-    }
-  };
-
-  fetchAddresses();
-}, []);
-
+    fetchAddresses();
+  }, []);
 
   const handleSelectAddress = (addressId: string) => {
-    setSelectedAddressId(addressId);  // Set the selected address ID
-    setAddress(addressId);  // Pass it to parent component
+    setSelectedAddressId(addressId);
+    setAddress(addressId);
   };
 
   const combineAddress = (address: any) => {
@@ -74,7 +59,7 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
   const handleEditAddress = (addressId: string) => {
     const addressToEdit = addresses.find(address => address.id === addressId);
     setAddressToEdit(addressToEdit);
-    setIsEditing(true);  // Open the edit form
+    setIsEditing(true);
   };
 
   const handleDeleteAddress = (addressId: string) => {
@@ -91,20 +76,20 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
     }
   };
 
-  const handleSaveEditedAddress = async (updatedAddress: any) => {
-    try {
-      const updated = await editAddress(updatedAddress.id, updatedAddress);
-      setAddresses(prevAddresses =>
-        prevAddresses.map(address =>
-          address.id === updated.id ? updated : address
-        )
-      );
-      setIsEditing(false);
-      toast.success('Address updated successfully');
-    } catch (error) {
-      toast.error('Failed to update address');
-      console.error('Error updating address:', error);
-    }
+  // ✅ FIXED FUNCTION: Updates state immediately without calling API again
+  const handleSaveEditedAddress = (updatedAddress: any) => {
+    // We do NOT call editAddress() here because AddAddress.tsx already did it.
+    // We just update the local list with the data passed back.
+    
+    setAddresses(prevAddresses =>
+      prevAddresses.map(address =>
+        address.id === updatedAddress.id ? updatedAddress : address
+      )
+    );
+    
+    setIsEditing(false);
+    setAddressToEdit(null);
+    // toast.success('Address updated successfully'); // Optional: Toast is already shown in popup
   };
 
   return (
@@ -123,14 +108,14 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
       </div>
       <div className="address-container">
         {loading ? (
-         <AddressSkeleton />
+          <AddressSkeleton />
         ) : (
           addresses.length > 0 ? (
             addresses.map((item) => (
               <div key={item.id} className={`address-bar ${selectedAddressId === item.id ? 'selected' : ''}`} >
                 <div
                   className='address-card '
-                  onClick={() => handleSelectAddress(item.id)}  // Select the address
+                  onClick={() => handleSelectAddress(item.id)}
                 >
                   <div className="addressleft">
                     <p className="addressheading">Address - {item.addressType}</p>
@@ -171,8 +156,8 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
           isOpen={isEditing}
           onClose={() => setIsEditing(false)}
           vendorId={vendorId}
-          addressToEdit={addressToEdit}  // Pass the address to edit
-          onAdd={handleSaveEditedAddress}  // Use save function instead of adding a new address
+          addressToEdit={addressToEdit}
+          onAdd={handleSaveEditedAddress} // Connects to the fixed function above
         />
       )}
     </div>
@@ -180,5 +165,3 @@ const Address = ({ vendorId, setAddress }: AddressProps) => {
 };
 
 export default Address;
-
-
