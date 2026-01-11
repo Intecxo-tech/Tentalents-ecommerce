@@ -33,7 +33,7 @@ const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddr
   const [isDefault, setIsDefault] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+   
   useEffect(() => {
     if (addressToEdit) {
       setName(addressToEdit.name);
@@ -65,22 +65,21 @@ const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddr
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as Node;
-    const htmlTarget = e.target as HTMLElement;
+      const htmlTarget = e.target as HTMLElement;
 
-// Ignore click if inside phone input dropdown
-if (
-  htmlTarget.closest('.react-tel-input') || // phone input container
-  htmlTarget.closest('.flag-dropdown') ||   // country selector button
-  htmlTarget.closest('.country-list')       // dropdown list
-) {
-  return; // Don't close the popup
-}
+      // Ignore click if inside phone input dropdown
+      if (
+        htmlTarget.closest('.react-tel-input') || // phone input container
+        htmlTarget.closest('.flag-dropdown') ||   // country selector button
+        htmlTarget.closest('.country-list')       // dropdown list
+      ) {
+        return; // Don't close the popup
+      }
 
-// Close only if outside the popup
-if (formRef.current && !formRef.current.contains(htmlTarget)) {
-  onClose();
-}
-
+      // Close only if outside the popup
+      if (formRef.current && !formRef.current.contains(htmlTarget)) {
+        onClose();
+      }
     };
 
     if (isOpen) {
@@ -95,50 +94,61 @@ if (formRef.current && !formRef.current.contains(htmlTarget)) {
   if (!isOpen) return null;
 
   // Handle submit: call backend API
-  // Inside AddAddress.tsx
-
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ... (existing token and payload logic) ...
+    const token = localStorage.getItem('token');
+    const payload = {
+      addressLine1,
+      addressLine2,
+      addressType,
+      city,
+      vendorId,
+      country,
+      isDefault,
+      name,
+      phone,
+      pinCode,
+      state,
+    };
 
     try {
-        const url = addressToEdit
-            ? `${API_BASE_URL}/api/orders/addresses/${addressToEdit.id}`
-            : `${API_BASE_URL}/api/orders/addresses`;
+      const url = addressToEdit
+        ? `${API_BASE_URL}/api/orders/addresses/${addressToEdit.id}`
+        : `${API_BASE_URL}/api/orders/addresses`;
 
-        const method = addressToEdit ? 'PATCH' : 'POST';
+      const method = addressToEdit ? 'PATCH' : 'POST';
 
-        const response = await fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token ? `Bearer ${token}` : '',
-            },
-            body: JSON.stringify(payload),
-        });
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify(payload),
+      });
 
-        const data = await response.json(); 
+      const data = await response.json(); 
 
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to save address');
-        }
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to save address');
+      }
 
-        toast.success(addressToEdit ? 'Address updated successfully!' : 'Address added successfully!');
+      toast.success(addressToEdit ? 'Address updated successfully!' : 'Address added successfully!');
 
-        onClose();
+      onClose();
 
-        // 👇 CHANGED HERE: Check if the address is inside 'data.data' or just 'data'
-        // Based on your Cart component, your API seems to wrap responses in a 'data' key.
-        const addressToUpdate = data.data || data; 
-        
-        onAdd(addressToUpdate); 
+      // ✅ FIX IS HERE: Unwrap the address object from the response
+      // This prevents the "undefined" issue in the UI
+      const addressToUpdate = data.data || data;
+      
+      onAdd(addressToUpdate);    // Notify parent with the correct clean address object
 
     } catch (error) {
-        console.error('Error:', error);
-        toast.error('Failed to save address');
+      console.error('Error:', error);
+      toast.error('Failed to save address');
     }
-};
+  };
 
   return (
     <div className="popup-overlay">
@@ -163,17 +173,9 @@ const handleSubmit = async (e: React.FormEvent) => {
               onChange={(phone) => setPhone(phone)}
               inputClass="phone-input"
             />
-        
+           
           </div>
-                    {/* <div className="firstcolumn topsection mb-[10px]">
-    <input
-              type="email"
-              placeholder="Email"
-              value={Email}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            </div> */}
+          
           <div className="newdelivery">
             <h2 className="sectiontitle">Add New Delivery Address</h2>
 
@@ -275,9 +277,3 @@ const handleSubmit = async (e: React.FormEvent) => {
 };
 
 export default AddAddress;
-
-
-
-
-
-
