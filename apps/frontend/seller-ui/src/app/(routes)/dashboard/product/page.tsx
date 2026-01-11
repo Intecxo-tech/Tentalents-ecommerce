@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './product.css';
-import { useRouter, useSearchParams } from 'next/navigation'; // ✅ Import useSearchParams
+// You can remove useSearchParams if you are relying on the prop from the parent
 import { Star } from 'lucide-react';
 import Link from 'next/link';
 import ProductSkeleton from './ProductSkeleton';
@@ -32,15 +32,18 @@ interface Product {
   listings: Listing[];
 }
 
-// ❌ DELETED: interface ProductProps (This was causing the error)
+// 1. ✅ RESTORE THE INTERFACE
+interface ProductProps {
+  searchQuery: string;
+}
 
-// ✅ CHANGED: Removed props from the function arguments
-const Page = () => {
-  const router = useRouter();
+// 2. ✅ ACCEPT THE PROP IN THE COMPONENT
+const Page = ({ searchQuery }: ProductProps) => {
+  // const router = useRouter(); // Optional if not used
   
-  // ✅ ADDED: Get search query from the URL (e.g., /product?search=chair)
-  const searchParams = useSearchParams();
-  const searchQuery = searchParams.get('search') || '';
+  // 3. ❌ REMOVE useSearchParams (The parent is passing the data directly)
+  // const searchParams = useSearchParams();
+  // const searchQuery = searchParams.get('search') || ''; 
 
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -75,8 +78,9 @@ const Page = () => {
     fetchVendorProducts();
   }, []);
 
-  // Filter products whenever searchQuery (from URL) changes
+  // Filter products whenever searchQuery (Passed from Parent) changes
   useEffect(() => {
+    // If search is empty, show all
     if (!searchQuery) {
       setFilteredProducts(products);
       return;
