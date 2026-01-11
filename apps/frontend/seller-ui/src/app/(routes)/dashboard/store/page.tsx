@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import StoreLayout from '../../../../shared/components/layouts/StoreLayout';
 import Product from '../product/page';
+import ProductList from '../product/ProductList';
 import { ChevronDown, Search, PlusIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -94,9 +95,10 @@ const Page = () => {
       </div>
 
       {/* ✅ Pass searchQuery as prop */}
-      <Product searchQuery={searchQuery} />
+ <ProductList searchQuery={searchQuery} />
     </StoreLayout>
   );
 };
 
 export default Page;
+
