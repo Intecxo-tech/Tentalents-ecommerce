@@ -95,55 +95,50 @@ if (formRef.current && !formRef.current.contains(htmlTarget)) {
   if (!isOpen) return null;
 
   // Handle submit: call backend API
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Inside AddAddress.tsx
+
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = localStorage.getItem('token');
-    const payload = {
-      addressLine1,
-      addressLine2,
-      addressType,
-      city,
-      vendorId,
-      country,
-      isDefault,
-      name,
-      phone,
-      pinCode,
-      state,
-    };
+    // ... (existing token and payload logic) ...
 
     try {
-     const url = addressToEdit
-  ? `${API_BASE_URL}/api/orders/addresses/${addressToEdit.id}`
-  : `${API_BASE_URL}/api/orders/addresses`;
+        const url = addressToEdit
+            ? `${API_BASE_URL}/api/orders/addresses/${addressToEdit.id}`
+            : `${API_BASE_URL}/api/orders/addresses`;
 
-const method = addressToEdit ? 'PATCH' : 'POST';
+        const method = addressToEdit ? 'PATCH' : 'POST';
 
-const response = await fetch(url, {
-  method,
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  },
-  body: JSON.stringify(payload),
-});
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : '',
+            },
+            body: JSON.stringify(payload),
+        });
 
-const data = await response.json();  // ✅ CALL ONLY ONCE
+        const data = await response.json(); 
 
-if (!response.ok) {
-  throw new Error(data.message || 'Failed to save address');
-}
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to save address');
+        }
 
-toast.success(addressToEdit ? 'Address updated successfully!' : 'Address added successfully!');
+        toast.success(addressToEdit ? 'Address updated successfully!' : 'Address added successfully!');
 
-onClose();
-onAdd(data);    // Notify parent with the new/updated address
+        onClose();
+
+        // 👇 CHANGED HERE: Check if the address is inside 'data.data' or just 'data'
+        // Based on your Cart component, your API seems to wrap responses in a 'data' key.
+        const addressToUpdate = data.data || data; 
+        
+        onAdd(addressToUpdate); 
+
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to save address');
+        console.error('Error:', error);
+        toast.error('Failed to save address');
     }
-  };
+};
 
   return (
     <div className="popup-overlay">
@@ -280,6 +275,7 @@ onAdd(data);    // Notify parent with the new/updated address
 };
 
 export default AddAddress;
+
 
 
 
