@@ -103,7 +103,7 @@ const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddr
       addressLine2,
       addressType,
       city,
-      vendorId,
+     ...(vendorId ? { vendorId } : {}),
       country,
       isDefault,
       name,
@@ -277,3 +277,4 @@ const AddAddress = ({ isOpen, onClose, vendorId, addressToEdit, onAdd }: AddAddr
 };
 
 export default AddAddress;
+
